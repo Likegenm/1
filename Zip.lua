@@ -23,7 +23,7 @@ title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 0)
 title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Text = "Scripts GUI"
+title.Text = "SB(Steal Brainrot)"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 title.Parent = mainFrame
@@ -63,8 +63,7 @@ local scripts = {
     {name = "2: InfJump", url = "https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Infjump.lua"},
     {name = "3: JumpHack", url = "https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Jump.lua"},
     {name = "4: Float", url = "https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/float.lua"},
-    {name = "5: StealHelper", url = "https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/STealHelper.lua"},
-    {name = "6: AntiHit", url = "https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/AntiHit.lua"}
+    {name = "5: AntiHit", url = "https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/AntiHit.lua"}
 }
 
 for i, scriptData in ipairs(scripts) do
@@ -92,7 +91,7 @@ closeButton.MouseButton1Click:Connect(function()
 end)
 
 UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightAlt then
+    if input.KeyCode == Enum.KeyCode.LeftAlt then
         mainFrame.Visible = not mainFrame.Visible
     end
 end)
