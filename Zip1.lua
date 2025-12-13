@@ -1100,7 +1100,7 @@ local player = Players.LocalPlayer
 local function killSelf()
     local character = player.Character
     if not character then
-print()
+print(1)
         return
     end
     
@@ -1109,6 +1109,5 @@ print()
         humanoid.Health = 0
     end
 end
-
-killSelf()
+killself()
 })
