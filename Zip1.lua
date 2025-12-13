@@ -1288,7 +1288,7 @@ local trashcanEnabled = false
 
 TrashcanSection:Button({
     Title = "Get Trashcan",
-    Desc = "Save position and teleport to trashcan",
+    Desc = "Save position and auto-click trashcan",
     Icon = "trash",
     Color = Color3.fromHex("#FF5500"),
     Justify = "Center",
@@ -1309,33 +1309,46 @@ TrashcanSection:Button({
                 if trashcan then
                     trashcan = trashcan:FindFirstChild("Trashcan")
                     if trashcan then
-                        character.HumanoidRootPart.CFrame = CFrame.new(trashcan.Position + Vector3.new(0, 5, 0))
+                        character.HumanoidRootPart.CFrame = CFrame.new(trashcan.Position + Vector3.new(0, 1, 0))
                         WindUI:Notify({
                             Title = "Trashcan",
-                            Content = "Teleported to trashcan!",
+                            Content = "Teleported next to trashcan!",
                             Icon = "check"
                         })
                         
                         trashcanEnabled = true
                         trashcanThread = task.spawn(function()
-                            local UserInputService = game:GetService("UserInputService")
                             local RunService = game:GetService("RunService")
+                            local mouse = player:GetMouse()
                             
-                            while trashcanEnabled do
-                                if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-                                    if savedPosition then
-                                        character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
-                                        WindUI:Notify({
-                                            Title = "Trashcan",
-                                            Content = "Returned to saved position!",
-                                            Icon = "check"
-                                        })
-                                        trashcanEnabled = false
-                                        break
-                                    end
+                            mouse.Target = trashcan
+                            mouse.Hit = CFrame.new(trashcan.Position)
+                            
+                            task.wait(0.5)
+                            
+                            if trashcanEnabled then
+                                mouse.Button1Down:Fire()
+                                mouse.Button1Up:Fire()
+                                
+                                WindUI:Notify({
+                                    Title = "Trashcan",
+                                    Content = "Auto-clicked trashcan!",
+                                    Icon = "check"
+                                })
+                                
+                                task.wait(0.5)
+                                
+                                if savedPosition then
+                                    character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
+                                    WindUI:Notify({
+                                        Title = "Trashcan",
+                                        Content = "Returned to saved position!",
+                                        Icon = "check"
+                                    })
                                 end
-                                RunService.Heartbeat:Wait()
                             end
+                            
+                            trashcanEnabled = false
                         end)
                     end
                 end
@@ -1356,7 +1369,7 @@ TrashcanSection:Space()
 
 TrashcanSection:Button({
     Title = "Stop Trashcan",
-    Desc = "Stop trashcan teleport script",
+    Desc = "Stop trashcan script",
     Icon = "x",
     Color = Color3.fromHex("#FF5555"),
     Justify = "Center",
