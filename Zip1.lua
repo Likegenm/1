@@ -1306,3 +1306,361 @@ local SettingsTab = Window:Tab({
     Icon = "settings",
     IconColor = Color3.fromHex("#8B4513"),
 })
+
+local BoxSection = VisualTab:Section({
+    Title = "Box"
+})
+
+local boxColor = Color3.fromHex("#FF0000")
+local boxRainbow = false
+local boxEnabled = false
+local boxThread = nil
+local boxes = {}
+
+BoxSection:Colorpicker({
+    Title = "Box Color",
+    Default = boxColor,
+    Callback = function(color)
+        boxColor = color
+        updateBoxes()
+    end
+})
+
+BoxSection:Toggle({
+    Title = "Rainbow Box",
+    Callback = function(state)
+        boxRainbow = state
+    end
+})
+
+local function updateBoxes()
+    for player, box in pairs(boxes) do
+        if box and box:FindFirstChild("Box") then
+            box.Box.Color = boxRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or boxColor
+        end
+    end
+end
+
+BoxSection:Toggle({
+    Title = "Enable Box",
+    Callback = function(state)
+        boxEnabled = state
+        
+        if boxThread then
+            boxThread = nil
+        end
+        
+        if not state then
+            for player, box in pairs(boxes) do
+                if box then
+                    box:Destroy()
+                end
+            end
+            boxes = {}
+            return
+        end
+        
+        boxThread = task.spawn(function()
+            local RunService = game:GetService("RunService")
+            
+            while boxEnabled do
+                for _, player in pairs(game.Players:GetPlayers()) do
+                    if player ~= game.Players.LocalPlayer and player.Character then
+                        local character = player.Character
+                        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                        
+                        if humanoidRootPart and not boxes[player] then
+                            local box = Instance.new("BoxHandleAdornment")
+                            box.Name = "Box"
+                            box.Adornee = humanoidRootPart
+                            box.Size = Vector3.new(4, 6, 2)
+                            box.Color3 = boxRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or boxColor
+                            box.Transparency = 0.5
+                            box.AlwaysOnTop = true
+                            box.ZIndex = 1
+                            box.Parent = humanoidRootPart
+                            
+                            local container = Instance.new("Folder")
+                            container.Name = "BoxContainer"
+                            container.Parent = workspace
+                            box.Parent = container
+                            
+                            boxes[player] = container
+                        elseif boxes[player] and (not character or not humanoidRootPart) then
+                            boxes[player]:Destroy()
+                            boxes[player] = nil
+                        end
+                    end
+                end
+                
+                if boxRainbow then
+                    updateBoxes()
+                end
+                
+                RunService.Heartbeat:Wait()
+            end
+        end)
+    end
+})
+
+BoxSection:Space()
+
+-- Chams Section
+local ChamsSection = VisualTab:Section({
+    Title = "Chams"
+})
+
+local chamsColor = Color3.fromHex("#00FF00")
+local chamsRainbow = false
+local chamsEnabled = false
+local chamsThread = nil
+local chamHighlights = {}
+
+ChamsSection:Colorpicker({
+    Title = "Chams Color",
+    Default = chamsColor,
+    Callback = function(color)
+        chamsColor = color
+        updateChams()
+    end
+})
+
+ChamsSection:Toggle({
+    Title = "Rainbow Chams",
+    Callback = function(state)
+        chamsRainbow = state
+    end
+})
+
+local function updateChams()
+    for player, highlight in pairs(chamHighlights) do
+        if highlight then
+            highlight.FillColor = chamsRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or chamsColor
+            highlight.OutlineColor = chamsRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or chamsColor
+        end
+    end
+end
+
+ChamsSection:Toggle({
+    Title = "Enable Chams",
+    Callback = function(state)
+        chamsEnabled = state
+        
+        if chamsThread then
+            chamsThread = nil
+        end
+        
+        if not state then
+            for player, highlight in pairs(chamHighlights) do
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+            chamHighlights = {}
+            return
+        end
+        
+        chamsThread = task.spawn(function()
+            local RunService = game:GetService("RunService")
+            
+            while chamsEnabled do
+                for _, player in pairs(game.Players:GetPlayers()) do
+                    if player ~= game.Players.LocalPlayer and player.Character then
+                        local character = player.Character
+                        
+                        if not chamHighlights[player] then
+                            local highlight = Instance.new("Highlight")
+                            highlight.Name = "ChamsHighlight"
+                            highlight.Adornee = character
+                            highlight.FillColor = chamsRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or chamsColor
+                            highlight.OutlineColor = chamsRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or chamsColor
+                            highlight.FillTransparency = 0.5
+                            highlight.OutlineTransparency = 0
+                            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                            highlight.Parent = character
+                            
+                            chamHighlights[player] = highlight
+                        elseif chamHighlights[player] and (not character) then
+                            chamHighlights[player]:Destroy()
+                            chamHighlights[player] = nil
+                        end
+                    end
+                end
+                
+                if chamsRainbow then
+                    updateChams()
+                end
+                
+                RunService.Heartbeat:Wait()
+            end
+        end)
+    end
+})
+
+ChamsSection:Space()
+
+-- Fullbright Section
+local FullbrightSection = VisualTab:Section({
+    Title = "Fullbright"
+})
+
+local fullbrightEnabled = false
+local originalLighting = {}
+local fullbrightThread = nil
+
+FullbrightSection:Toggle({
+    Title = "Enable Fullbright",
+    Callback = function(state)
+        fullbrightEnabled = state
+        
+        if fullbrightThread then
+            fullbrightThread = nil
+        end
+        
+        if state then
+            originalLighting = {
+                Ambient = game.Lighting.Ambient,
+                Brightness = game.Lighting.Brightness,
+                GlobalShadows = game.Lighting.GlobalShadows,
+                OutdoorAmbient = game.Lighting.OutdoorAmbient
+            }
+            
+            game.Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            game.Lighting.Brightness = 2
+            game.Lighting.GlobalShadows = false
+            game.Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        else
+            if originalLighting.Ambient then
+                game.Lighting.Ambient = originalLighting.Ambient
+                game.Lighting.Brightness = originalLighting.Brightness
+                game.Lighting.GlobalShadows = originalLighting.GlobalShadows
+                game.Lighting.OutdoorAmbient = originalLighting.OutdoorAmbient
+            end
+        end
+    end
+})
+
+FullbrightSection:Space()
+
+-- Ambient Section
+local AmbientSection = VisualTab:Section({
+    Title = "Ambient"
+})
+
+local ambientColor = Color3.fromHex("#0000FF")
+local ambientRainbow = false
+local ambientEnabled = false
+local ambientThread = nil
+
+AmbientSection:Colorpicker({
+    Title = "Ambient Color",
+    Default = ambientColor,
+    Callback = function(color)
+        ambientColor = color
+        if ambientEnabled then
+            updateAmbient()
+        end
+    end
+})
+
+AmbientSection:Toggle({
+    Title = "Rainbow Ambient",
+    Callback = function(state)
+        ambientRainbow = state
+    end
+})
+
+local function updateAmbient()
+    local screenGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if screenGui then
+        local frame = screenGui:FindFirstChild("AmbientFrame")
+        if frame then
+            frame.BackgroundColor3 = ambientRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or ambientColor
+        end
+    end
+end
+
+AmbientSection:Toggle({
+    Title = "Enable Ambient",
+    Callback = function(state)
+        ambientEnabled = state
+        
+        if ambientThread then
+            ambientThread = nil
+        end
+        
+        if not state then
+            local screenGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+            if screenGui then
+                local frame = screenGui:FindFirstChild("AmbientFrame")
+                if frame then
+                    frame:Destroy()
+                end
+            end
+            return
+        end
+        
+        ambientThread = task.spawn(function()
+            local screenGui = game.Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+            if not screenGui then return end
+            
+            local frame = Instance.new("Frame")
+            frame.Name = "AmbientFrame"
+            frame.Size = UDim2.new(1, 0, 1, 0)
+            frame.Position = UDim2.new(0, 0, 0, 0)
+            frame.BackgroundColor3 = ambientRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or ambientColor
+            frame.BackgroundTransparency = 0.6
+            frame.BorderSizePixel = 0
+            frame.ZIndex = 1000
+            frame.Parent = screenGui
+            
+            while ambientEnabled do
+                if ambientRainbow then
+                    updateAmbient()
+                end
+                task.wait()
+            end
+        end)
+    end
+})
+
+AmbientSection:Space()
+
+-- Detector Section
+local DetectorSection = VisualTab:Section({
+    Title = "Detector"
+})
+
+local noCameraAnimations = false
+local originalCameraAnimations = {}
+
+DetectorSection:Toggle({
+    Title = "No Camera Animations",
+    Callback = function(state)
+        noCameraAnimations = state
+        
+        if state then
+            local player = game.Players.LocalPlayer
+            local character = player.Character
+            if character then
+                for _, animator in pairs(character:GetDescendants()) do
+                    if animator:IsA("Animator") then
+                        for _, animationTrack in pairs(animator:GetPlayingAnimationTracks()) do
+                            if animationTrack.Name == "WalkAnim" or animationTrack.Name == "RunAnim" then
+                                originalCameraAnimations[animationTrack] = animationTrack.Looped
+                                animationTrack:Stop()
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            for animationTrack, looped in pairs(originalCameraAnimations) do
+                if looped then
+                    animationTrack:Play()
+                end
+            end
+            originalCameraAnimations = {}
+        end
+    end
+})
