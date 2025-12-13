@@ -25,6 +25,12 @@ local Window = WindUI:CreateWindow({
             Color3.fromHex("#0000FF")
         )
     },
+
+        game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.E then
+        Window:Toggle()
+    end
+end)
 })
 
 local PlayerTab = Window:Tab({
