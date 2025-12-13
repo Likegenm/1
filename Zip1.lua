@@ -1023,3 +1023,62 @@ KillauraSection:Toggle({
         end
     end
 })
+
+local AntiFlingSection = PlayerTab:Section({
+    Title = "AntiFling"
+})
+
+local antiFlingEnabled = false
+
+local function updateAntiFling()
+    if antiFlingEnabled then
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+            end
+        end
+        
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if antiFlingEnabled and game.Players.LocalPlayer.Character then
+                local character = game.Players.LocalPlayer.Character
+                
+                for _, part in ipairs(workspace:GetDescendants()) do
+                    if part:IsA("BasePart") and not part.Anchored and not part:IsDescendantOf(character) then
+                        if part.AssemblyLinearVelocity.Magnitude > 3 or part.AssemblyAngularVelocity.Magnitude > 3 then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end
+
+AntiFlingSection:Toggle({
+    Title = "AntiFling",
+    Desc = "K key to toggle + anti-sit",
+    Icon = "shield",
+    Callback = function(state)
+        antiFlingEnabled = state
+        updateAntiFling()
+    end
+})
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.K then
+        antiFlingEnabled = not antiFlingEnabled
+        updateAntiFling()
+    end
+end)
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    task.wait(0.5)
+    if antiFlingEnabled then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        end
+    end
+end)
