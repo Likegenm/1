@@ -1082,3 +1082,22 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
         end
     end
 end)
+
+local MainSection = PlayerTab:Section({
+    Title = "Main"
+})
+
+MainSection:Button({
+    Title = "Respawn",
+    Desc = "Respawn u",
+    Icon = "skull",
+    Color = Color3.fromHex("#FF5555"),
+    Justify = "Center",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character then
+            character:BreakJoints()
+        end
+    end
+})
