@@ -1090,3 +1090,177 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
         end
     end
 end)
+
+local ReachSection = FightTab:Section({
+    Title = "Reach"
+})
+
+local reachRange = 50
+local reachTeleportDist = 2
+local reachVisualColor = Color3.fromHex("#00FF00")
+local reachRainbowVisual = false
+local reachEnabled = false
+local reachThread = nil
+local reachVisual = nil
+
+ReachSection:Slider({
+    Title = "Range",
+    Step = 1,
+    Value = {
+        Min = 1,
+        Max = 1000,
+        Default = 50,
+    },
+    Callback = function(value)
+        reachRange = value
+        updateReachVisual()
+    end
+})
+
+ReachSection:Slider({
+    Title = "Teleport",
+    Desc = "Distance behind player",
+    Step = 0.1,
+    Value = {
+        Min = 1,
+        Max = 5,
+        Default = 2,
+    },
+    Callback = function(value)
+        reachTeleportDist = value
+    end
+})
+
+ReachSection:Colorpicker({
+    Title = "Visualer Color",
+    Default = reachVisualColor,
+    Callback = function(color)
+        reachVisualColor = color
+        updateReachVisual()
+    end
+})
+
+ReachSection:Toggle({
+    Title = "Rainbow Visualer",
+    Callback = function(state)
+        reachRainbowVisual = state
+        updateReachVisual()
+    end
+})
+
+local function updateReachVisual()
+    if reachVisual then
+        reachVisual:Destroy()
+        reachVisual = nil
+    end
+    
+    if reachEnabled then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            reachVisual = Instance.new("Part")
+            reachVisual.Name = "ReachRange"
+            reachVisual.Shape = Enum.PartType.Cylinder
+            reachVisual.Size = Vector3.new(1, reachRange * 2, reachRange * 2)
+            reachVisual.CFrame = character.HumanoidRootPart.CFrame * CFrame.Angles(0, 0, math.rad(90))
+            reachVisual.Anchored = true
+            reachVisual.CanCollide = false
+            reachVisual.Transparency = 0.7
+            reachVisual.Color = reachRainbowVisual and Color3.fromHSV(tick() % 5 / 5, 1, 1) or reachVisualColor
+            reachVisual.Material = Enum.Material.Neon
+            reachVisual.Parent = workspace
+            
+            if reachRainbowVisual then
+                task.spawn(function()
+                    while reachVisual and reachEnabled do
+                        reachVisual.Color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                        task.wait()
+                    end
+                end)
+            end
+        end
+    end
+end
+
+local function getClosestPlayerInReach()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
+        return nil
+    end
+    
+    local closest = nil
+    local closestDist = math.huge
+    local myPos = character.HumanoidRootPart.Position
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (myPos - p.Character.HumanoidRootPart.Position).Magnitude
+            if dist <= reachRange and dist < closestDist then
+                closestDist = dist
+                closest = p
+            end
+        end
+    end
+    
+    return closest
+end
+
+local function teleportBehindWithDistance(targetPlayer, distance)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local targetChar = targetPlayer.Character
+    
+    if character and character:FindFirstChild("HumanoidRootPart") and 
+       targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+       
+        local targetCFrame = targetChar.HumanoidRootPart.CFrame
+        local behindOffset = targetCFrame.LookVector * -distance
+        
+        character.HumanoidRootPart.CFrame = CFrame.new(
+            targetChar.HumanoidRootPart.Position + behindOffset + Vector3.new(0, 3, 0)
+        )
+    end
+end
+
+ReachSection:Toggle({
+    Title = "Toggle",
+    Desc = "Mouse1 to teleport behind closest player",
+    Callback = function(state)
+        reachEnabled = state
+        
+        if reachThread then
+            reachThread = nil
+        end
+        
+        if reachVisual then
+            reachVisual:Destroy()
+            reachVisual = nil
+        end
+        
+        if state then
+            reachThread = task.spawn(function()
+                local UserInputService = game:GetService("UserInputService")
+                local RunService = game:GetService("RunService")
+                
+                while reachEnabled do
+                    updateReachVisual()
+                    
+                    if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                        local closestPlayer = getClosestPlayerInReach()
+                        if closestPlayer then
+                            teleportBehindWithDistance(closestPlayer, reachTeleportDist)
+                        end
+                    end
+                    
+                    RunService.Heartbeat:Wait()
+                end
+                
+                if reachVisual then
+                    reachVisual:Destroy()
+                    reachVisual = nil
+                end
+            end)
+        end
+    end
+})
