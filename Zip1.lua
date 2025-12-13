@@ -1094,10 +1094,21 @@ MainSection:Button({
     Color = Color3.fromHex("#FF5555"),
     Justify = "Center",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character then
-            character:BreakJoints()
-        end
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function killSelf()
+    local character = player.Character
+    if not character then
+print()
+        return
     end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.Health = 0
+    end
+end
+
+killSelf()
 })
