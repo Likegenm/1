@@ -1300,13 +1300,6 @@ local AnimationsTab = Window:Tab({
     IconColor = Color3.fromHex("#FF00AA"),
 })
 
-local FlingTab = Window:Tab({
-    Title = "Player controls",
-    Desc = "Fling and more",
-    Icon = "settings",
-    IconColor = Color3.fromHex("#8B4513"),
-})
-
 local SettingsTab = Window:Tab({
         Title = "Settings",
         Desc = "UI Settings",
@@ -1643,8 +1636,7 @@ AmbientSection:Toggle({
             end
         end)
     end
-})
-AmbientSection:Space()
+    })
 
 -- Detector Section
 local DetectorSection = VisualTab:Section({
