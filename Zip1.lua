@@ -1264,3 +1264,45 @@ ReachSection:Toggle({
         end
     end
 })
+
+local VisualTab = Window:Tab({
+    Title = "Visual",
+    Desc = "Visual Modifications",
+    Icon = "eye",
+    IconColor = Color3.fromHex("#00FF00"),
+})
+
+local ExploitsTab = Window:Tab({
+    Title = "Exploits",
+    Desc = "Game Exploits",
+    Icon = "zap",
+    IconColor = Color3.fromHex("#00AAFF"),
+})
+
+local AdminTab = Window:Tab({
+    Title = "Admin",
+    Desc = "Admin Commands",
+    Icon = "shield",
+    IconColor = Color3.fromHex("#0000FF"),
+})
+
+local TeleportTab = Window:Tab({
+    Title = "Teleport",
+    Desc = "Teleport Features",
+    Icon = "map-pin",
+    IconColor = Color3.fromHex("#AA00FF"),
+})
+
+local AnimationsTab = Window:Tab({
+    Title = "Animations",
+    Desc = "Player Animations",
+    Icon = "activity",
+    IconColor = Color3.fromHex("#FF00AA"),
+})
+
+local SettingsTab = Window:Tab({
+    Title = "Settings",
+    Desc = "UI Settings",
+    Icon = "settings",
+    IconColor = Color3.fromHex("#8B4513"),
+})
