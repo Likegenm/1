@@ -1080,32 +1080,3 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
         end
     end
 end)
-
-local MainSection = PlayerTab:Section({
-    Title = "Main"
-})
-
-MainSection:Button({
-    Title = "Respawn",
-    Desc = "Respawn u",
-    Icon = "skull",
-    Color = Color3.fromHex("#FF5555"),
-    Justify = "Center",
-    Callback = function()
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
-local function killSelf()
-    local character = player.Character
-    if not character then
-print(1)
-        return
-    end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.Health = 0
-    end
-end
-killself()
-})
