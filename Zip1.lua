@@ -1578,7 +1578,7 @@ AmbientSection:Toggle({
 })
 
 local function updateAmbient()
-    local screenGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+    local screenGui = game.Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
     if screenGui then
         local frame = screenGui:FindFirstChild("AmbientFrame")
         if frame then
@@ -1597,7 +1597,7 @@ AmbientSection:Toggle({
         end
         
         if not state then
-            local screenGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+            local screenGui = game.Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
             if screenGui then
                 local frame = screenGui:FindFirstChild("AmbientFrame")
                 if frame then
@@ -1608,29 +1608,42 @@ AmbientSection:Toggle({
         end
         
         ambientThread = task.spawn(function()
-            local screenGui = game.Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
-            if not screenGui then return end
-            
-            local frame = Instance.new("Frame")
-            frame.Name = "AmbientFrame"
-            frame.Size = UDim2.new(1, 0, 1, 0)
-            frame.Position = UDim2.new(0, 0, 0, 0)
-            frame.BackgroundColor3 = ambientRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or ambientColor
-            frame.BackgroundTransparency = 0.6
-            frame.BorderSizePixel = 0
-            frame.ZIndex = 1000
-            frame.Parent = screenGui
+            local player = game.Players.LocalPlayer
+            local RunService = game:GetService("RunService")
             
             while ambientEnabled do
-                if ambientRainbow then
-                    updateAmbient()
+                local screenGui = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
+                
+                local frame = screenGui:FindFirstChild("AmbientFrame")
+                if not frame then
+                    frame = Instance.new("Frame")
+                    frame.Name = "AmbientFrame"
+                    frame.Size = UDim2.new(1, 0, 1, 0)
+                    frame.Position = UDim2.new(0, 0, 0, 0)
+                    frame.BackgroundColor3 = ambientRainbow and Color3.fromHSV(tick() % 5 / 5, 1, 1) or ambientColor
+                    frame.BackgroundTransparency = 0.6
+                    frame.BorderSizePixel = 0
+                    frame.ZIndex = 1000
+                    frame.Parent = screenGui
                 end
-                task.wait()
+                
+                if ambientRainbow then
+                    frame.BackgroundColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                end
+                
+                RunService.Heartbeat:Wait()
+            end
+            
+            local screenGui = player:FindFirstChildOfClass("PlayerGui")
+            if screenGui then
+                local frame = screenGui:FindFirstChild("AmbientFrame")
+                if frame then
+                    frame:Destroy()
+                end
             end
         end)
     end
 })
-
 AmbientSection:Space()
 
 -- Detector Section
