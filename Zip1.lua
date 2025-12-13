@@ -9,7 +9,7 @@ local Window = WindUI:CreateWindow({
     Author = "Likegenm",
     Folder = "ftgshub",
     Icon = "code",
-    IconSize = 44,
+    IconSize = 22,
     NewElements = true,
     
     OpenButton = {
@@ -1300,12 +1300,19 @@ local AnimationsTab = Window:Tab({
     IconColor = Color3.fromHex("#FF00AA"),
 })
 
-local SettingsTab = Window:Tab({
-    Title = "Settings",
-    Desc = "UI Settings",
+local FlingTab = Window:Tab({
+    Title = "Player controls",
+    Desc = "Fling and more",
     Icon = "settings",
     IconColor = Color3.fromHex("#8B4513"),
 })
+
+local SettingsTab = Window:Tab({
+        Title = "Settings",
+        Desc = "UI Settings",
+        Icon = "activity",
+        IconColor = Color3.fromHex("#000000"),
+    })
 
 local BoxSection = VisualTab:Section({
     Title = "Box"
