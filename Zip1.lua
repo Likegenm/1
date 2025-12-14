@@ -1974,3 +1974,73 @@ AimassistSection:Toggle({
         end
     end
 })
+
+
+AntiFlingSection:Toggle({
+    Title = "Touch Fling",
+    Desc = "P key to toggle touch fling",
+    Icon = "wind",
+    Callback = function(state)
+        touchFlingEnabled = state
+        
+        if touchFlingThread then
+            touchFlingThread = nil
+        end
+        
+        if state then
+            touchFlingThread = task.spawn(function()
+                local lp = game.Players.LocalPlayer
+                local c, hrp, vel, movel = nil, nil, nil, 0.1
+                
+                while touchFlingEnabled do
+                    game:GetService("RunService").Heartbeat:Wait()
+                    c = lp.Character
+                    hrp = c and c:FindFirstChild("HumanoidRootPart")
+                    
+                    if hrp then
+                        vel = hrp.Velocity
+                        hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                        game:GetService("RunService").RenderStepped:Wait()
+                        hrp.Velocity = vel
+                        game:GetService("RunService").Stepped:Wait()
+                        hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                        movel = -movel
+                    end
+                end
+            end)
+        end
+    end
+})
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.P then
+        touchFlingEnabled = not touchFlingEnabled
+        
+        if touchFlingThread then
+            touchFlingThread = nil
+        end
+        
+        if touchFlingEnabled then
+            touchFlingThread = task.spawn(function()
+                local lp = game.Players.LocalPlayer
+                local c, hrp, vel, movel = nil, nil, nil, 0.1
+                
+                while touchFlingEnabled do
+                    game:GetService("RunService").Heartbeat:Wait()
+                    c = lp.Character
+                    hrp = c and c:FindFirstChild("HumanoidRootPart")
+                    
+                    if hrp then
+                        vel = hrp.Velocity
+                        hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                        game:GetService("RunService").RenderStepped:Wait()
+                        hrp.Velocity = vel
+                        game:GetService("RunService").Stepped:Wait()
+                        hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                        movel = -movel
+                    end
+                end
+            end)
+        end
+    end
+end)
