@@ -1442,13 +1442,6 @@ local AnimationsTab = Window:Tab({
     IconColor = Color3.fromHex("#FF00AA"),
 })
 
-local SettingsTab = Window:Tab({
-        Title = "Settings",
-        Desc = "UI Settings",
-        Icon = "activity",
-        IconColor = Color3.fromHex("#000000"),
-    })
-
 local BoxSection = VisualTab:Section({
     Title = "Box"
 })
