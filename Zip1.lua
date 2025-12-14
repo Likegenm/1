@@ -2044,3 +2044,445 @@ game:GetService("UserInputService").InputBegan:Connect(function(input)
         end
     end
 end)
+
+local ControlTab = Window:Tab({
+    Title = "Control",
+    Desc = "Player Control Features",
+    Icon = "target",
+    IconColor = Color3.fromHex("#FF8800"),
+})
+
+-- Fling Section
+local FlingSection = ControlTab:Section({
+    Title = "Fling"
+})
+
+local selectedFlingPlayer = ""
+local flingSavedPosition = nil
+local flingThread = nil
+local loopFlingEnabled = false
+local loopFlingThread = nil
+
+FlingSection:Input({
+    Title = "Player Name",
+    Desc = "Enter player name to fling",
+    Callback = function(value)
+        selectedFlingPlayer = value
+        WindUI:Notify({
+            Title = "Fling",
+            Content = "Selected player: " .. value,
+            Icon = "user"
+        })
+    end
+})
+
+FlingSection:Button({
+    Title = "Fling",
+    Desc = "Teleport and fling player for 3 seconds",
+    Icon = "wind",
+    Color = Color3.fromHex("#FF5555"),
+    Justify = "Center",
+    Callback = function()
+        if selectedFlingPlayer == "" then
+            WindUI:Notify({
+                Title = "Fling",
+                Content = "Please select a player first!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local targetPlayer = game.Players:FindFirstChild(selectedFlingPlayer)
+        if not targetPlayer or not targetPlayer.Character then
+            WindUI:Notify({
+                Title = "Fling",
+                Content = "Player not found or has no character!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then
+            return
+        end
+        
+        flingSavedPosition = character.HumanoidRootPart.Position
+        
+        local targetChar = targetPlayer.Character
+        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+        if not targetRoot then return end
+        
+        flingThread = task.spawn(function()
+            character.HumanoidRootPart.CFrame = CFrame.new(targetRoot.Position)
+            
+            local flingEnabled = true
+            local c, hrp, vel, movel = character, character.HumanoidRootPart, nil, 0.1
+            
+            local flingStart = tick()
+            while flingEnabled and tick() - flingStart < 3 do
+                game:GetService("RunService").Heartbeat:Wait()
+                if hrp then
+                    vel = hrp.Velocity
+                    hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                    game:GetService("RunService").RenderStepped:Wait()
+                    hrp.Velocity = vel
+                    game:GetService("RunService").Stepped:Wait()
+                    hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                    movel = -movel
+                end
+            end
+            
+            if flingSavedPosition then
+                character.HumanoidRootPart.CFrame = CFrame.new(flingSavedPosition)
+            end
+            
+            flingEnabled = false
+        end)
+    end
+})
+
+FlingSection:Toggle({
+    Title = "Loop Fling",
+    Desc = "Continuously fling selected player",
+    Icon = "refresh-cw",
+    Callback = function(state)
+        loopFlingEnabled = state
+        
+        if loopFlingThread then
+            loopFlingThread = nil
+        end
+        
+        if state then
+            if selectedFlingPlayer == "" then
+                WindUI:Notify({
+                    Title = "Loop Fling",
+                    Content = "Please select a player first!",
+                    Icon = "x"
+                })
+                loopFlingEnabled = false
+                return
+            end
+            
+            local targetPlayer = game.Players:FindFirstChild(selectedFlingPlayer)
+            if not targetPlayer then
+                WindUI:Notify({
+                    Title = "Loop Fling",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+                loopFlingEnabled = false
+                return
+            end
+            
+            local player = game.Players.LocalPlayer
+            local character = player.Character
+            if not character or not character:FindFirstChild("HumanoidRootPart") then
+                loopFlingEnabled = false
+                return
+            end
+            
+            flingSavedPosition = character.HumanoidRootPart.Position
+            
+            loopFlingThread = task.spawn(function()
+                local RunService = game:GetService("RunService")
+                
+                while loopFlingEnabled do
+                    local targetChar = targetPlayer.Character
+                    if not targetChar then
+                        task.wait(0.1)
+                        continue
+                    end
+                    
+                    local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+                    if not targetRoot then
+                        task.wait(0.1)
+                        continue
+                    end
+                    
+                    if targetRoot.Velocity.Magnitude > 200 then
+                        WindUI:Notify({
+                            Title = "Loop Fling",
+                            Content = "Player moving too fast, stopping!",
+                            Icon = "x"
+                        })
+                        loopFlingEnabled = false
+                        break
+                    end
+                    
+                    character.HumanoidRootPart.CFrame = CFrame.new(targetRoot.Position)
+                    
+                    local flingEnabled = true
+                    local c, hrp, vel, movel = character, character.HumanoidRootPart, nil, 0.1
+                    
+                    local flingTime = 0.01
+                    local flingStart = tick()
+                    while flingEnabled and tick() - flingStart < flingTime do
+                        RunService.Heartbeat:Wait()
+                        if hrp then
+                            vel = hrp.Velocity
+                            hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                            RunService.RenderStepped:Wait()
+                            hrp.Velocity = vel
+                            RunService.Stepped:Wait()
+                            hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                            movel = -movel
+                        end
+                    end
+                end
+                
+                if flingSavedPosition then
+                    character.HumanoidRootPart.CFrame = CFrame.new(flingSavedPosition)
+                end
+            end)
+        end
+    end
+})
+
+FlingSection:Space()
+
+-- View Section
+local ViewSection = ControlTab:Section({
+    Title = "View"
+})
+
+local selectedViewPlayer = ""
+local viewSavedPosition = nil
+local viewThread = nil
+local loopViewEnabled = false
+local loopViewThread = nil
+
+ViewSection:Input({
+    Title = "Player Name",
+    Desc = "Enter player name to view",
+    Callback = function(value)
+        selectedViewPlayer = value
+        WindUI:Notify({
+            Title = "View",
+            Content = "Selected player: " .. value,
+            Icon = "user"
+        })
+    end
+})
+
+ViewSection:Button({
+    Title = "View",
+    Desc = "Spectate player for 3 seconds",
+    Icon = "eye",
+    Color = Color3.fromHex("#55AAFF"),
+    Justify = "Center",
+    Callback = function()
+        if selectedViewPlayer == "" then
+            WindUI:Notify({
+                Title = "View",
+                Content = "Please select a player first!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local targetPlayer = game.Players:FindFirstChild(selectedViewPlayer)
+        if not targetPlayer or not targetPlayer.Character then
+            WindUI:Notify({
+                Title = "View",
+                Content = "Player not found or has no character!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local camera = workspace.CurrentCamera
+        local originalCameraType = camera.CameraType
+        camera.CameraType = Enum.CameraType.Scriptable
+        
+        viewThread = task.spawn(function()
+            local viewStart = tick()
+            while tick() - viewStart < 3 do
+                local targetChar = targetPlayer.Character
+                if targetChar then
+                    local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+                    if targetRoot then
+                        camera.CFrame = CFrame.new(targetRoot.Position + Vector3.new(0, 5, 10), targetRoot.Position)
+                    end
+                end
+                task.wait()
+            end
+            
+            camera.CameraType = originalCameraType
+        end)
+    end
+})
+
+ViewSection:Toggle({
+    Title = "Loop View",
+    Desc = "Continuously spectate selected player",
+    Icon = "eye",
+    Callback = function(state)
+        loopViewEnabled = state
+        
+        if loopViewThread then
+            loopViewThread = nil
+        end
+        
+        if state then
+            if selectedViewPlayer == "" then
+                WindUI:Notify({
+                    Title = "Loop View",
+                    Content = "Please select a player first!",
+                    Icon = "x"
+                })
+                loopViewEnabled = false
+                return
+            end
+            
+            local targetPlayer = game.Players:FindFirstChild(selectedViewPlayer)
+            if not targetPlayer then
+                WindUI:Notify({
+                    Title = "Loop View",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+                loopViewEnabled = false
+                return
+            end
+            
+            local camera = workspace.CurrentCamera
+            local originalCameraType = camera.CameraType
+            camera.CameraType = Enum.CameraType.Scriptable
+            
+            loopViewThread = task.spawn(function()
+                while loopViewEnabled do
+                    local targetChar = targetPlayer.Character
+                    if targetChar then
+                        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+                        if targetRoot then
+                            camera.CFrame = CFrame.new(targetRoot.Position + Vector3.new(0, 5, 10), targetRoot.Position)
+                        end
+                    end
+                    task.wait()
+                end
+                
+                camera.CameraType = originalCameraType
+            end)
+        end
+    end
+})
+
+ViewSection:Space()
+
+-- Teleport Section
+local TeleportSection = ControlTab:Section({
+    Title = "Teleport"
+})
+
+local selectedTeleportPlayer = ""
+local teleportThread = nil
+local loopTeleportEnabled = false
+local loopTeleportThread = nil
+
+TeleportSection:Input({
+    Title = "Player Name",
+    Desc = "Enter player name to teleport",
+    Callback = function(value)
+        selectedTeleportPlayer = value
+        WindUI:Notify({
+            Title = "Teleport",
+            Content = "Selected player: " .. value,
+            Icon = "user"
+        })
+    end
+})
+
+TeleportSection:Button({
+    Title = "Teleport",
+    Desc = "Teleport to player once",
+    Icon = "map-pin",
+    Color = Color3.fromHex("#55FF55"),
+    Justify = "Center",
+    Callback = function()
+        if selectedTeleportPlayer == "" then
+            WindUI:Notify({
+                Title = "Teleport",
+                Content = "Please select a player first!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local targetPlayer = game.Players:FindFirstChild(selectedTeleportPlayer)
+        if not targetPlayer or not targetPlayer.Character then
+            WindUI:Notify({
+                Title = "Teleport",
+                Content = "Player not found or has no character!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then
+            return
+        end
+        
+        local targetChar = targetPlayer.Character
+        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+        if not targetRoot then return end
+        
+        character.HumanoidRootPart.CFrame = CFrame.new(targetRoot.Position)
+    end
+})
+
+TeleportSection:Toggle({
+    Title = "Loop Teleport",
+    Desc = "Continuously teleport to player",
+    Icon = "refresh-cw",
+    Callback = function(state)
+        loopTeleportEnabled = state
+        
+        if loopTeleportThread then
+            loopTeleportThread = nil
+        end
+        
+        if state then
+            if selectedTeleportPlayer == "" then
+                WindUI:Notify({
+                    Title = "Loop Teleport",
+                    Content = "Please select a player first!",
+                    Icon = "x"
+                })
+                loopTeleportEnabled = false
+                return
+            end
+            
+            local targetPlayer = game.Players:FindFirstChild(selectedTeleportPlayer)
+            if not targetPlayer then
+                WindUI:Notify({
+                    Title = "Loop Teleport",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+                loopTeleportEnabled = false
+                return
+            end
+            
+            loopTeleportThread = task.spawn(function()
+                while loopTeleportEnabled do
+                    local player = game.Players.LocalPlayer
+                    local character = player.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local targetChar = targetPlayer.Character
+                        if targetChar then
+                            local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+                            if targetRoot then
+                                character.HumanoidRootPart.CFrame = CFrame.new(targetRoot.Position)
+                            end
+                        end
+                    end
+                    task.wait(0.01)
+                end
+            end)
+        end
+    end
+})
