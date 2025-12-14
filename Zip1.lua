@@ -1874,3 +1874,103 @@ OtherSection:Button({
         })
     end
 })
+
+local AimassistSection = FightTab:Section({
+    Title = "Aimassist"
+})
+
+local aimassistRadius = 25
+local aimassistSpeed = 5
+local aimassistEnabled = false
+local aimassistThread = nil
+
+AimassistSection:Slider({
+    Title = "Radius",
+    Step = 1,
+    Value = {
+        Min = 1,
+        Max = 50,
+        Default = 25,
+    },
+    Callback = function(value)
+        aimassistRadius = value
+    end
+})
+
+AimassistSection:Slider({
+    Title = "Speed",
+    Step = 0.1,
+    Value = {
+        Min = 1,
+        Max = 10,
+        Default = 5,
+    },
+    Callback = function(value)
+        aimassistSpeed = value
+    end
+})
+
+local function getClosestPlayerToCamera()
+    local player = game.Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+    local cameraPosition = camera.CFrame.Position
+    
+    local closest = nil
+    local closestDist = math.huge
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local character = p.Character
+            local targetPart = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+            
+            if targetPart then
+                local dist = (cameraPosition - targetPart.Position).Magnitude
+                if dist <= aimassistRadius and dist < closestDist then
+                    closestDist = dist
+                    closest = {player = p, part = targetPart}
+                end
+            end
+        end
+    end
+    
+    return closest
+end
+
+AimassistSection:Toggle({
+    Title = "On",
+    Callback = function(state)
+        aimassistEnabled = state
+        
+        if aimassistThread then
+            aimassistThread = nil
+        end
+        
+        if state then
+            aimassistThread = task.spawn(function()
+                local RunService = game:GetService("RunService")
+                
+                while aimassistEnabled do
+                    local closest = getClosestPlayerToCamera()
+                    if closest and closest.part then
+                        local camera = workspace.CurrentCamera
+                        local targetPosition = closest.part.Position
+                        local currentCFrame = camera.CFrame
+                        local lookVector = (targetPosition - currentCFrame.Position).Unit
+                        
+                        local newCFrame = CFrame.lookAt(
+                            currentCFrame.Position,
+                            currentCFrame.Position:Lerp(
+                                currentCFrame.Position + lookVector * 1000,
+                                aimassistSpeed * RunService.Heartbeat:Wait()
+                            )
+                        )
+                        
+                        camera.CFrame = newCFrame
+                    end
+                    
+                    RunService.Heartbeat:Wait()
+                end
+            end)
+        end
+    end
+})
