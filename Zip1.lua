@@ -1415,11 +1415,19 @@ TrashcanSection:Button({
     end
 })
 
+local ExploitsTab = Window:Tab({
+    Title = "Exploits",
+    Desc = "Game Exploits",
+    Icon = "zap",
+    IconColor = Color3.fromHex("#00AAFF"),
+})
+
 local WallComboSection = ExploitsTab:Section({
     Title = "WallCombo"
 })
 
 local wallComboMode = "WallComboOff"
+local wallComboThread = nil
 local wallComboParts = {}
 
 WallComboSection:Dropdown({
@@ -1429,6 +1437,10 @@ WallComboSection:Dropdown({
     Callback = function(value)
         wallComboMode = value
         
+        if wallComboThread then
+            wallComboThread = nil
+        end
+        
         for _, part in pairs(wallComboParts) do
             if part then
                 part:Destroy()
@@ -1437,50 +1449,51 @@ WallComboSection:Dropdown({
         wallComboParts = {}
         
         if value == "WallCombo" then
-            local tunnel = game.Workspace:FindFirstChild("Map")
-            if tunnel then
-                tunnel = tunnel:FindFirstChild("Tunnel")
-                if tunnel then
-                    local player = game.Players.LocalPlayer
-                    local character = player.Character
-                    
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        local playerPos = character.HumanoidRootPart.Position
-                        local playerLook = character.HumanoidRootPart.CFrame.LookVector
-                        
-                        for _, obj in pairs(tunnel:GetDescendants()) do
-                            if (obj:IsA("Part") and obj.Name == "Part") or (obj:IsA("UnionOperation") and obj.Name == "Union") then
-                                local clone = obj:Clone()
-                                clone.Parent = workspace
-                                clone.Position = playerPos + (playerLook * 20)
-                                clone.Transparency = 1
-                                clone.CanCollide = true
-                                clone.Anchored = true
+            wallComboThread = task.spawn(function()
+                while wallComboMode == "WallCombo" do
+                    local tunnel = game.Workspace:FindFirstChild("Map")
+                    if tunnel then
+                        tunnel = tunnel:FindFirstChild("Tunnel")
+                        if tunnel then
+                            local player = game.Players.LocalPlayer
+                            local character = player.Character
+                            
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                local playerPos = character.HumanoidRootPart.Position
+                                local playerLook = character.HumanoidRootPart.CFrame.LookVector
                                 
-                                table.insert(wallComboParts, clone)
+                                for _, obj in pairs(tunnel:GetDescendants()) do
+                                    if (obj:IsA("Part") and obj.Name == "Part") or (obj:IsA("UnionOperation") and obj.Name == "Union") then
+                                        local clone = obj:Clone()
+                                        clone.Parent = workspace
+                                        clone.Position = playerPos + (playerLook * 20)
+                                        clone.Transparency = 1
+                                        clone.CanCollide = true
+                                        clone.Anchored = true
+                                        
+                                        table.insert(wallComboParts, clone)
+                                        
+                                        if #wallComboParts > 3 then
+                                            local oldest = table.remove(wallComboParts, 1)
+                                            if oldest then
+                                                oldest:Destroy()
+                                            end
+                                        end
+                                    end
+                                end
                             end
                         end
-                        
-                        WindUI:Notify({
-                            Title = "Wall Combo",
-                            Content = "Wall parts created in front of you!",
-                            Icon = "check"
-                        })
                     end
-                else
-                    WindUI:Notify({
-                        Title = "Wall Combo",
-                        Content = "Tunnel not found!",
-                        Icon = "x"
-                    })
+                    
+                    task.wait(0.1)
                 end
-            else
-                WindUI:Notify({
-                    Title = "Wall Combo",
-                    Content = "Map not found!",
-                    Icon = "x"
-                })
-            end
+            end)
+        elseif value == "WallComboBring" then
+            WindUI:Notify({
+                Title = "Wall Combo",
+                Content = "WallComboBring mode coming soon!",
+                Icon = "info"
+            })
         end
     end
 })
