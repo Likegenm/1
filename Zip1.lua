@@ -1415,13 +1415,6 @@ TrashcanSection:Button({
     end
 })
 
-local ExploitsTab = Window:Tab({
-    Title = "Exploits",
-    Desc = "Game Exploits",
-    Icon = "zap",
-    IconColor = Color3.fromHex("#00AAFF"),
-})
-
 local WallComboSection = ExploitsTab:Section({
     Title = "WallCombo"
 })
@@ -1458,25 +1451,31 @@ WallComboSection:Dropdown({
                             local player = game.Players.LocalPlayer
                             local character = player.Character
                             
-                            if character and character:FindFirstChild("HumanoidRootPart") then
-                                local playerPos = character.HumanoidRootPart.Position
-                                local playerLook = character.HumanoidRootPart.CFrame.LookVector
+                            if character then
+                                local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+                                local head = character:FindFirstChild("Head")
                                 
-                                for _, obj in pairs(tunnel:GetDescendants()) do
-                                    if (obj:IsA("Part") and obj.Name == "Part") or (obj:IsA("UnionOperation") and obj.Name == "Union") then
-                                        local clone = obj:Clone()
-                                        clone.Parent = workspace
-                                        clone.Position = playerPos + (playerLook * 20)
-                                        clone.Transparency = 1
-                                        clone.CanCollide = true
-                                        clone.Anchored = true
-                                        
-                                        table.insert(wallComboParts, clone)
-                                        
-                                        if #wallComboParts > 3 then
-                                            local oldest = table.remove(wallComboParts, 1)
-                                            if oldest then
-                                                oldest:Destroy()
+                                if torso and head then
+                                    local torsoPos = torso.Position
+                                    local headPos = head.Position
+                                    local direction = (headPos - torsoPos).Unit
+                                    
+                                    for _, obj in pairs(tunnel:GetDescendants()) do
+                                        if (obj:IsA("Part") and obj.Name == "Part") or (obj:IsA("UnionOperation") and obj.Name == "Union") then
+                                            local clone = obj:Clone()
+                                            clone.Parent = workspace
+                                            clone.Position = torsoPos + (direction * 20)
+                                            clone.Transparency = 1
+                                            clone.CanCollide = true
+                                            clone.Anchored = true
+                                            
+                                            table.insert(wallComboParts, clone)
+                                            
+                                            if #wallComboParts > 3 then
+                                                local oldest = table.remove(wallComboParts, 1)
+                                                if oldest then
+                                                    oldest:Destroy()
+                                                end
                                             end
                                         end
                                     end
