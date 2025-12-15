@@ -1451,31 +1451,28 @@ WallComboSection:Dropdown({
                             local player = game.Players.LocalPlayer
                             local character = player.Character
                             
-                            if character then
-                                local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-                                local head = character:FindFirstChild("Head")
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                local hrp = character.HumanoidRootPart
+                                local camera = workspace.CurrentCamera
                                 
-                                if torso and head then
-                                    local torsoPos = torso.Position
-                                    local headPos = head.Position
-                                    local direction = (headPos - torsoPos).Unit
-                                    
-                                    for _, obj in pairs(tunnel:GetDescendants()) do
-                                        if (obj:IsA("Part") and obj.Name == "Part") or (obj:IsA("UnionOperation") and obj.Name == "Union") then
-                                            local clone = obj:Clone()
-                                            clone.Parent = workspace
-                                            clone.Position = torsoPos + (direction * 20)
-                                            clone.Transparency = 1
-                                            clone.CanCollide = true
-                                            clone.Anchored = true
-                                            
-                                            table.insert(wallComboParts, clone)
-                                            
-                                            if #wallComboParts > 3 then
-                                                local oldest = table.remove(wallComboParts, 1)
-                                                if oldest then
-                                                    oldest:Destroy()
-                                                end
+                                local frontDirection = camera.CFrame.LookVector
+                                local wallPosition = hrp.Position + (frontDirection * 20)
+                                
+                                for _, obj in pairs(tunnel:GetDescendants()) do
+                                    if (obj:IsA("Part") and obj.Name == "Part") or (obj:IsA("UnionOperation") and obj.Name == "Union") then
+                                        local clone = obj:Clone()
+                                        clone.Parent = workspace
+                                        clone.Position = wallPosition
+                                        clone.Transparency = 1
+                                        clone.CanCollide = true
+                                        clone.Anchored = true
+                                        
+                                        table.insert(wallComboParts, clone)
+                                        
+                                        if #wallComboParts > 3 then
+                                            local oldest = table.remove(wallComboParts, 1)
+                                            if oldest then
+                                                oldest:Destroy()
                                             end
                                         end
                                     end
