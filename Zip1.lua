@@ -1278,12 +1278,6 @@ local ExploitsTab = Window:Tab({
     Icon = "zap",
     IconColor = Color3.fromHex("#00AAFF"),
 })
-local ExploitsTab = Window:Tab({
-    Title = "Exploits",
-    Desc = "Game Exploits",
-    Icon = "zap",
-    IconColor = Color3.fromHex("#00AAFF"),
-})
 
 local TrashcanSection = ExploitsTab:Section({
     Title = "Trashcan"
@@ -1418,6 +1412,76 @@ TrashcanSection:Button({
             Content = "Trashcan script stopped!",
             Icon = "check"
         })
+    end
+})
+
+local WallComboSection = ExploitsTab:Section({
+    Title = "WallCombo"
+})
+
+local wallComboMode = "WallComboOff"
+local wallComboParts = {}
+
+WallComboSection:Dropdown({
+    Title = "Wall Combo Mode",
+    Values = {"WallComboOff", "WallCombo", "WallComboBring"},
+    Value = "WallComboOff",
+    Callback = function(value)
+        wallComboMode = value
+        
+        for _, part in pairs(wallComboParts) do
+            if part then
+                part:Destroy()
+            end
+        end
+        wallComboParts = {}
+        
+        if value == "WallCombo" then
+            local tunnel = game.Workspace:FindFirstChild("Map")
+            if tunnel then
+                tunnel = tunnel:FindFirstChild("Tunnel")
+                if tunnel then
+                    local player = game.Players.LocalPlayer
+                    local character = player.Character
+                    
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local playerPos = character.HumanoidRootPart.Position
+                        local playerLook = character.HumanoidRootPart.CFrame.LookVector
+                        
+                        for _, obj in pairs(tunnel:GetDescendants()) do
+                            if (obj:IsA("Part") and obj.Name == "Part") or (obj:IsA("UnionOperation") and obj.Name == "Union") then
+                                local clone = obj:Clone()
+                                clone.Parent = workspace
+                                clone.Position = playerPos + (playerLook * 20)
+                                clone.Transparency = 1
+                                clone.CanCollide = true
+                                clone.Anchored = true
+                                
+                                table.insert(wallComboParts, clone)
+                            end
+                        end
+                        
+                        WindUI:Notify({
+                            Title = "Wall Combo",
+                            Content = "Wall parts created in front of you!",
+                            Icon = "check"
+                        })
+                    end
+                else
+                    WindUI:Notify({
+                        Title = "Wall Combo",
+                        Content = "Tunnel not found!",
+                        Icon = "x"
+                    })
+                end
+            else
+                WindUI:Notify({
+                    Title = "Wall Combo",
+                    Content = "Map not found!",
+                    Icon = "x"
+                })
+            end
+        end
     end
 })
 
