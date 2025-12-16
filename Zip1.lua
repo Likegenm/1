@@ -2078,92 +2078,74 @@ local ControlTab = Window:Tab({
     IconColor = Color3.fromHex("#FF8800"),
 })
 
--- Fling Section
-local FlingSection = ControlTab:Section({
-    Title = "Fling"
+-- Player Selection Section
+local PlayerSelectSection = ControlTab:Section({
+    Title = "Player Selection"
 })
 
-local selectedFlingPlayer = ""
-local flingSavedPosition = nil
-local flingThread = nil
-local loopFlingEnabled = false
-local loopFlingThread = nil
 local targetPlayerInfo = nil
 
-FlingSection:Input({
+PlayerSelectSection:Input({
     Title = "Player Name",
-    Desc = "Enter player display name (partial)",
+    Desc = "Enter player name (partial or display)",
     Callback = function(value)
-        selectedFlingPlayer = value
+        local foundPlayer = nil
         
         for _, player in pairs(game.Players:GetPlayers()) do
             if string.find(player.DisplayName:lower(), value:lower()) or string.find(player.Name:lower(), value:lower()) then
-                targetPlayerInfo = player
+                foundPlayer = player
                 break
             end
         end
         
-        if targetPlayerInfo then
-            local screenGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-            local existingFrame = screenGui:FindFirstChild("PlayerInfoFrame")
-            if existingFrame then
-                existingFrame:Destroy()
-            end
+        if foundPlayer then
+            targetPlayerInfo = foundPlayer
             
-            local frame = Instance.new("Frame")
-            frame.Name = "PlayerInfoFrame"
-            frame.Size = UDim2.new(0, 200, 0, 100)
-            frame.Position = UDim2.new(0.5, -100, 0, 10)
-            frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-            frame.BorderSizePixel = 0
-            frame.BackgroundTransparency = 0.3
-            frame.Parent = screenGui
+            local starterGui = Instance.new("StarterGui")
+            starterGui.Name = "SelectedPlayerInfo"
+            starterGui.Parent = game.ReplicatedStorage
             
-            local displayName = Instance.new("TextLabel")
-            displayName.Text = "Display: " .. targetPlayerInfo.DisplayName
-            displayName.Size = UDim2.new(1, 0, 0.3, 0)
-            displayName.Position = UDim2.new(0, 0, 0, 5)
-            displayName.BackgroundTransparency = 1
-            displayName.TextColor3 = Color3.fromRGB(255, 255, 255)
-            displayName.Font = Enum.Font.Gotham
-            displayName.TextSize = 14
-            displayName.Parent = frame
+            local info = Instance.new("StringValue")
+            info.Name = "PlayerName"
+            info.Value = foundPlayer.Name
+            info.Parent = starterGui
             
-            local userName = Instance.new("TextLabel")
-            userName.Text = "Username: " .. targetPlayerInfo.Name
-            userName.Size = UDim2.new(1, 0, 0.3, 0)
-            userName.Position = UDim2.new(0, 0, 0.3, 5)
-            userName.BackgroundTransparency = 1
-            userName.TextColor3 = Color3.fromRGB(200, 200, 200)
-            userName.Font = Enum.Font.Gotham
-            userName.TextSize = 12
-            userName.Parent = frame
+            local displayName = Instance.new("StringValue")
+            displayName.Name = "DisplayName"
+            displayName.Value = foundPlayer.DisplayName
+            displayName.Parent = starterGui
             
-            local thumbnail = game:GetService("Players"):GetUserThumbnailAsync(targetPlayerInfo.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-            local image = Instance.new("ImageLabel")
-            image.Image = thumbnail
-            image.Size = UDim2.new(0.3, 0, 0.6, 0)
-            image.Position = UDim2.new(0.02, 0, 0.4, 0)
-            image.BackgroundTransparency = 1
-            image.Parent = frame
-            
-            frame.Active = true
-            frame.Draggable = true
+            local userId = Instance.new("IntValue")
+            userId.Name = "UserId"
+            userId.Value = foundPlayer.UserId
+            userId.Parent = starterGui
             
             WindUI:Notify({
-                Title = "Fling",
-                Content = "Selected: " .. targetPlayerInfo.DisplayName .. " (@" .. targetPlayerInfo.Name .. ")",
+                Title = "Player Selected",
+                Content = foundPlayer.DisplayName .. " (@" .. foundPlayer.Name .. ")",
                 Icon = "user"
             })
         else
             WindUI:Notify({
-                Title = "Fling",
+                Title = "Player Selection",
                 Content = "Player not found!",
                 Icon = "x"
             })
         end
     end
 })
+
+PlayerSelectSection:Space()
+
+-- Fling Section
+local FlingSection = ControlTab:Section({
+    Title = "Fling"
+})
+
+local flingSavedPosition = nil
+local flingThread = nil
+local loopFlingEnabled = false
+local loopFlingThread = nil
 
 FlingSection:Button({
     Title = "Fling",
@@ -2320,41 +2302,9 @@ local ViewSection = ControlTab:Section({
     Title = "View"
 })
 
-local selectedViewPlayer = ""
-local viewSavedPosition = nil
 local viewThread = nil
 local loopViewEnabled = false
 local loopViewThread = nil
-local viewTargetInfo = nil
-
-ViewSection:Input({
-    Title = "Player Name",
-    Desc = "Enter player display name (partial)",
-    Callback = function(value)
-        selectedViewPlayer = value
-        
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if string.find(player.DisplayName:lower(), value:lower()) or string.find(player.Name:lower(), value:lower()) then
-                viewTargetInfo = player
-                break
-            end
-        end
-        
-        if viewTargetInfo then
-            WindUI:Notify({
-                Title = "View",
-                Content = "Selected: " .. viewTargetInfo.DisplayName .. " (@" .. viewTargetInfo.Name .. ")",
-                Icon = "user"
-            })
-        else
-            WindUI:Notify({
-                Title = "View",
-                Content = "Player not found!",
-                Icon = "x"
-            })
-        end
-    end
-})
 
 ViewSection:Button({
     Title = "View",
@@ -2363,7 +2313,7 @@ ViewSection:Button({
     Color = Color3.fromHex("#55AAFF"),
     Justify = "Center",
     Callback = function()
-        if not viewTargetInfo then
+        if not targetPlayerInfo then
             WindUI:Notify({
                 Title = "View",
                 Content = "Please select a player first!",
@@ -2372,7 +2322,7 @@ ViewSection:Button({
             return
         end
         
-        local targetPlayer = viewTargetInfo
+        local targetPlayer = targetPlayerInfo
         if not targetPlayer.Character then
             WindUI:Notify({
                 Title = "View",
@@ -2425,7 +2375,7 @@ ViewSection:Toggle({
         end
         
         if state then
-            if not viewTargetInfo then
+            if not targetPlayerInfo then
                 WindUI:Notify({
                     Title = "Loop View",
                     Content = "Please select a player first!",
@@ -2435,7 +2385,7 @@ ViewSection:Toggle({
                 return
             end
             
-            local targetPlayer = viewTargetInfo
+            local targetPlayer = targetPlayerInfo
             
             local camera = workspace.CurrentCamera
             local originalCameraType = camera.CameraType
@@ -2476,40 +2426,9 @@ local TeleportSection = ControlTab:Section({
     Title = "Teleport"
 })
 
-local selectedTeleportPlayer = ""
 local teleportThread = nil
 local loopTeleportEnabled = false
 local loopTeleportThread = nil
-local teleportTargetInfo = nil
-
-TeleportSection:Input({
-    Title = "Player Name",
-    Desc = "Enter player display name (partial)",
-    Callback = function(value)
-        selectedTeleportPlayer = value
-        
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if string.find(player.DisplayName:lower(), value:lower()) or string.find(player.Name:lower(), value:lower()) then
-                teleportTargetInfo = player
-                break
-            end
-        end
-        
-        if teleportTargetInfo then
-            WindUI:Notify({
-                Title = "Teleport",
-                Content = "Selected: " .. teleportTargetInfo.DisplayName .. " (@" .. teleportTargetInfo.Name .. ")",
-                Icon = "user"
-            })
-        else
-            WindUI:Notify({
-                Title = "Teleport",
-                Content = "Player not found!",
-                Icon = "x"
-            })
-        end
-    end
-})
 
 TeleportSection:Button({
     Title = "Teleport",
@@ -2518,7 +2437,7 @@ TeleportSection:Button({
     Color = Color3.fromHex("#55FF55"),
     Justify = "Center",
     Callback = function()
-        if not teleportTargetInfo then
+        if not targetPlayerInfo then
             WindUI:Notify({
                 Title = "Teleport",
                 Content = "Please select a player first!",
@@ -2527,7 +2446,7 @@ TeleportSection:Button({
             return
         end
         
-        local targetPlayer = teleportTargetInfo
+        local targetPlayer = targetPlayerInfo
         if not targetPlayer.Character then
             WindUI:Notify({
                 Title = "Teleport",
@@ -2563,7 +2482,7 @@ TeleportSection:Toggle({
         end
         
         if state then
-            if not teleportTargetInfo then
+            if not targetPlayerInfo then
                 WindUI:Notify({
                     Title = "Loop Teleport",
                     Content = "Please select a player first!",
@@ -2573,7 +2492,7 @@ TeleportSection:Toggle({
                 return
             end
             
-            local targetPlayer = teleportTargetInfo
+            local targetPlayer = targetPlayerInfo
             
             loopTeleportThread = task.spawn(function()
                 while loopTeleportEnabled do
