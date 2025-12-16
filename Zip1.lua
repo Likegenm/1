@@ -256,16 +256,22 @@ JumpSection:Toggle({
 
 JumpSection:Space()
 
+local PlayerTab = Window:Tab({
+    Title = "Player",
+    Desc = "LocalPlayer Settings",
+    Icon = "user",
+    IconColor = Color3.fromHex("#FF0000"),
+})
+
 local OrbitSection = PlayerTab:Section({
     Title = "Orbit"
 })
 
 local orbitSpeed = 50
 local orbitDistance = 10
-local orbitTargetMode = "Mouse"
 local orbitEnabled = false
-local orbitThread
-local orbitLockedTarget = nil
+local orbitThread = nil
+local savedOrbitPosition = nil
 
 OrbitSection:Slider({
     Title = "Orbit Speed",
@@ -293,170 +299,124 @@ OrbitSection:Slider({
     end
 })
 
-OrbitSection:Dropdown({
-    Title = "Target Mode",
-    Values = {"Mouse", "Nearest Player", "Locked Target"},
-    Value = "Mouse",
-    Callback = function(value)
-        orbitTargetMode = value
-    end
-})
-
-local function getOrbitTarget()
+local function getClosestPlayer()
     local player = game.Players.LocalPlayer
     local character = player.Character
-    
     if not character or not character:FindFirstChild("HumanoidRootPart") then
         return nil
     end
     
-    if orbitTargetMode == "Locked Target" and orbitLockedTarget then
-        return orbitLockedTarget
-    end
+    local closest = nil
+    local closestDist = math.huge
+    local myPos = character.HumanoidRootPart.Position
     
-    if orbitTargetMode == "Mouse" then
-        local mouse = player:GetMouse()
-        return mouse.Hit.Position
-    end
-    
-    if orbitTargetMode == "Nearest Player" then
-        local players = game.Players:GetPlayers()
-        local closest = nil
-        local closestDist = math.huge
-        
-        for _, p in pairs(players) do
-            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = (character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-                if dist < closestDist then
-                    closestDist = dist
-                    closest = p.Character.HumanoidRootPart.Position
-                end
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (myPos - p.Character.HumanoidRootPart.Position).Magnitude
+            if dist < closestDist then
+                closestDist = dist
+                closest = p.Character.HumanoidRootPart.Position
             end
         end
-        
-        return closest
     end
     
-    return nil
+    return closest
 end
 
-OrbitSection:Toggle({
-    Title = "Enable Orbit",
-    Icon = "orbit",
-    Callback = function(state)
-        orbitEnabled = state
+local function toggleOrbit()
+    if orbitEnabled then
+        orbitEnabled = false
         if orbitThread then
             orbitThread = nil
         end
-        if state then
+        
+        if savedOrbitPosition then
+            local character = game.Players.LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = CFrame.new(savedOrbitPosition)
+            end
+            savedOrbitPosition = nil
+        end
+        
+        WindUI:Notify({
+            Title = "Orbit",
+            Content = "Orbit disabled!",
+            Icon = "x"
+        })
+    else
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            savedOrbitPosition = character.HumanoidRootPart.Position
+            orbitEnabled = true
+            
             orbitThread = task.spawn(function()
-                local player = game.Players.LocalPlayer
                 local RunService = game:GetService("RunService")
                 local time = 0
                 
-                while orbitEnabled and RunService.Heartbeat:Wait() do
+                while orbitEnabled do
                     local character = player.Character
                     if not character or not character:FindFirstChild("HumanoidRootPart") then
-                        continue
+                        break
                     end
                     
-                    local targetPos = getOrbitTarget()
+                    local targetPos = getClosestPlayer()
                     if not targetPos then
+                        task.wait(0.1)
                         continue
                     end
                     
+                    local hrp = character.HumanoidRootPart
                     time = time + RunService.Heartbeat:Wait() * (orbitSpeed / 100)
                     
                     local x = math.cos(time) * orbitDistance
                     local z = math.sin(time) * orbitDistance
                     
-                    character.HumanoidRootPart.CFrame = CFrame.new(
+                    hrp.CFrame = CFrame.new(
                         targetPos.X + x,
                         targetPos.Y + 5,
                         targetPos.Z + z
                     )
                 end
+                
+                if savedOrbitPosition then
+                    local character = player.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        character.HumanoidRootPart.CFrame = CFrame.new(savedOrbitPosition)
+                    end
+                    savedOrbitPosition = nil
+                end
             end)
-        else
-            orbitLockedTarget = nil
-        end
-    end
-})
-
-OrbitSection:Space()
-
-OrbitSection:Button({
-    Title = "Lock Current Target",
-    Icon = "lock",
-    IconColor = Color3.fromHex("#AA00FF"),
-    Justify = "Center",
-    Callback = function()
-        local target = getOrbitTarget()
-        if target then
-            orbitLockedTarget = target
-            orbitTargetMode = "Locked Target"
+            
             WindUI:Notify({
                 Title = "Orbit",
-                Content = "Target locked!",
-                Icon = "lock"
+                Content = "Orbit enabled!",
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "Orbit",
+                Content = "No character found!",
+                Icon = "x"
             })
         end
     end
-})
+end
 
 OrbitSection:Button({
-    Title = "Unlock Target",
-    Icon = "unlock",
+    Title = "Toggle Orbit",
+    Desc = "Orbit around closest player",
+    Icon = "orbit",
+    Color = Color3.fromHex("#AA00FF"),
     Justify = "Center",
-    Callback = function()
-        orbitLockedTarget = nil
-        orbitTargetMode = "Mouse"
-        WindUI:Notify({
-            Title = "Orbit",
-            Content = "Target unlocked!",
-            Icon = "unlock"
-        })
+    Callback = toggleOrbit
+})
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.H then
+        toggleOrbit()
     end
-})
-
-local MouseTPSection = PlayerTab:Section({
-    Title = "Mouse TP"
-})
-
-local mouseTPEnabled = false
-local mouseTPThread
-
-MouseTPSection:Toggle({
-    Title = "Enable Mouse TP",
-    Desc = "Press T to teleport",
-    Icon = "mouse-pointer",
-    Callback = function(state)
-        mouseTPEnabled = state
-        if mouseTPThread then
-            mouseTPThread = nil
-        end
-        if state then
-            mouseTPThread = task.spawn(function()
-                local player = game.Players.LocalPlayer
-                local UserInputService = game:GetService("UserInputService")
-                local mouse = player:GetMouse()
-                
-                while mouseTPEnabled and task.wait() do
-                    if UserInputService:IsKeyDown(Enum.KeyCode.T) then
-                        local character = player.Character
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            local hit = mouse.Hit
-                            character.HumanoidRootPart.CFrame = CFrame.new(hit.Position + Vector3.new(0, 3, 0))
-                            task.wait(0.2)
-                        end
-                    end
-                end
-            end)
-        end
-    end
-})
-
-MouseTPSection:Space()
+end)
 
 local ExploitsSection = PlayerTab:Section({
     Title = "Player Exploits"
