@@ -1608,6 +1608,65 @@ local TeleportTab = Window:Tab({
     Icon = "map-pin",
     IconColor = Color3.fromHex("#AA00FF"),
 })
+-- Save Position Section
+local SaveSection = TeleportTab:Section({
+    Title = "Save Position"
+})
+
+local savedPosition = nil
+
+SaveSection:Button({
+    Title = "Save Current Position",
+    Desc = "Save your current position",
+    Icon = "save",
+    Color = Color3.fromHex("#FFAA00"),
+    Justify = "Center",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            savedPosition = character.HumanoidRootPart.Position
+            WindUI:Notify({
+                Title = "Position Saved",
+                Content = string.format("Saved at: X: %.2f, Y: %.2f, Z: %.2f", 
+                    savedPosition.X, savedPosition.Y, savedPosition.Z),
+                Icon = "check"
+            })
+        end
+    end
+})
+
+SaveSection:Button({
+    Title = "Teleport to Saved",
+    Desc = "Teleport to saved position",
+    Icon = "map-pin",
+    Color = Color3.fromHex("#55FF55"),
+    Justify = "Center",
+    Callback = function()
+        if savedPosition then
+            local player = game.Players.LocalPlayer
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
+                WindUI:Notify({
+                    Title = "Teleport",
+                    Content = "Teleported to saved position!",
+                    Icon = "check"
+                })
+            end
+        else
+            WindUI:Notify({
+                Title = "Teleport",
+                Content = "No position saved!",
+                Icon = "x"
+            })
+        end
+    end
+})
+
+SaveSection:Space()
+
+-- Locations Section
 local LocationsSection = TeleportTab:Section({
     Title = "Locations"
 })
