@@ -647,6 +647,108 @@ ExploitsSection:Toggle({
 
 ExploitsSection:Space()
 
+local TeleportPlusSection = PlayerTab:Section({
+    Title = "Teleport+"
+})
+
+local teleportX = 0
+local teleportY = 0
+local teleportZ = 0
+local teleportPlusEnabled = false
+local teleportPlusThread = nil
+
+TeleportPlusSection:Slider({
+    Title = "X Offset",
+    Step = 1,
+    Value = {
+        Min = -500,
+        Max = 500,
+        Default = 0,
+    },
+    Callback = function(value)
+        teleportX = value
+    end
+})
+
+TeleportPlusSection:Slider({
+    Title = "Y Offset",
+    Step = 1,
+    Value = {
+        Min = -500,
+        Max = 500,
+        Default = 0,
+    },
+    Callback = function(value)
+        teleportY = value
+    end
+})
+
+TeleportPlusSection:Slider({
+    Title = "Z Offset",
+    Step = 1,
+    Value = {
+        Min = -500,
+        Max = 500,
+        Default = 0,
+    },
+    Callback = function(value)
+        teleportZ = value
+    end
+})
+
+TeleportPlusSection:Toggle({
+    Title = "Enable Teleport+",
+    Desc = "Teleport with offset on key press",
+    Icon = "map-pin-plus",
+    Callback = function(state)
+        teleportPlusEnabled = state
+        
+        if teleportPlusThread then
+            teleportPlusThread = nil
+        end
+        
+        if state then
+            teleportPlusThread = task.spawn(function()
+                local player = game.Players.LocalPlayer
+                local UserInputService = game:GetService("UserInputService")
+                
+                while teleportPlusEnabled do
+                    if UserInputService:IsKeyDown(Enum.KeyCode.T) then
+                        local character = player.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local hrp = character.HumanoidRootPart
+                            local offset = Vector3.new(teleportX, teleportY, teleportZ)
+                            hrp.CFrame = CFrame.new(hrp.Position + offset)
+                            task.wait(0.2)
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
+
+TeleportPlusSection:Space()
+
+TeleportPlusSection:Button({
+    Title = "Reset Offsets",
+    Desc = "Set all offsets to 0",
+    Icon = "refresh-cw",
+    Color = Color3.fromHex("#5555FF"),
+    Justify = "Center",
+    Callback = function()
+        teleportX = 0
+        teleportY = 0
+        teleportZ = 0
+        WindUI:Notify({
+            Title = "Teleport+",
+            Content = "Offsets reset to 0!",
+            Icon = "check"
+        })
+    end
+})
+
 local MicsTab = Window:Tab({
     Title = "Mics",
     Desc = "Miscellaneous Features",
