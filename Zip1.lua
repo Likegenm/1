@@ -256,6 +256,58 @@ JumpSection:Toggle({
 
 JumpSection:Space()
 
+local MouseTeleportSection = PlayerTab:Section({
+    Title = "Mouse Teleport"
+})
+
+local mouseTeleportEnabled = false
+local mouseTeleportThread = nil
+
+MouseTeleportSection:Toggle({
+    Title = "Mouse Teleport",
+    Desc = "Press T to teleport to mouse cursor",
+    Icon = "mouse-pointer",
+    Callback = function(state)
+        mouseTeleportEnabled = state
+        
+        if mouseTeleportThread then
+            mouseTeleportThread = nil
+        end
+        
+        if state then
+            mouseTeleportThread = task.spawn(function()
+                local player = game.Players.LocalPlayer
+                local UserInputService = game:GetService("UserInputService")
+                
+                while mouseTeleportEnabled do
+                    if UserInputService:IsKeyDown(Enum.KeyCode.T) then
+                        local character = player.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local mouse = player:GetMouse()
+                            local hit = mouse.Hit
+                            character.HumanoidRootPart.CFrame = CFrame.new(hit.Position + Vector3.new(0, 3, 0))
+                            task.wait(0.2)
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.T then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local mouse = player:GetMouse()
+            local hit = mouse.Hit
+            character.HumanoidRootPart.CFrame = CFrame.new(hit.Position + Vector3.new(0, 3, 0))
+        end
+    end
+end)
+
 local OrbitSection = PlayerTab:Section({
     Title = "Orbit"
 })
