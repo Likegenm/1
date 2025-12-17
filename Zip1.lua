@@ -1608,6 +1608,67 @@ local TeleportTab = Window:Tab({
     Icon = "map-pin",
     IconColor = Color3.fromHex("#AA00FF"),
 })
+local LocationsSection = TeleportTab:Section({
+    Title = "Locations"
+})
+
+local teleportMode = "CFrame"
+local locations = {
+    ["Arena"] = {X = -164.81, Y = 439.51, Z = -367.23},
+    ["Void"] = {X = -81.32, Y = -496.50, Z = -313.67},
+    ["Mountain"] = {X = 358.53, Y = 699.10, Z = 358.56},
+    ["Corner1"] = {X = 47.70, Y = 440.51, Z = 473.56},
+    ["Corner2"] = {X = -248.36, Y = 441.75, Z = -238.39},
+    ["Corner3"] = {X = 217.33, Y = 442.17, Z = -435.79},
+    ["Corner4"] = {X = 552.33, Y = 441.57, Z = 277.07},
+    ["Middle"] = {X = 142.33, Y = 440.75, Z = 29.89},
+    ["Jail"] = {X = 438.82, Y = 439.51, Z = -376.02},
+    ["BiggerJail"] = {X = 370.61, Y = 439.51, Z = 440.63}
+}
+
+LocationsSection:Dropdown({
+    Title = "Teleport Mode",
+    Values = {"CFrame", "TweenService"},
+    Value = "CFrame",
+    Callback = function(value)
+        teleportMode = value
+    end
+})
+
+for locationName, coords in pairs(locations) do
+    LocationsSection:Button({
+        Title = locationName,
+        Desc = string.format("X: %.2f, Y: %.2f, Z: %.2f", coords.X, coords.Y, coords.Z),
+        Icon = "map-pin",
+        Color = Color3.fromHex("#55FF55"),
+        Justify = "Center",
+        Callback = function()
+            local player = game.Players.LocalPlayer
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local hrp = character.HumanoidRootPart
+                local targetPosition = Vector3.new(coords.X, coords.Y, coords.Z)
+                
+                if teleportMode == "CFrame" then
+                    hrp.CFrame = CFrame.new(targetPosition)
+                elseif teleportMode == "TweenService" then
+                    local TweenService = game:GetService("TweenService")
+                    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear)
+                    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPosition)})
+                    tween:Play()
+                end
+                
+                WindUI:Notify({
+                    Title = "Teleport",
+                    Content = "Teleported to " .. locationName,
+                    Icon = "check"
+                })
+            end
+        end
+    })
+    
+    LocationsSection:Space()
+end
 
 local AnimationsTab = Window:Tab({
     Title = "Animations",
