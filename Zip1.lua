@@ -654,8 +654,6 @@ local TeleportPlusSection = PlayerTab:Section({
 local teleportX = 0
 local teleportY = 0
 local teleportZ = 0
-local teleportPlusEnabled = false
-local teleportPlusThread = nil
 
 TeleportPlusSection:Slider({
     Title = "X Offset",
@@ -696,38 +694,34 @@ TeleportPlusSection:Slider({
     end
 })
 
-TeleportPlusSection:Toggle({
-    Title = "Enable Teleport+",
-    Desc = "Teleport with offset on key press",
+TeleportPlusSection:Button({
+    Title = "Teleport with Offset",
+    Desc = "Teleport to current position + offset",
     Icon = "map-pin-plus",
-    Callback = function(state)
-        teleportPlusEnabled = state
-        
-        if teleportPlusThread then
-            teleportPlusThread = nil
-        end
-        
-        if state then
-            teleportPlusThread = task.spawn(function()
-                local player = game.Players.LocalPlayer
-                local UserInputService = game:GetService("UserInputService")
-                
-                while teleportPlusEnabled do
-                    if UserInputService:IsKeyDown(Enum.KeyCode.T) then
-                        local character = player.Character
-                        if character and character:FindFirstChild("HumanoidRootPart") then
-                            local hrp = character.HumanoidRootPart
-                            local offset = Vector3.new(teleportX, teleportY, teleportZ)
-                            hrp.CFrame = CFrame.new(hrp.Position + offset)
-                            task.wait(0.2)
-                        end
-                    end
-                    task.wait()
-                end
-            end)
+    Color = Color3.fromHex("#55AAFF"),
+    Justify = "Center",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local hrp = character.HumanoidRootPart
+            local offset = Vector3.new(teleportX, teleportY, teleportZ)
+            hrp.CFrame = CFrame.new(hrp.Position + offset)
         end
     end
 })
+
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.T then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local hrp = character.HumanoidRootPart
+            local offset = Vector3.new(teleportX, teleportY, teleportZ)
+            hrp.CFrame = CFrame.new(hrp.Position + offset)
+        end
+    end
+end)
 
 TeleportPlusSection:Space()
 
