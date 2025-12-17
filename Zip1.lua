@@ -256,13 +256,6 @@ JumpSection:Toggle({
 
 JumpSection:Space()
 
-local PlayerTab = Window:Tab({
-    Title = "Player",
-    Desc = "LocalPlayer Settings",
-    Icon = "user",
-    IconColor = Color3.fromHex("#FF0000"),
-})
-
 local OrbitSection = PlayerTab:Section({
     Title = "Orbit"
 })
