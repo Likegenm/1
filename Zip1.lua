@@ -1735,6 +1735,7 @@ local AnimationsTab = Window:Tab({
     Icon = "activity",
     IconColor = Color3.fromHex("#FF00AA"),
 })
+
 -- Jerk Section
 local JerkSection = AnimationsTab:Section({
     Title = "Jerk"
@@ -1767,6 +1768,8 @@ local followTargetName = ""
 local followTargetInfo = nil
 local followEnabled = false
 local followThread = nil
+local followDistance = 20
+local followHeight = 3
 
 FollowSection:Input({
     Title = "Player Name",
@@ -1798,9 +1801,37 @@ FollowSection:Input({
     end
 })
 
+FollowSection:Slider({
+    Title = "Distance",
+    Desc = "Distance behind player (studs)",
+    Step = 1,
+    Value = {
+        Min = 1,
+        Max = 50,
+        Default = 20,
+    },
+    Callback = function(value)
+        followDistance = value
+    end
+})
+
+FollowSection:Slider({
+    Title = "Height",
+    Desc = "Height above ground (studs)",
+    Step = 1,
+    Value = {
+        Min = 0,
+        Max = 20,
+        Default = 3,
+    },
+    Callback = function(value)
+        followHeight = value
+    end
+})
+
 FollowSection:Toggle({
     Title = "Follow Player",
-    Desc = "Tween behind target player at torso height",
+    Desc = "Constantly stay behind target player",
     Icon = "users",
     Callback = function(state)
         followEnabled = state
@@ -1822,7 +1853,7 @@ FollowSection:Toggle({
             
             followThread = task.spawn(function()
                 local player = game.Players.LocalPlayer
-                local TweenService = game:GetService("TweenService")
+                local RunService = game:GetService("RunService")
                 
                 while followEnabled do
                     if not game.Players:FindFirstChild(followTargetInfo.Name) then
@@ -1845,16 +1876,13 @@ FollowSection:Toggle({
                         if torso and myHRP then
                             local targetPos = torso.Position
                             local direction = torso.CFrame.LookVector
-                            local behindPos = targetPos - (direction * 20) + Vector3.new(0, 3, 0)
+                            local behindPos = targetPos - (direction * followDistance) + Vector3.new(0, followHeight, 0)
                             
-                            local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear)
-                            local tween = TweenService:Create(myHRP, tweenInfo, {CFrame = CFrame.new(behindPos)})
-                            tween:Play()
-                            tween.Completed:Wait()
+                            myHRP.CFrame = CFrame.new(behindPos)
                         end
                     end
                     
-                    task.wait(0.1)
+                    RunService.Heartbeat:Wait()
                 end
             end)
         end
