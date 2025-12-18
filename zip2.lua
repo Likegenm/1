@@ -23,26 +23,28 @@ local function checkExecutor()
         ["Krnl"] = KRNL_LOADED,
         ["ScriptWare"] = isexecutorclosure,
         ["Xeno"] = identifyexecutor,
-        ["Solara"] = is_solara
-        ["Wave"] = is_wave
-        ['Cryptic'] = is_cryptic
+        ["Solara"] = is_solara,
+        ["Wave"] = is_wave,
+        ["Cryptic"] = is_cryptic
     }
     
     for name, check in pairs(executors) do
         if check then
            StarterGui:SetCore("SendNotification", {
-    Title = "Cheat Engine",
-    Text = "Ur executor 90>ur executor",
-    Icon = nil,
-    Duration = 5,
-    Button1 = "OK",
-    Callback = function()
-StarterGui:Destroy()
-    end
-})
+                Title = "Cheat Engine",
+                Text = "Ur executor 90>ur executor",
+                Icon = "",
+                Duration = 5,
+                Button1 = "OK",
+                Callback = function()
+                end
+           })
+           return
         end
     end
 end
+
+checkExecutor()
 
 --[[
 ██╗     ██╗██╗██╗  ██╗███████╗ ██████╗ ███████╗███╗   ██╗███╗   ███╗
