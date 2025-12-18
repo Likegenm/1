@@ -1735,6 +1735,154 @@ local AnimationsTab = Window:Tab({
     Icon = "activity",
     IconColor = Color3.fromHex("#FF00AA"),
 })
+-- Jerk Section
+local JerkSection = AnimationsTab:Section({
+    Title = "Jerk"
+})
+
+JerkSection:Button({
+    Title = "Jerk",
+    Desc = "Load Universal Jerk Off",
+    Icon = "zap",
+    Color = Color3.fromHex("#FF5500"),
+    Justify = "Center",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Sakupenny/Universal-Jerk-Off/refs/heads/main/Main.lua"))()
+        WindUI:Notify({
+            Title = "Jerk",
+            Content = "Universal Jerk Off loaded!",
+            Icon = "check"
+        })
+    end
+})
+
+JerkSection:Space()
+
+-- Follow Player Section
+local FollowSection = AnimationsTab:Section({
+    Title = "Follow Player"
+})
+
+local followTargetName = ""
+local followTargetInfo = nil
+local followEnabled = false
+local followThread = nil
+
+FollowSection:Input({
+    Title = "Player Name",
+    Desc = "Enter player username to follow",
+    Callback = function(value)
+        followTargetName = value
+        
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Name:lower() == value:lower() then
+                followTargetInfo = player
+                break
+            end
+        end
+        
+        if followTargetInfo then
+            WindUI:Notify({
+                Title = "Follow",
+                Content = "Target: " .. followTargetInfo.Name,
+                Icon = "user"
+            })
+        else
+            WindUI:Notify({
+                Title = "Follow",
+                Content = "Player not found!",
+                Icon = "x"
+            })
+            followTargetInfo = nil
+        end
+    end
+})
+
+FollowSection:Toggle({
+    Title = "Follow Player",
+    Desc = "Tween behind target player at torso height",
+    Icon = "users",
+    Callback = function(state)
+        followEnabled = state
+        
+        if followThread then
+            followThread = nil
+        end
+        
+        if state then
+            if not followTargetInfo then
+                WindUI:Notify({
+                    Title = "Follow",
+                    Content = "Please select a player first!",
+                    Icon = "x"
+                })
+                followEnabled = false
+                return
+            end
+            
+            followThread = task.spawn(function()
+                local player = game.Players.LocalPlayer
+                local TweenService = game:GetService("TweenService")
+                
+                while followEnabled do
+                    if not game.Players:FindFirstChild(followTargetInfo.Name) then
+                        WindUI:Notify({
+                            Title = "Follow",
+                            Content = "Target player left the game!",
+                            Icon = "x"
+                        })
+                        followEnabled = false
+                        break
+                    end
+                    
+                    local targetChar = followTargetInfo.Character
+                    local myChar = player.Character
+                    
+                    if targetChar and myChar then
+                        local torso = targetChar:FindFirstChild("Torso") or targetChar:FindFirstChild("UpperTorso")
+                        local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+                        
+                        if torso and myHRP then
+                            local targetPos = torso.Position
+                            local direction = torso.CFrame.LookVector
+                            local behindPos = targetPos - (direction * 20) + Vector3.new(0, 3, 0)
+                            
+                            local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Linear)
+                            local tween = TweenService:Create(myHRP, tweenInfo, {CFrame = CFrame.new(behindPos)})
+                            tween:Play()
+                            tween.Completed:Wait()
+                        end
+                    end
+                    
+                    task.wait(0.1)
+                end
+            end)
+        end
+    end
+})
+
+FollowSection:Space()
+
+-- TSB Animations Section
+local TSBSection = AnimationsTab:Section({
+    Title = "TSB Animations"
+})
+
+TSBSection:Button({
+    Title = "Animations",
+    Desc = "Load Strong Guest Animations",
+    Icon = "play",
+    Color = Color3.fromHex("#AA00FF"),
+    Justify = "Center",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/Mautiku/ehh/main/strong%20guest.lua.txt'))()
+        WindUI:Notify({
+            Title = "Animations",
+            Content = "Strong Guest Animations loaded!",
+            Icon = "check"
+        })
+    end
+})
 
 local BoxSection = VisualTab:Section({
     Title = "Box"
