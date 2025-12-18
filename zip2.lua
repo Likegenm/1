@@ -32,15 +32,13 @@ local function checkExecutor()
         if check then
             Library:Notify({
                 Title = "Cheat Engine",
-                Description = "Ur executor is 90>" name, " UNC"
+                Description = "Ur executor is 90>" name,
                 Time = 5
             })
             return
         end
     end
 end
-
-checkExecutor()
 
 local Window = Library:CreateWindow({
     Title = "PSCP",
