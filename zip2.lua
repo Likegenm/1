@@ -13,8 +13,8 @@ by likegenm
 
 repeat task.wait() until game:IsLoaded()
 
+local StarterGui = game:GetService("StarterGui")
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 local function checkExecutor()
     local executors = {
         ["Delta"] = is_sirhurt_closure,
@@ -30,15 +30,30 @@ local function checkExecutor()
     
     for name, check in pairs(executors) do
         if check then
-            Library:Notify({
-                Title = "Cheat Engine",
-                Description = "Ur executor is 90>" name,
-                Time = 5
-            })
-            return
+           StarterGui:SetCore("SendNotification", {
+    Title = "Cheat Engine",
+    Text = "Ur executor 90>ur executor",
+    Icon = nil,
+    Duration = 5,
+    Button1 = "OK",
+    Callback = function()
+StarterGui:Destroy()
+    end
+})
         end
     end
 end
+
+--[[
+██╗     ██╗██╗██╗  ██╗███████╗ ██████╗ ███████╗███╗   ██╗███╗   ███╗
+██║     ██║██║██║ ██╔╝██╔════╝██╔════╝ ██╔════╝████╗  ██║████╗ ████║
+██║     ██║██║█████╔╝ █████╗  ██║  ███╗█████╗  ██╔██╗ ██║██╔████╔██║
+██║     ██║██║██╔═██╗ ██╔══╝  ██║   ██║██╔══╝  ██║╚██╗██║██║╚██╔╝██║
+███████╗██║██║██║  ██╗███████╗╚██████╔╝███████╗██║ ╚████║██║ ╚═╝ ██║
+╚══════╝╚═╝╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚═╝     ╚═╝
+]]
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
     Title = "PSCP",
@@ -55,5 +70,3 @@ local MainTab = Window:AddTab("Main", "home")
 
 local LeftGroupbox = MainTab:AddLeftGroupbox("LocalPlayer")
 local RightGroupbox = MainTab:AddRightGroupbox("Players")
-
-local 
