@@ -11,10 +11,6 @@ Likegenm scripts (LS) Project scp 2.0
 by likegenm
 ]]
 
-repeat task.wait() until game:IsLoaded()
-
-local StarterGui = game:GetService("StarterGui")
-
 local blacklistedExecutors = {
     "Fluxus",
     "Delta", 
