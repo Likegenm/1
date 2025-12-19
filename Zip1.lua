@@ -2951,3 +2951,107 @@ TeleportSection:Toggle({
         end
     end
 })
+
+local AutoClickerSection = FightTab:Section({
+    Title = "AutoClicker"
+})
+
+local clickerDelay = 0.2
+local clickerSpamEnabled = false
+local clickerAutoM1Enabled = false
+local clickerSpamThread = nil
+local clickerAutoM1Thread = nil
+
+AutoClickerSection:Slider({
+    Title = "Delay",
+    Desc = "Click delay in seconds",
+    Step = 0.1,
+    Value = {
+        Min = 0.1,
+        Max = 3,
+        Default = 0.2,
+    },
+    Callback = function(value)
+        clickerDelay = value
+    end
+})
+
+AutoClickerSection:Toggle({
+    Title = "Spammer",
+    Desc = "Spam left click when holding LMB",
+    Icon = "mouse-pointer",
+    Callback = function(state)
+        clickerSpamEnabled = state
+        
+        if clickerSpamThread then
+            clickerSpamThread = nil
+        end
+        
+        if state then
+            clickerSpamThread = task.spawn(function()
+                local UserInputService = game:GetService("UserInputService")
+                local mouse = game.Players.LocalPlayer:GetMouse()
+                
+                while clickerSpamEnabled do
+                    if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                        mouse.Button1Down:Fire()
+                        mouse.Button1Up:Fire()
+                        task.wait(clickerDelay)
+                    else
+                        task.wait(0.01)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+AutoClickerSection:Toggle({
+    Title = "Auto M1",
+    Desc = "Auto click when player is within 5 studs",
+    Icon = "target",
+    Callback = function(state)
+        clickerAutoM1Enabled = state
+        
+        if clickerAutoM1Thread then
+            clickerAutoM1Thread = nil
+        end
+        
+        if state then
+            clickerAutoM1Thread = task.spawn(function()
+                local player = game.Players.LocalPlayer
+                local mouse = player:GetMouse()
+                
+                while clickerAutoM1Enabled do
+                    local character = player.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local myPos = character.HumanoidRootPart.Position
+                        local playerFound = false
+                        
+                        for _, p in pairs(game.Players:GetPlayers()) do
+                            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                                local targetPos = p.Character.HumanoidRootPart.Position
+                                local distance = (myPos - targetPos).Magnitude
+                                
+                                if distance <= 5 then
+                                    playerFound = true
+                                    mouse.Button1Down:Fire()
+                                    mouse.Button1Up:Fire()
+                                    break
+                                end
+                            end
+                        end
+                        
+                        if playerFound then
+                            task.wait(1)
+                        else
+                            task.wait(0.1)
+                        end
+                    else
+                        task.wait(0.1)
+                    end
+                end
+            end)
+        end
+    end
+})
