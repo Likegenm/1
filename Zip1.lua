@@ -1070,23 +1070,6 @@ local function getClosestPlayer()
     return closest
 end
 
-local function teleportBehindPlayer(targetPlayer)
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    local targetChar = targetPlayer.Character
-    
-    if character and character:FindFirstChild("HumanoidRootPart") and 
-       targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
-       
-        local targetCFrame = targetChar.HumanoidRootPart.CFrame
-        local behindOffset = targetCFrame.LookVector * -5
-        
-        character.HumanoidRootPart.CFrame = CFrame.new(
-            targetChar.HumanoidRootPart.Position + behindOffset + Vector3.new(0, 3, 0)
-        )
-    end
-end
-
 KillauraSection:Toggle({
     Title = "ON",
     Callback = function(state)
@@ -1117,7 +1100,15 @@ KillauraSection:Toggle({
                     if anyKeyPressed then
                         local closestPlayer = getClosestPlayer()
                         if closestPlayer then
-                            teleportBehindPlayer(closestPlayer)
+                            local character = game.Players.LocalPlayer.Character
+                            if character and character:FindFirstChild("HumanoidRootPart") then
+                                local root = character.HumanoidRootPart
+                                local targetRoot = closestPlayer.Character.HumanoidRootPart
+                                
+                                root.CFrame = targetRoot.CFrame
+                                task.wait(0.1)
+                                root.CFrame = CFrame.new(root.Position)
+                            end
                         end
                     end
                     
