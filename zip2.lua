@@ -13,6 +13,38 @@ by likegenm
 
 repeat task.wait() until game:IsLoaded()
 
+local StarterGui = game:GetService("StarterGui")
+
+local blacklistedExecutors = {
+    "Fluxus",
+    "Delta", 
+    "Krnl",
+    "Synapse X"
+}
+
+local function checkExecutor()
+local Players = game:GetService("Players")
+
+if fluxus then
+    Players.LocalPlayer:Kick("Fluxus is blacklisted")
+    return
+end
+
+if is_sirhurt_closure then
+    Players.LocalPlayer:Kick("Delta is blacklisted")
+    return
+end
+
+if KRNL_LOADED then
+    Players.LocalPlayer:Kick("Krnl is blacklisted")
+    return
+end
+
+if is_synapse_function then
+    Players.LocalPlayer:Kick("Synapse X is blacklisted")
+    return
+end
+
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
