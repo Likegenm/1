@@ -11,36 +11,6 @@ Likegenm scripts (LS) Project scp 2.0
 by likegenm
 ]]
 
-local blacklistedExecutors = {
-    "Fluxus",
-    "Delta", 
-    "Krnl",
-    "Synapse X"
-}
-
-local function checkExecutor()
-local Players = game:GetService("Players")
-
-if fluxus then
-    Players.LocalPlayer:Kick("Fluxus is blacklisted")
-    return
-end
-
-if is_sirhurt_closure then
-    Players.LocalPlayer:Kick("Delta is blacklisted")
-    return
-end
-
-if KRNL_LOADED then
-    Players.LocalPlayer:Kick("Krnl is blacklisted")
-    return
-end
-
-if is_synapse_function then
-    Players.LocalPlayer:Kick("Synapse X is blacklisted")
-    return
-end
-
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
