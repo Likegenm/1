@@ -194,3 +194,69 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+local doubleJumpEnabled = false
+local maxJumps = 2
+local currentJumps = 0
+local jumpPower = 50
+
+local function toggleDoubleJump()
+    doubleJumpEnabled = not doubleJumpEnabled
+    currentJumps = 0
+    
+    if doubleJumpEnabled then
+        print("Двойной прыжок включен")
+    else
+        print("Двойной прыжок выключен")
+    end
+end
+
+local function performJump()
+    local character = player.Character
+    if not character then return end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    if currentJumps < maxJumps then
+        currentJumps = currentJumps + 1
+        rootPart.Velocity = Vector3.new(
+            rootPart.Velocity.X,
+            jumpPower,
+            rootPart.Velocity.Z
+        )
+        print("Прыжок", currentJumps, "/", maxJumps)
+    end
+end
+
+-- Сброс счетчика прыжков при касании земли
+RunService.Heartbeat:Connect(function()
+    if doubleJumpEnabled and player.Character then
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if humanoid and humanoid.FloorMaterial ~= Enum.Material.Air then
+            currentJumps = 0
+        end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Space and doubleJumpEnabled then
+        performJump()
+    end
+end)
+
+-- Включить по клавише
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.H then
+        toggleDoubleJump()
+    end
+end)
+
+print("Нажми H для включения двойного прыжка")
+print("Прыгай Space два раза в воздухе")
