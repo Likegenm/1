@@ -308,22 +308,25 @@ game:GetService("UserInputService").InputBegan:Connect(function(input)
     end
 end)
 
+-- Orbit Section
 local OrbitSection = PlayerTab:Section({
     Title = "Orbit"
 })
 
 local orbitSpeed = 50
 local orbitDistance = 10
+local orbitTargetPlayer = nil
 local orbitEnabled = false
 local orbitThread = nil
 local savedOrbitPosition = nil
 
 OrbitSection:Slider({
     Title = "Orbit Speed",
+    Desc = "Rotation speed multiplier",
     Step = 1,
     Value = {
         Min = 1,
-        Max = 100,
+        Max = 200,
         Default = 50,
     },
     Callback = function(value)
@@ -333,6 +336,7 @@ OrbitSection:Slider({
 
 OrbitSection:Slider({
     Title = "Orbit Distance",
+    Desc = "Distance from target",
     Step = 1,
     Value = {
         Min = 1,
@@ -360,7 +364,7 @@ local function getClosestPlayer()
             local dist = (myPos - p.Character.HumanoidRootPart.Position).Magnitude
             if dist < closestDist then
                 closestDist = dist
-                closest = p.Character.HumanoidRootPart.Position
+                closest = p
             end
         end
     end
@@ -383,6 +387,7 @@ local function toggleOrbit()
             savedOrbitPosition = nil
         end
         
+        orbitTargetPlayer = nil
         WindUI:Notify({
             Title = "Orbit",
             Content = "Orbit disabled!",
@@ -393,31 +398,60 @@ local function toggleOrbit()
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
             savedOrbitPosition = character.HumanoidRootPart.Position
+            
+            orbitTargetPlayer = getClosestPlayer()
+            if not orbitTargetPlayer then
+                WindUI:Notify({
+                    Title = "Orbit",
+                    Content = "No nearby players found!",
+                    Icon = "x"
+                })
+                return
+            end
+            
             orbitEnabled = true
+            WindUI:Notify({
+                Title = "Orbit",
+                Content = "Orbiting around " .. orbitTargetPlayer.Name .. "!",
+                Icon = "orbit"
+            })
             
             orbitThread = task.spawn(function()
                 local RunService = game:GetService("RunService")
-                local time = 0
+                local angle = 0
                 
                 while orbitEnabled do
-                    local character = player.Character
-                    if not character or not character:FindFirstChild("HumanoidRootPart") then
+                    if not game.Players:FindFirstChild(orbitTargetPlayer.Name) then
+                        WindUI:Notify({
+                            Title = "Orbit",
+                            Content = "Target player left the game!",
+                            Icon = "x"
+                        })
+                        orbitEnabled = false
                         break
                     end
                     
-                    local targetPos = getClosestPlayer()
-                    if not targetPos then
+                    local myCharacter = player.Character
+                    local targetCharacter = orbitTargetPlayer.Character
+                    
+                    if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then
+                        break
+                    end
+                    
+                    if not targetCharacter or not targetCharacter:FindFirstChild("HumanoidRootPart") then
                         task.wait(0.1)
                         continue
                     end
                     
-                    local hrp = character.HumanoidRootPart
-                    time = time + RunService.Heartbeat:Wait() * (orbitSpeed / 100)
+                    local myHRP = myCharacter.HumanoidRootPart
+                    local targetPos = targetCharacter.HumanoidRootPart.Position
                     
-                    local x = math.cos(time) * orbitDistance
-                    local z = math.sin(time) * orbitDistance
+                    angle = angle + (RunService.Heartbeat:Wait() * (orbitSpeed / 10))
                     
-                    hrp.CFrame = CFrame.new(
+                    local x = math.cos(angle) * orbitDistance
+                    local z = math.sin(angle) * orbitDistance
+                    
+                    myHRP.CFrame = CFrame.new(
                         targetPos.X + x,
                         targetPos.Y + 5,
                         targetPos.Z + z
@@ -431,13 +465,9 @@ local function toggleOrbit()
                     end
                     savedOrbitPosition = nil
                 end
+                
+                orbitTargetPlayer = nil
             end)
-            
-            WindUI:Notify({
-                Title = "Orbit",
-                Content = "Orbit enabled!",
-                Icon = "check"
-            })
         else
             WindUI:Notify({
                 Title = "Orbit",
