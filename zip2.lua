@@ -137,3 +137,60 @@ local MainTab = Window:AddTab("Main", "home")
 
 local LeftGroupbox = MainTab:AddLeftGroupbox("LocalPlayer")
 local RightGroupbox = MainTab:AddRightGroupbox("Players")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local teleportEnabled = false
+local teleportSpeed = 0.02
+
+local SpeedToggle = LeftGroupbox:AddToggle("SpeedBoost", {
+    Text = "SpeedBoost (Teleport)",
+    Default = false,
+    Tooltip = "Teleport in movement direction",
+    Callback = function(Value)
+        teleportEnabled = Value
+        if Value then
+            Library:Notify({
+                Title = "SpeedBoost",
+                Description = "Teleport movement enabled",
+                Time = 3
+            })
+        end
+    end
+})
+
+SpeedToggle:OnChanged(function(Value)
+    teleportEnabled = Value
+end)
+
+local SpeedSlider = LeftGroupbox:AddSlider("SpeedValue", {
+    Text = "Teleport Speed",
+    Default = 0.02,
+    Min = 0.01,
+    Max = 1.0,
+    Rounding = 3,
+    Suffix = " studs",
+    Callback = function(Value)
+        teleportSpeed = Value
+    end
+})
+
+RunService.Heartbeat:Connect(function()
+    if teleportEnabled and player.Character then
+        local character = player.Character
+        local humanoid = character:FindFirstChild("Humanoid")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and rootPart then
+            local moveDirection = humanoid.MoveDirection
+            
+            if moveDirection.Magnitude > 0 then
+                local direction = moveDirection.Unit
+                local newPosition = rootPart.Position + (direction * teleportSpeed)
+                rootPart.CFrame = CFrame.new(newPosition)
+            end
+        end
+    end
+end)
