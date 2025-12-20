@@ -3051,6 +3051,7 @@ AutoClickerSection:Toggle({
             clickerAutoM1Thread = task.spawn(function()
                 local player = game.Players.LocalPlayer
                 local mouse = player:GetMouse()
+                local VirtualInputManager = game:GetService("VirtualInputManager")
                 
                 while clickerAutoM1Enabled do
                     local character = player.Character
@@ -3065,8 +3066,8 @@ AutoClickerSection:Toggle({
                                 
                                 if distance <= 5 then
                                     playerFound = true
-                                    mouse.Button1Down:Fire()
-                                    mouse.Button1Up:Fire()
+                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
                                     break
                                 end
                             end
@@ -3085,3 +3086,4 @@ AutoClickerSection:Toggle({
         end
     end
 })
+
