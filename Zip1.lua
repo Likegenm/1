@@ -960,6 +960,93 @@ PlatformSection:Button({
     end
 })
 
+local OtherSection = MicsTab:Section({
+    Title = "Other"
+})
+
+OtherSection:Button({
+    Title = "FixCam",
+    Desc = "Reset camera to default settings",
+    Icon = "camera",
+    Color = Color3.fromHex("#55AAFF"),
+    Justify = "Center",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local camera = workspace.CurrentCamera
+        
+        camera.CameraType = Enum.CameraType.Custom
+        camera.FieldOfView = 70
+        
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                camera.CameraSubject = humanoid
+            end
+        end
+        
+        WindUI:Notify({
+            Title = "FixCam",
+            Content = "Camera reset to default!",
+            Icon = "check"
+        })
+    end
+})
+
+OtherSection:Space()
+
+OtherSection:Button({
+    Title = "Dex",
+    Desc = "Load Dex Explorer",
+    Icon = "folder-open",
+    Color = Color3.fromHex("#FFAA00"),
+    Justify = "Center",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
+        WindUI:Notify({
+            Title = "Dex",
+            Content = "Dex Explorer loaded!",
+            Icon = "check"
+        })
+    end
+})
+
+OtherSection:Space()
+
+OtherSection:Button({
+    Title = "Inf Yield",
+    Desc = "Load Infinite Yield",
+    Icon = "zap",
+    Color = Color3.fromHex("#00FFAA"),
+    Justify = "Center",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+        WindUI:Notify({
+            Title = "Inf Yield",
+            Content = "Infinite Yield loaded!",
+            Icon = "check"
+        })
+    end
+})
+
+OtherSection:Space()
+
+OtherSection:Button({
+    Title = "Dex v2",
+    Desc = "Load Dex Explorer v2",
+    Icon = "folder",
+    Color = Color3.fromHex("#AA00FF"),
+    Justify = "Center",
+    Callback = function()
+        loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/Dex%20Explorer.txt"))()
+        WindUI:Notify({
+            Title = "Dex v2",
+            Content = "Dex Explorer v2 loaded!",
+            Icon = "check"
+        })
+    end
+})
+
 local FightTab = Window:Tab({
     Title = "Fight",
     Desc = "Combat Features",
@@ -3086,32 +3173,3 @@ AutoClickerSection:Toggle({
         end
     end
 })
-
-OtherSection:Button({
-    Title = "FixCam",
-    Desc = "Reset camera to default settings",
-    Icon = "camera",
-    Color = Color3.fromHex("#55AAFF"),
-    Justify = "Center",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local camera = workspace.CurrentCamera
-        
-        camera.CameraType = Enum.CameraType.Custom
-        camera.FieldOfView = 70
-        
-        local character = player.Character
-        if character then
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then
-                camera.CameraSubject = humanoid
-            end
-        end
-        
-        WindUI:Notify({
-            Title = "FixCam",
-            Content = "Camera reset to default!",
-            Icon = "check"
-        })
-    end
-}
