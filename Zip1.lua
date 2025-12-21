@@ -624,7 +624,7 @@ local function teleportWithTween(hrp, direction, distance)
         targetCFrame = currentCFrame * CFrame.new(-distance, 0, 0)
     end
     
-    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
     tween:Play()
 end
