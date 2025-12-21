@@ -581,6 +581,11 @@ ExploitsSection:Toggle({
 
 ExploitsSection:Space()
 
+PlayerExploitsSection:Toggle({
+    Title = "Inf Side Dash",
+    Desc = "Q+D dash right, Q+A dash left with animations",
+    Icon = "move-horizontal",
+    Callback = function(state)
 local infSideDashEnabled = false
 local infSideDashConnection1 = nil
 local infSideDashConnection2 = nil
