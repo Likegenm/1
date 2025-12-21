@@ -557,7 +557,7 @@ local alwaysBlockEnabled = false
 local alwaysBlockThread
 
 ExploitsSection:Toggle({
-    Title = "Always Block",
+    Title = "Anti-Ragdoll",
     Icon = "shield",
     Callback = function(state)
         alwaysBlockEnabled = state
@@ -570,8 +570,8 @@ ExploitsSection:Toggle({
                 while alwaysBlockEnabled and task.wait(0.01) do
                     local character = player.Character
                     if character then
-                        local NB = character:FindFirstChild("NoBlock")
-                        if NB then NB:Destroy() end
+                        local AR = character:FindFirstChild("Ragdoll")
+                        if AR then AR:Destroy() end
                     end
                 end
             end)
@@ -609,73 +609,113 @@ ExploitsSection:Toggle({
 
 ExploitsSection:Space()
 
-local lagHackEnabled = false
-local lagHackThread
+local infSideDashEnabled = false
+local infSideDashConnection1 = nil
+local infSideDashConnection2 = nil
 
-ExploitsSection:Toggle({
-    Title = "Lag Hack",
-    Icon = "wifi-off",
+local function teleportWithTween(hrp, direction, distance)
+    local TweenService = game:GetService("TweenService")
+    local currentCFrame = hrp.CFrame
+    
+    local targetCFrame
+    if direction == "Right" then
+        targetCFrame = currentCFrame * CFrame.new(distance, 0, 0)
+    elseif direction == "Left" then
+        targetCFrame = currentCFrame * CFrame.new(-distance, 0, 0)
+    end
+    
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+end
+
+local function playAnimation(player, animationId, soundId)
+    local character = player.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. animationId
+    local animationTrack = humanoid:LoadAnimation(anim)
+    animationTrack:Play()
+    animationTrack:AdjustSpeed(1)
+    
+    if soundId then
+        local music = Instance.new("Sound")
+        music.Volume = 1
+        music.PlaybackSpeed = 1
+        music.Looped = false
+        music.SoundId = "rbxassetid://" .. soundId
+        music:Play()
+        music.Parent = game:GetService("ReplicatedStorage")
+    end
+end
+
+PlayerExploitsSection:Toggle({
+    Title = "Inf Side Dash",
+    Desc = "Q+D dash right, Q+A dash left with animations",
+    Icon = "move-horizontal",
     Callback = function(state)
-        lagHackEnabled = state
-        if lagHackThread then
-            lagHackThread = nil
+        infSideDashEnabled = state
+        
+        if infSideDashConnection1 then
+            infSideDashConnection1:Disconnect()
+            infSideDashConnection1 = nil
         end
+        
+        if infSideDashConnection2 then
+            infSideDashConnection2:Disconnect()
+            infSideDashConnection2 = nil
+        end
+        
         if state then
-            lagHackThread = task.spawn(function()
-                local player = game.Players.LocalPlayer
+            local player = game.Players.LocalPlayer
+            local UserInputService = game:GetService("UserInputService")
+            
+            local isQPressed = false
+            local isDPressed = false
+            local isAPressed = false
+            
+            infSideDashConnection1 = UserInputService.InputBegan:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Q then
+                    isQPressed = true
+                elseif input.KeyCode == Enum.KeyCode.D then
+                    isDPressed = true
+                elseif input.KeyCode == Enum.KeyCode.A then
+                    isAPressed = true
+                end
                 
-                while lagHackEnabled do
-                    local waitTime = math.random(13, 75)
-                    task.wait(waitTime)
-                    
-                    if not lagHackEnabled then break end
-                    
-                    local effects = {"AntiFreeze", "AntiSlow", "AntiDebris"}
-                    local randomEffect = effects[math.random(1, 3)]
-                    
-                    local effectDuration = math.random(12, 24)
-                    local effectStart = tick()
-                    
-                    while tick() - effectStart < effectDuration and lagHackEnabled do
-                        local character = player.Character
-                        if character then
-                            if randomEffect == "AntiFreeze" then
-                                local freeze = character:FindFirstChild("Freeze")
-                                if freeze then freeze:Destroy() end
-                            elseif randomEffect == "AntiSlow" then
-                                local slowed = character:FindFirstChild("Slowed")
-                                if slowed then slowed:Destroy() end
-                            elseif randomEffect == "AntiDebris" then
-                                local AD = character:FindFirstChild("Small Debris")
-                                if AD then AD:Destroy() end
-                            end
-                        end
-                        task.wait(0.01)
-                    end
-                    
-                    if not lagHackEnabled then break end
-                    
+                if isQPressed and isDPressed then
                     local character = player.Character
                     if character and character:FindFirstChild("HumanoidRootPart") then
-                        local savedPosition = character.HumanoidRootPart.Position
-                        local teleportCount = math.random(20, 50)
-                        
-                        for i = 1, teleportCount do
-                            if not lagHackEnabled then break end
-                            task.wait(math.random(1, 3))
-                            
-                            if character and character:FindFirstChild("HumanoidRootPart") then
-                                character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
-                            end
-                        end
+                        local hrp = character.HumanoidRootPart
+                        teleportWithTween(hrp, "Right", 25)
+                        playAnimation(player, "10480793962", "10481117326")
                     end
+                elseif isQPressed and isAPressed then
+                    local character = player.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local hrp = character.HumanoidRootPart
+                        teleportWithTween(hrp, "Left", 25)
+                        playAnimation(player, "10480796021", "10481117326")
+                    end
+                end
+            end)
+            
+            infSideDashConnection2 = UserInputService.InputEnded:Connect(function(input)
+                if input.KeyCode == Enum.KeyCode.Q then
+                    isQPressed = false
+                elseif input.KeyCode == Enum.KeyCode.D then
+                    isDPressed = false
+                elseif input.KeyCode == Enum.KeyCode.A then
+                    isAPressed = false
                 end
             end)
         end
     end
 })
-
-ExploitsSection:Space()
 
 local TeleportPlusSection = PlayerTab:Section({
     Title = "Teleport+"
