@@ -550,34 +550,6 @@ ExploitsSection:Toggle({
         end
     end
 })
-
-ExploitsSection:Space()
-
-local RagdollEnabled = false
-local RagdollThread
-
-ExploitsSection:Toggle({
-    Title = "Anti-Ragdoll",
-    Icon = "shield",
-    Callback = function(state)
-        RagdollEnabled = state
-        if RagdollThread then
-            RagdollThread = nil
-        end
-        if state then
-            RagdollThread = task.spawn(function()
-                local player = game.Players.LocalPlayer
-                while RagdollEnabled and task.wait(0.01) do
-                    local character = player.Character
-                    if character then
-                        local AR = character:FindFirstChild("Ragdoll")
-                        if AR then AR:Destroy() end
-                    end
-                end
-            end)
-        end
-    end
-})
     
 local TeleportPlusSection = PlayerTab:Section({
     Title = "Teleport+"
