@@ -553,21 +553,21 @@ ExploitsSection:Toggle({
 
 ExploitsSection:Space()
 
-local alwaysBlockEnabled = false
-local alwaysBlockThread
+local RagdollEnabled = false
+local RagdollThread
 
 ExploitsSection:Toggle({
     Title = "Anti-Ragdoll",
     Icon = "shield",
     Callback = function(state)
-        alwaysBlockEnabled = state
-        if alwaysBlockThread then
-            alwaysBlockThread = nil
+        RagdollEnabled = state
+        if RagdollThread then
+            RagdollThread = nil
         end
         if state then
-            alwaysBlockThread = task.spawn(function()
+            RagdollThread = task.spawn(function()
                 local player = game.Players.LocalPlayer
-                while alwaysBlockEnabled and task.wait(0.01) do
+                while RagdollEnabled and task.wait(0.01) do
                     local character = player.Character
                     if character then
                         local AR = character:FindFirstChild("Ragdoll")
