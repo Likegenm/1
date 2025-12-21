@@ -581,34 +581,6 @@ ExploitsSection:Toggle({
 
 ExploitsSection:Space()
 
-local antiDebrisEnabled = false
-local antiDebrisThread
-
-ExploitsSection:Toggle({
-    Title = "Anti-Debris",
-    Icon = "trash",
-    Callback = function(state)
-        antiDebrisEnabled = state
-        if antiDebrisThread then
-            antiDebrisThread = nil
-        end
-        if state then
-            antiDebrisThread = task.spawn(function()
-                local player = game.Players.LocalPlayer
-                while antiDebrisEnabled and task.wait(0.01) do
-                    local character = player.Character
-                    if character then
-                        local AD = character:FindFirstChild("Small Debris")
-                        if AD then AD:Destroy() end
-                    end
-                end
-            end)
-        end
-    end
-})
-
-ExploitsSection:Space()
-
 local infSideDashEnabled = false
 local infSideDashConnection1 = nil
 local infSideDashConnection2 = nil
