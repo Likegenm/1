@@ -262,3 +262,62 @@ UserInputService.InputBegan:Connect(function(input)
         end
     end
 end)
+
+local TeleportGroupbox = MainTab:AddRightGroupbox("Teleport")
+
+local teleportX = 10
+local teleportY = 10
+local teleportZ = 10
+
+local XSlider = TeleportGroupbox:AddSlider("TeleportX", {
+    Text = "X Position",
+    Default = 10,
+    Min = 1,
+    Max = 20,
+    Rounding = 0,
+    Callback = function(Value)
+        teleportX = Value
+    end
+})
+
+local YSlider = TeleportGroupbox:AddSlider("TeleportY", {
+    Text = "Y Position",
+    Default = 10,
+    Min = 1,
+    Max = 20,
+    Rounding = 0,
+    Callback = function(Value)
+        teleportY = Value
+    end
+})
+
+local ZSlider = TeleportGroupbox:AddSlider("TeleportZ", {
+    Text = "Z Position",
+    Default = 10,
+    Min = 1,
+    Max = 20,
+    Rounding = 0,
+    Callback = function(Value)
+        teleportZ = Value
+    end
+})
+
+TeleportGroupbox:AddButton({
+    Text = "Teleport to Position",
+    Func = function()
+        local character = player.Character
+        if not character then return end
+        
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if not rootPart then return end
+        
+        local targetPosition = Vector3.new(teleportX, teleportY, teleportZ)
+        rootPart.CFrame = CFrame.new(targetPosition)
+        
+        Library:Notify({
+            Title = "Teleported",
+            Description = string.format("Position: (%d, %d, %d)", teleportX, teleportY, teleportZ),
+            Time = 3
+        })
+    end
+})
