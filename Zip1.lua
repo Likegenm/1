@@ -1,5 +1,4 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/DownoloadLiblary.lua"))()
-
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Test/refs/heads/main/Irina.lua"))()
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
@@ -24,14 +23,14 @@ local Window = WindUI:CreateWindow({
             Color3.fromHex("#800080"), 
             Color3.fromHex("#0000FF")
         )
-    },
+    }
+})
 
-        game:GetService("UserInputService").InputBegan:Connect(function(input)
+game:GetService("UserInputService").InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.E then
         Window:Toggle()
     end
 end)
-})
 
 local PlayerTab = Window:Tab({
     Title = "Player",
@@ -296,19 +295,6 @@ MouseTeleportSection:Toggle({
     end
 })
 
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.T then
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local mouse = player:GetMouse()
-            local hit = mouse.Hit
-            character.HumanoidRootPart.CFrame = CFrame.new(hit.Position + Vector3.new(0, 3, 0))
-        end
-    end
-end)
-
--- Orbit Section
 local OrbitSection = PlayerTab:Section({
     Title = "Orbit"
 })
@@ -550,7 +536,7 @@ ExploitsSection:Toggle({
         end
     end
 })
-    
+
 local TeleportPlusSection = PlayerTab:Section({
     Title = "Teleport+"
 })
@@ -615,18 +601,6 @@ TeleportPlusSection:Button({
     end
 })
 
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.T then
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local hrp = character.HumanoidRootPart
-            local offset = Vector3.new(teleportX, teleportY, teleportZ)
-            hrp.CFrame = CFrame.new(hrp.Position + offset)
-        end
-    end
-end)
-
 TeleportPlusSection:Space()
 
 TeleportPlusSection:Button({
@@ -661,7 +635,7 @@ local PlatformSection = MicsTab:Section({
 local platformEnabled = false
 local rainbowPlatform = false
 local platformColor = Color3.fromHex("#FFFFFF")
-local platformSize = 10
+local platformSize = 10000
 local platformTransparency = 0
 local platformType = "Normal"
 local platformPart = nil
@@ -1037,7 +1011,7 @@ local function isKeyPressed(key)
     return false
 end
 
-local function getClosestPlayer()
+local function getClosestPlayerKillaura()
     local player = game.Players.LocalPlayer
     local character = player.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then
@@ -1089,7 +1063,7 @@ KillauraSection:Toggle({
                     end
                     
                     if anyKeyPressed then
-                        local closestPlayer = getClosestPlayer()
+                        local closestPlayer = getClosestPlayerKillaura()
                         if closestPlayer then
                             local character = game.Players.LocalPlayer.Character
                             if character and character:FindFirstChild("HumanoidRootPart") then
@@ -1459,7 +1433,6 @@ SkillBringSection:Toggle({
     end
 })
 
-
 local VisualTab = Window:Tab({
     Title = "Visual",
     Desc = "Visual Modifications",
@@ -1702,12 +1675,12 @@ local TeleportTab = Window:Tab({
     Icon = "map-pin",
     IconColor = Color3.fromHex("#AA00FF"),
 })
--- Save Position Section
+
 local SaveSection = TeleportTab:Section({
     Title = "Save Position"
 })
 
-local savedPosition = nil
+local savedPositionTP = nil
 
 SaveSection:Button({
     Title = "Save Current Position",
@@ -1719,11 +1692,11 @@ SaveSection:Button({
         local player = game.Players.LocalPlayer
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
-            savedPosition = character.HumanoidRootPart.Position
+            savedPositionTP = character.HumanoidRootPart.Position
             WindUI:Notify({
                 Title = "Position Saved",
                 Content = string.format("Saved at: X: %.2f, Y: %.2f, Z: %.2f", 
-                    savedPosition.X, savedPosition.Y, savedPosition.Z),
+                    savedPositionTP.X, savedPositionTP.Y, savedPositionTP.Z),
                 Icon = "check"
             })
         end
@@ -1737,11 +1710,11 @@ SaveSection:Button({
     Color = Color3.fromHex("#55FF55"),
     Justify = "Center",
     Callback = function()
-        if savedPosition then
+        if savedPositionTP then
             local player = game.Players.LocalPlayer
             local character = player.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
-                character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
+                character.HumanoidRootPart.CFrame = CFrame.new(savedPositionTP)
                 WindUI:Notify({
                     Title = "Teleport",
                     Content = "Teleported to saved position!",
@@ -1760,7 +1733,6 @@ SaveSection:Button({
 
 SaveSection:Space()
 
--- Locations Section
 local LocationsSection = TeleportTab:Section({
     Title = "Locations"
 })
@@ -1830,7 +1802,6 @@ local AnimationsTab = Window:Tab({
     IconColor = Color3.fromHex("#FF00AA"),
 })
 
--- Jerk Section
 local JerkSection = AnimationsTab:Section({
     Title = "Jerk"
 })
@@ -1853,7 +1824,6 @@ JerkSection:Button({
 
 JerkSection:Space()
 
--- Follow Player Section
 local FollowSection = AnimationsTab:Section({
     Title = "Follow Player"
 })
@@ -1985,7 +1955,6 @@ FollowSection:Toggle({
 
 FollowSection:Space()
 
--- TSB Animations Section
 local TSBSection = AnimationsTab:Section({
     Title = "TSB Animations"
 })
@@ -2104,7 +2073,6 @@ BoxSection:Toggle({
 
 BoxSection:Space()
 
--- Chams Section
 local ChamsSection = VisualTab:Section({
     Title = "Chams"
 })
@@ -2198,7 +2166,6 @@ ChamsSection:Toggle({
 
 ChamsSection:Space()
 
--- Fullbright Section
 local FullbrightSection = VisualTab:Section({
     Title = "Fullbright"
 })
@@ -2241,7 +2208,6 @@ FullbrightSection:Toggle({
 
 FullbrightSection:Space()
 
--- Ambient Section
 local AmbientSection = VisualTab:Section({
     Title = "Ambient"
 })
@@ -2335,9 +2301,8 @@ AmbientSection:Toggle({
             end
         end)
     end
-    })
+})
 
--- Detector Section
 local DetectorSection = VisualTab:Section({
     Title = "Detector"
 })
@@ -2373,62 +2338,6 @@ DetectorSection:Toggle({
             end
             originalCameraAnimations = {}
         end
-    end
-})
-
-local OtherSection = MicsTab:Section({
-    Title = "Other"
-})
-
-OtherSection:Button({
-    Title = "Dex",
-    Desc = "Load Dex Explorer",
-    Icon = "folder-open",
-    Color = Color3.fromHex("#FFAA00"),
-    Justify = "Center",
-    Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
-        WindUI:Notify({
-            Title = "Dex",
-            Content = "Dex Explorer loaded!",
-            Icon = "check"
-        })
-    end
-})
-
-OtherSection:Space()
-
-OtherSection:Button({
-    Title = "Inf Yield",
-    Desc = "Load Infinite Yield",
-    Icon = "zap",
-    Color = Color3.fromHex("#00FFAA"),
-    Justify = "Center",
-    Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-        WindUI:Notify({
-            Title = "Inf Yield",
-            Content = "Infinite Yield loaded!",
-            Icon = "check"
-        })
-    end
-})
-
-OtherSection:Space()
-
-OtherSection:Button({
-    Title = "Dex v2",
-    Desc = "Load Dex Explorer v2",
-    Icon = "folder",
-    Color = Color3.fromHex("#AA00FF"),
-    Justify = "Center",
-    Callback = function()
-        loadstring(game:HttpGet("https://cdn.wearedevs.net/scripts/Dex%20Explorer.txt"))()
-        WindUI:Notify({
-            Title = "Dex v2",
-            Content = "Dex Explorer v2 loaded!",
-            Icon = "check"
-        })
     end
 })
 
@@ -2532,8 +2441,14 @@ AimassistSection:Toggle({
     end
 })
 
+local TouchFlingSection = PlayerTab:Section({
+    Title = "Touch Fling"
+})
 
-AntiFlingSection:Toggle({
+local touchFlingEnabled = false
+local touchFlingThread = nil
+
+TouchFlingSection:Toggle({
     Title = "Touch Fling",
     Desc = "P key to toggle touch fling",
     Icon = "wind",
@@ -2609,7 +2524,6 @@ local ControlTab = Window:Tab({
     IconColor = Color3.fromHex("#FF8800"),
 })
 
--- Player Selection Section
 local PlayerSelectSection = ControlTab:Section({
     Title = "Player Selection"
 })
@@ -2632,25 +2546,6 @@ PlayerSelectSection:Input({
         if foundPlayer then
             targetPlayerInfo = foundPlayer
             
-            local starterGui = Instance.new("StarterGui")
-            starterGui.Name = "SelectedPlayerInfo"
-            starterGui.Parent = game.ReplicatedStorage
-            
-            local info = Instance.new("StringValue")
-            info.Name = "PlayerName"
-            info.Value = foundPlayer.Name
-            info.Parent = starterGui
-            
-            local displayName = Instance.new("StringValue")
-            displayName.Name = "DisplayName"
-            displayName.Value = foundPlayer.DisplayName
-            displayName.Parent = starterGui
-            
-            local userId = Instance.new("IntValue")
-            userId.Name = "UserId"
-            userId.Value = foundPlayer.UserId
-            userId.Parent = starterGui
-            
             WindUI:Notify({
                 Title = "Player Selected",
                 Content = foundPlayer.DisplayName .. " (@" .. foundPlayer.Name .. ")",
@@ -2668,7 +2563,6 @@ PlayerSelectSection:Input({
 
 PlayerSelectSection:Space()
 
--- Fling Section
 local FlingSection = ControlTab:Section({
     Title = "Fling"
 })
@@ -2828,7 +2722,6 @@ FlingSection:Toggle({
 
 FlingSection:Space()
 
--- View Section
 local ViewSection = ControlTab:Section({
     Title = "View"
 })
@@ -2952,7 +2845,6 @@ ViewSection:Toggle({
 
 ViewSection:Space()
 
--- Teleport Section
 local TeleportSection = ControlTab:Section({
     Title = "Teleport"
 })
@@ -3159,4 +3051,3 @@ AutoClickerSection:Toggle({
         end
     end
 })
-
