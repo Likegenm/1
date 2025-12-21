@@ -578,122 +578,7 @@ ExploitsSection:Toggle({
         end
     end
 })
-
-ExploitsSection:Space()
-
-PlayerExploitsSection:Toggle({
-    Title = "Inf Side Dash",
-    Desc = "Q+D dash right, Q+A dash left with animations",
-    Icon = "move-horizontal",
-    Callback = function(state)
-local infSideDashEnabled = false
-local infSideDashConnection1 = nil
-local infSideDashConnection2 = nil
-
-local function teleportWithTween(hrp, direction, distance)
-    local TweenService = game:GetService("TweenService")
-    local currentCFrame = hrp.CFrame
     
-    local targetCFrame
-    if direction == "Right" then
-        targetCFrame = currentCFrame * CFrame.new(distance, 0, 0)
-    elseif direction == "Left" then
-        targetCFrame = currentCFrame * CFrame.new(-distance, 0, 0)
-    end
-    
-    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-    tween:Play()
-end
-
-local function playAnimation(player, animationId, soundId)
-    local character = player.Character
-    if not character then return end
-    
-    local humanoid = character:FindFirstChild("Humanoid")
-    if not humanoid then return end
-    
-    local anim = Instance.new("Animation")
-    anim.AnimationId = "rbxassetid://" .. animationId
-    local animationTrack = humanoid:LoadAnimation(anim)
-    animationTrack:Play()
-    animationTrack:AdjustSpeed(1)
-    
-    if soundId then
-        local music = Instance.new("Sound")
-        music.Volume = 1
-        music.PlaybackSpeed = 1
-        music.Looped = false
-        music.SoundId = "rbxassetid://" .. soundId
-        music:Play()
-        music.Parent = game:GetService("ReplicatedStorage")
-    end
-end
-
-PlayerExploitsSection:Toggle({
-    Title = "Inf Side Dash",
-    Desc = "Q+D dash right, Q+A dash left with animations",
-    Icon = "move-horizontal",
-    Callback = function(state)
-        infSideDashEnabled = state
-        
-        if infSideDashConnection1 then
-            infSideDashConnection1:Disconnect()
-            infSideDashConnection1 = nil
-        end
-        
-        if infSideDashConnection2 then
-            infSideDashConnection2:Disconnect()
-            infSideDashConnection2 = nil
-        end
-        
-        if state then
-            local player = game.Players.LocalPlayer
-            local UserInputService = game:GetService("UserInputService")
-            
-            local isQPressed = false
-            local isDPressed = false
-            local isAPressed = false
-            
-            infSideDashConnection1 = UserInputService.InputBegan:Connect(function(input)
-                if input.KeyCode == Enum.KeyCode.Q then
-                    isQPressed = true
-                elseif input.KeyCode == Enum.KeyCode.D then
-                    isDPressed = true
-                elseif input.KeyCode == Enum.KeyCode.A then
-                    isAPressed = true
-                end
-                
-                if isQPressed and isDPressed then
-                    local character = player.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        local hrp = character.HumanoidRootPart
-                        teleportWithTween(hrp, "Right", 25)
-                        playAnimation(player, "10480793962", "10481117326")
-                    end
-                elseif isQPressed and isAPressed then
-                    local character = player.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        local hrp = character.HumanoidRootPart
-                        teleportWithTween(hrp, "Left", 25)
-                        playAnimation(player, "10480796021", "10481117326")
-                    end
-                end
-            end)
-            
-            infSideDashConnection2 = UserInputService.InputEnded:Connect(function(input)
-                if input.KeyCode == Enum.KeyCode.Q then
-                    isQPressed = false
-                elseif input.KeyCode == Enum.KeyCode.D then
-                    isDPressed = false
-                elseif input.KeyCode == Enum.KeyCode.A then
-                    isAPressed = false
-                end
-            end)
-        end
-    end
-})
-
 local TeleportPlusSection = PlayerTab:Section({
     Title = "Teleport+"
 })
@@ -3301,4 +3186,54 @@ AutoClickerSection:Toggle({
             end)
         end
     end
+})
+
+PlayerExploitsSection:Toggle({
+    Title = "Inf Side Dash",
+    Desc = "Q+D dash right, Q+A dash left with animations",
+    Icon = "move-horizontal",
+    Callback = function(state)
+local infSideDashEnabled = false
+local infSideDashConnection1 = nil
+local infSideDashConnection2 = nil
+
+local function teleportWithTween(hrp, direction, distance)
+    local TweenService = game:GetService("TweenService")
+    local currentCFrame = hrp.CFrame
+    
+    local targetCFrame
+    if direction == "Right" then
+        targetCFrame = currentCFrame * CFrame.new(distance, 0, 0)
+    elseif direction == "Left" then
+        targetCFrame = currentCFrame * CFrame.new(-distance, 0, 0)
+    end
+    
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+end
+
+local function playAnimation(player, animationId, soundId)
+    local character = player.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. animationId
+    local animationTrack = humanoid:LoadAnimation(anim)
+    animationTrack:Play()
+    animationTrack:AdjustSpeed(1)
+    
+    if soundId then
+        local music = Instance.new("Sound")
+        music.Volume = 1
+        music.PlaybackSpeed = 1
+        music.Looped = false
+        music.SoundId = "rbxassetid://" .. soundId
+        music:Play()
+        music.Parent = game:GetService("ReplicatedStorage")
+    end
+end
 })
