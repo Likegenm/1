@@ -195,47 +195,46 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
-local player = Players.LocalPlayer
-
 local doubleJumpEnabled = false
 local maxJumps = 2
 local currentJumps = 0
 local jumpPower = 50
 
-local function toggleDoubleJump()
-    doubleJumpEnabled = not doubleJumpEnabled
+local DoubleJumpToggle = LeftGroupbox:AddToggle("DoubleJump", {
+    Text = "Double Jump",
+    Default = false,
+    Tooltip = "Double jump in air",
+    Callback = function(Value)
+        doubleJumpEnabled = Value
+        currentJumps = 0
+        
+        if Value then
+            Library:Notify({
+                Title = "Double Jump",
+                Description = "Double jump enabled",
+                Time = 3
+            })
+        end
+    end
+})
+
+DoubleJumpToggle:OnChanged(function(Value)
+    doubleJumpEnabled = Value
     currentJumps = 0
-    
-    if doubleJumpEnabled then
-        print("Двойной прыжок включен")
-    else
-        print("Двойной прыжок выключен")
-    end
-end
+end)
 
-local function performJump()
-    local character = player.Character
-    if not character then return end
-    
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return end
-    
-    if currentJumps < maxJumps then
-        currentJumps = currentJumps + 1
-        rootPart.Velocity = Vector3.new(
-            rootPart.Velocity.X,
-            jumpPower,
-            rootPart.Velocity.Z
-        )
-        print("Прыжок", currentJumps, "/", maxJumps)
+local JumpPowerSlider = LeftGroupbox:AddSlider("JumpPower", {
+    Text = "Jump Power",
+    Default = 50,
+    Min = 20,
+    Max = 100,
+    Rounding = 0,
+    Suffix = " power",
+    Callback = function(Value)
+        jumpPower = Value
     end
-end
+})
 
--- Сброс счетчика прыжков при касании земли
 RunService.Heartbeat:Connect(function()
     if doubleJumpEnabled and player.Character then
         local humanoid = player.Character:FindFirstChild("Humanoid")
@@ -247,16 +246,19 @@ end)
 
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.Space and doubleJumpEnabled then
-        performJump()
+        local character = player.Character
+        if not character then return end
+        
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if not rootPart then return end
+        
+        if currentJumps < maxJumps then
+            currentJumps = currentJumps + 1
+            rootPart.Velocity = Vector3.new(
+                rootPart.Velocity.X,
+                jumpPower,
+                rootPart.Velocity.Z
+            )
+        end
     end
 end)
-
--- Включить по клавише
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.H then
-        toggleDoubleJump()
-    end
-end)
-
-print("Нажми H для включения двойного прыжка")
-print("Прыгай Space два раза в воздухе")
