@@ -3087,3 +3087,31 @@ AutoClickerSection:Toggle({
     end
 })
 
+OtherSection:Button({
+    Title = "FixCam",
+    Desc = "Reset camera to default settings",
+    Icon = "camera",
+    Color = Color3.fromHex("#55AAFF"),
+    Justify = "Center",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local camera = workspace.CurrentCamera
+        
+        camera.CameraType = Enum.CameraType.Custom
+        camera.FieldOfView = 70
+        
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                camera.CameraSubject = humanoid
+            end
+        end
+        
+        WindUI:Notify({
+            Title = "FixCam",
+            Content = "Camera reset to default!",
+            Icon = "check"
+        })
+    end
+}
