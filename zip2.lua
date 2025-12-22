@@ -134,7 +134,6 @@ local Window = Library:CreateWindow({
 local MainTab = Window:AddTab("Main", "home")
 
 local LeftGroupbox = MainTab:AddLeftGroupbox("LocalPlayer")
-local RightGroupbox = MainTab:AddRightGroupbox("Players")
 
 local selectedTargetPlayer = nil
 
@@ -313,38 +312,5 @@ LeftGroupbox:AddButton({
             Description = string.format("Position: (%d, %d, %d)", teleportX, teleportY, teleportZ),
             Time = 3
         })
-    end
-})
-
-})
-
-LeftGroupbox:AddButton({
-    Text = "Teleport to Player",
-    Func = function()
-        if selectedTargetPlayer then
-            local targetPlayer = Players:FindFirstChild(selectedTargetPlayer)
-            if targetPlayer and targetPlayer.Character then
-                local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-                local character = player.Character
-                
-                if targetRoot and character then
-                    local myRoot = character:FindFirstChild("HumanoidRootPart")
-                    if myRoot then
-                        myRoot.CFrame = targetRoot.CFrame
-                        Library:Notify({
-                            Title = "Teleported",
-                            Description = "Teleported to " .. selectedTargetPlayer,
-                            Time = 3
-                        })
-                    end
-                end
-            end
-        else
-            Library:Notify({
-                Title = "Error",
-                Description = "Select a player first!",
-                Time = 3
-            })
-        end
     end
 })
