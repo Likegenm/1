@@ -13,6 +13,9 @@ by likegenm
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 
 local screenGui = Instance.new("ScreenGui")
@@ -107,15 +110,10 @@ end
 
 showAnimation()
 
-
-
-
-
-
 task.wait(0.1)
 print("Wait")
 task.wait(0.1)
-    
+
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/DownoloadLiblary.lua"))()
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Test/refs/heads/main/Irina.lua"))()
@@ -138,9 +136,7 @@ local MainTab = Window:AddTab("Main", "home")
 local LeftGroupbox = MainTab:AddLeftGroupbox("LocalPlayer")
 local RightGroupbox = MainTab:AddRightGroupbox("Players")
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
+local selectedTargetPlayer = nil
 
 local teleportEnabled = false
 local teleportSpeed = 0.02
@@ -263,7 +259,6 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
--- Слайдеры для координат телепорта
 local teleportX = 10
 local teleportY = 10
 local teleportZ = 10
@@ -301,7 +296,6 @@ local ZSlider = LeftGroupbox:AddSlider("TeleportZ", {
     end
 })
 
--- Кнопка телепорта
 LeftGroupbox:AddButton({
     Text = "Teleport to Position",
     Func = function()
@@ -322,7 +316,8 @@ LeftGroupbox:AddButton({
     end
 })
 
--- Кнопка телепорта к выбранному игроку
+})
+
 LeftGroupbox:AddButton({
     Text = "Teleport to Player",
     Func = function()
