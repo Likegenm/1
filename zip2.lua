@@ -263,46 +263,46 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
-local TeleportGroupbox = MainTab:AddRightGroupbox("Teleport")
-
+-- Слайдеры для координат телепорта
 local teleportX = 10
 local teleportY = 10
 local teleportZ = 10
 
-local XSlider = TeleportGroupbox:AddSlider("TeleportX", {
+local XSlider = LeftGroupbox:AddSlider("TeleportX", {
     Text = "X Position",
     Default = 10,
     Min = 1,
-    Max = 20,
+    Max = 100,
     Rounding = 0,
     Callback = function(Value)
         teleportX = Value
     end
 })
 
-local YSlider = TeleportGroupbox:AddSlider("TeleportY", {
+local YSlider = LeftGroupbox:AddSlider("TeleportY", {
     Text = "Y Position",
     Default = 10,
     Min = 1,
-    Max = 20,
+    Max = 100,
     Rounding = 0,
     Callback = function(Value)
         teleportY = Value
     end
 })
 
-local ZSlider = TeleportGroupbox:AddSlider("TeleportZ", {
+local ZSlider = LeftGroupbox:AddSlider("TeleportZ", {
     Text = "Z Position",
     Default = 10,
     Min = 1,
-    Max = 20,
+    Max = 100,
     Rounding = 0,
     Callback = function(Value)
         teleportZ = Value
     end
 })
 
-TeleportGroupbox:AddButton({
+-- Кнопка телепорта
+LeftGroupbox:AddButton({
     Text = "Teleport to Position",
     Func = function()
         local character = player.Character
@@ -319,5 +319,37 @@ TeleportGroupbox:AddButton({
             Description = string.format("Position: (%d, %d, %d)", teleportX, teleportY, teleportZ),
             Time = 3
         })
+    end
+})
+
+-- Кнопка телепорта к выбранному игроку
+LeftGroupbox:AddButton({
+    Text = "Teleport to Player",
+    Func = function()
+        if selectedTargetPlayer then
+            local targetPlayer = Players:FindFirstChild(selectedTargetPlayer)
+            if targetPlayer and targetPlayer.Character then
+                local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local character = player.Character
+                
+                if targetRoot and character then
+                    local myRoot = character:FindFirstChild("HumanoidRootPart")
+                    if myRoot then
+                        myRoot.CFrame = targetRoot.CFrame
+                        Library:Notify({
+                            Title = "Teleported",
+                            Description = "Teleported to " .. selectedTargetPlayer,
+                            Time = 3
+                        })
+                    end
+                end
+            end
+        else
+            Library:Notify({
+                Title = "Error",
+                Description = "Select a player first!",
+                Time = 3
+            })
+        end
     end
 })
