@@ -1,4 +1,5 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/DownoloadLiblary.lua"))()
+
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Test/refs/heads/main/Irina.lua"))()
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
@@ -1668,6 +1669,508 @@ local AdminTab = Window:Tab({
     Icon = "shield",
     IconColor = Color3.fromHex("#0000FF"),
 })
+
+local CommandSection = AdminTab:Section({
+    Title = "Command"
+})
+
+local commandInput = ""
+local flingParts = {}
+local loopGotoThreads = {}
+local viewThread = nil
+local whitelist = {}
+local loopFlingThreads = {}
+
+CommandSection:Input({
+    Title = "Command Input",
+    Desc = "Enter command (see commands below)",
+    Callback = function(value)
+        commandInput = value
+    end
+})
+
+CommandSection:Button({
+    Title = "Execute Command",
+    Desc = "Run the command entered above",
+    Icon = "terminal",
+    Color = Color3.fromHex("#FFAA00"),
+    Justify = "Center",
+    Callback = function()
+        executeCommand(commandInput)
+    end
+})
+
+CommandSection:Text({
+    Title = "Available Commands:",
+    Content = [[
+Goto (Player)
+LoopGoto (Player)
+UnLoopGoto (Player)
+WhiteList (Player)
+UnWhitelist (Player)
+View (Player) (Second)
+UnView
+Fling (Player)
+LoopFling (Player)
+UnLoopFling (Player)
+Fling All
+LoopFling All
+]]
+})
+
+local function executeCommand(cmd)
+    local args = {}
+    for word in cmd:gmatch("%S+") do
+        table.insert(args, word)
+    end
+    
+    if #args == 0 then return end
+    
+    local command = args[1]:lower()
+    
+    local function getPlayerByName(name)
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Name:lower() == name:lower() or 
+               player.DisplayName:lower():find(name:lower(), 1, true) then
+                return player
+            end
+        end
+        return nil
+    end
+    
+    local function getAllPlayersAlphabetical()
+        local players = {}
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer then
+                table.insert(players, player)
+            end
+        end
+        table.sort(players, function(a, b)
+            return a.DisplayName:lower() < b.DisplayName:lower()
+        end)
+        return players
+    end
+    
+    local function createFlingCube(position)
+        local part = Instance.new("Part")
+        part.Name = "PositionMarker"
+        part.Position = position or Vector3.new(121.99, 440.75, 34.52)
+        part.Size = Vector3.new(1000, 1000, 1000)
+        part.Color = Color3.fromRGB(0, 255, 0)
+        part.Material = Enum.Material.Neon
+        part.Anchored = true
+        part.CanCollide = false
+        part.Transparency = 0.7
+        part.Parent = workspace
+        return part
+    end
+    
+    local function teleportToPlayer(targetPlayer)
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local targetChar = targetPlayer.Character
+            if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = CFrame.new(
+                    targetChar.HumanoidRootPart.Position
+                )
+            end
+        end
+    end
+    
+    local function isPlayerInCube(player, cube)
+        if not player.Character then return false end
+        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return false end
+        
+        local playerPos = hrp.Position
+        local cubePos = cube.Position
+        local halfSize = cube.Size / 2
+        
+        return math.abs(playerPos.X - cubePos.X) <= halfSize.X and
+               math.abs(playerPos.Y - cubePos.Y) <= halfSize.Y and
+               math.abs(playerPos.Z - cubePos.Z) <= halfSize.Z
+    end
+    
+    local function performFling(player, savedPos, flingCube)
+        local targetChar = player.Character
+        if not targetChar then return end
+        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+        if not targetRoot then return end
+        
+        local myChar = game.Players.LocalPlayer.Character
+        if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+        
+        local myHRP = myChar.HumanoidRootPart
+        
+        if flingCube and not isPlayerInCube(player, flingCube) then
+            if savedPos then
+                myHRP.CFrame = CFrame.new(savedPos)
+            end
+            return false
+        end
+        
+        myHRP.CFrame = CFrame.new(targetRoot.Position)
+        
+        for i = 1, 3 do
+            local vel = myHRP.Velocity
+            myHRP.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+        end
+        
+        return true
+    end
+    
+    if command == "goto" and #args >= 2 then
+        local playerName = args[2]
+        local targetPlayer = getPlayerByName(playerName)
+        if targetPlayer then
+            teleportToPlayer(targetPlayer)
+            WindUI:Notify({
+                Title = "Goto",
+                Content = "Teleported to " .. targetPlayer.DisplayName,
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "Goto",
+                Content = "Player not found!",
+                Icon = "x"
+            })
+        end
+        
+    elseif command == "loopgoto" and #args >= 2 then
+        local playerName = args[2]
+        local targetPlayer = getPlayerByName(playerName)
+        
+        if not targetPlayer then
+            WindUI:Notify({
+                Title = "LoopGoto",
+                Content = "Player not found!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        if loopGotoThreads[targetPlayer.Name] then
+            WindUI:Notify({
+                Title = "LoopGoto",
+                Content = "Already loop-gotoing this player!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        loopGotoThreads[targetPlayer.Name] = task.spawn(function()
+            while loopGotoThreads[targetPlayer.Name] do
+                teleportToPlayer(targetPlayer)
+                task.wait(0.01)
+            end
+        end)
+        
+        WindUI:Notify({
+            Title = "LoopGoto",
+            Content = "Started loop-goto to " .. targetPlayer.DisplayName,
+            Icon = "check"
+        })
+        
+    elseif command == "unloopgoto" and #args >= 2 then
+        local playerName = args[2]
+        local targetPlayer = getPlayerByName(playerName)
+        
+        if targetPlayer and loopGotoThreads[targetPlayer.Name] then
+            loopGotoThreads[targetPlayer.Name] = nil
+            WindUI:Notify({
+                Title = "UnLoopGoto",
+                Content = "Stopped loop-goto to " .. targetPlayer.DisplayName,
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "UnLoopGoto",
+                Content = "Not loop-gotoing this player!",
+                Icon = "x"
+            })
+        end
+        
+    elseif command == "whitelist" and #args >= 2 then
+        local playerName = args[2]
+        local targetPlayer = getPlayerByName(playerName)
+        
+        if targetPlayer then
+            whitelist[targetPlayer.Name] = true
+            WindUI:Notify({
+                Title = "Whitelist",
+                Content = targetPlayer.DisplayName .. " added to whitelist",
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "Whitelist",
+                Content = "Player not found!",
+                Icon = "x"
+            })
+        end
+        
+    elseif command == "unwhitelist" and #args >= 2 then
+        local playerName = args[2]
+        local targetPlayer = getPlayerByName(playerName)
+        
+        if targetPlayer and whitelist[targetPlayer.Name] then
+            whitelist[targetPlayer.Name] = nil
+            WindUI:Notify({
+                Title = "UnWhitelist",
+                Content = targetPlayer.DisplayName .. " removed from whitelist",
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "UnWhitelist",
+                Content = "Player not in whitelist!",
+                Icon = "x"
+            })
+        end
+        
+    elseif command == "view" and #args >= 2 then
+        local playerName = args[2]
+        local seconds = 3
+        if #args >= 3 then
+            seconds = tonumber(args[3]) or 3
+        end
+        
+        local targetPlayer = getPlayerByName(playerName)
+        
+        if not targetPlayer then
+            WindUI:Notify({
+                Title = "View",
+                Content = "Player not found!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local camera = workspace.CurrentCamera
+        local originalCameraType = camera.CameraType
+        camera.CameraType = Enum.CameraType.Scriptable
+        
+        if viewThread then
+            viewThread = nil
+        end
+        
+        viewThread = task.spawn(function()
+            local viewStart = tick()
+            while tick() - viewStart < seconds and viewThread do
+                if not game.Players:FindFirstChild(targetPlayer.Name) then
+                    break
+                end
+                
+                local targetChar = targetPlayer.Character
+                if targetChar then
+                    local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+                    if targetRoot then
+                        camera.CFrame = CFrame.new(targetRoot.Position + Vector3.new(0, 5, 10), targetRoot.Position)
+                    end
+                end
+                task.wait()
+            end
+            
+            camera.CameraType = originalCameraType
+            viewThread = nil
+        end)
+        
+        WindUI:Notify({
+            Title = "View",
+            Content = "Viewing " .. targetPlayer.DisplayName .. " for " .. seconds .. " seconds",
+            Icon = "check"
+        })
+        
+    elseif command == "unview" then
+        if viewThread then
+            viewThread = nil
+            WindUI:Notify({
+                Title = "UnView",
+                Content = "Stopped viewing",
+                Icon = "check"
+            })
+        end
+        
+    elseif command == "fling" and #args >= 2 then
+        local playerName = args[2]
+        local targetPlayer
+        
+        if playerName:lower() == "all" then
+            local players = getAllPlayersAlphabetical()
+            for _, player in ipairs(players) do
+                if not whitelist[player.Name] then
+                    local flingCube = createFlingCube()
+                    local savedPos = game.Players.LocalPlayer.Character and 
+                                   game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and
+                                   game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+                    
+                    task.spawn(function()
+                        performFling(player, savedPos, flingCube)
+                    end)
+                end
+            end
+            WindUI:Notify({
+                Title = "Fling All",
+                Content = "Flinging all players!",
+                Icon = "check"
+            })
+            return
+        else
+            targetPlayer = getPlayerByName(playerName)
+        end
+        
+        if not targetPlayer then
+            WindUI:Notify({
+                Title = "Fling",
+                Content = "Player not found!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        if whitelist[targetPlayer.Name] then
+            WindUI:Notify({
+                Title = "Fling",
+                Content = targetPlayer.DisplayName .. " is whitelisted!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        local flingCube = createFlingCube()
+        local savedPos = game.Players.LocalPlayer.Character and 
+                       game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and
+                       game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+        
+        performFling(targetPlayer, savedPos, flingCube)
+        
+        flingParts[targetPlayer.Name] = flingCube
+        
+        WindUI:Notify({
+            Title = "Fling",
+            Content = "Flinging " .. targetPlayer.DisplayName,
+            Icon = "check"
+        })
+        
+    elseif command == "loopfling" and #args >= 2 then
+        local playerName = args[2]
+        local targetPlayers = {}
+        
+        if playerName:lower() == "all" then
+            targetPlayers = getAllPlayersAlphabetical()
+        else
+            local targetPlayer = getPlayerByName(playerName)
+            if targetPlayer then
+                table.insert(targetPlayers, targetPlayer)
+            end
+        end
+        
+        if #targetPlayers == 0 then
+            WindUI:Notify({
+                Title = "LoopFling",
+                Content = "No players found!",
+                Icon = "x"
+            })
+            return
+        end
+        
+        for _, targetPlayer in ipairs(targetPlayers) do
+            if whitelist[targetPlayer.Name] then
+                WindUI:Notify({
+                    Title = "LoopFling",
+                    Content = targetPlayer.DisplayName .. " is whitelisted!",
+                    Icon = "x"
+                })
+                goto continue
+            end
+            
+            if loopFlingThreads[targetPlayer.Name] then
+                WindUI:Notify({
+                    Title = "LoopFling",
+                    Content = "Already loop-flinging " .. targetPlayer.DisplayName,
+                    Icon = "x"
+                })
+                goto continue
+            end
+            
+            local flingCube = createFlingCube()
+            local savedPos = game.Players.LocalPlayer.Character and 
+                           game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and
+                           game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+            
+            flingParts[targetPlayer.Name] = flingCube
+            
+            loopFlingThreads[targetPlayer.Name] = task.spawn(function()
+                while loopFlingThreads[targetPlayer.Name] do
+                    if not performFling(targetPlayer, savedPos, flingCube) then
+                        if savedPos then
+                            local myChar = game.Players.LocalPlayer.Character
+                            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                                myChar.HumanoidRootPart.CFrame = CFrame.new(savedPos)
+                            end
+                        end
+                        loopFlingThreads[targetPlayer.Name] = nil
+                        break
+                    end
+                    task.wait(0.01)
+                end
+            end)
+            
+            ::continue::
+        end
+        
+        WindUI:Notify({
+            Title = "LoopFling",
+            Content = "Started loop-flinging " .. (#targetPlayers == 1 and targetPlayers[1].DisplayName or "all players"),
+            Icon = "check"
+        })
+        
+    elseif command == "unloopfling" and #args >= 2 then
+        local playerName = args[2]
+        
+        if playerName:lower() == "all" then
+            for playerName, thread in pairs(loopFlingThreads) do
+                loopFlingThreads[playerName] = nil
+            end
+            WindUI:Notify({
+                Title = "UnLoopFling All",
+                Content = "Stopped all loop-flings",
+                Icon = "check"
+            })
+        else
+            local targetPlayer = getPlayerByName(playerName)
+            if targetPlayer and loopFlingThreads[targetPlayer.Name] then
+                loopFlingThreads[targetPlayer.Name] = nil
+                WindUI:Notify({
+                    Title = "UnLoopFling",
+                    Content = "Stopped loop-flinging " .. targetPlayer.DisplayName,
+                    Icon = "check"
+                })
+            end
+        end
+        
+    else
+        WindUI:Notify({
+            Title = "Command",
+            Content = "Unknown command!",
+            Icon = "x"
+        })
+    end
+end
+
+game.Players.LocalPlayer.CharacterRemoving:Connect(function()
+    for _, thread in pairs(loopGotoThreads) do
+        thread = nil
+    end
+    for _, thread in pairs(loopFlingThreads) do
+        thread = nil
+    end
+    if viewThread then
+        viewThread = nil
+    end
+end)
 
 local TeleportTab = Window:Tab({
     Title = "Teleport",
