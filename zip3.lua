@@ -1,7 +1,14 @@
+loadstring(gameLHttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/Library.lua"))()
+showNotification("System Cheat", "Troll is a pinning tower 2")
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/DownoloadLiblary.lua"))()
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Test/refs/heads/main/Irina.lua"))()
+	
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
-    Title = "Troll is a pinning 2",
+    Title = "Troll is a pinning tower 2",
     Footer = "v1.0.0 by likegenm (хайп прошел но ладно)",
     ToggleKeybind = Enum.KeyCode.RightControl,
     Center = true,
