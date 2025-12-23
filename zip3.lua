@@ -103,9 +103,10 @@ PlayerGroupbox:AddToggle("Infjump", {
 					game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end)
+		else
+			while task.wait(10000000000000000000000000) do
+					print("Likegenm scripts")
+				end
 		end
-	end
-	if not Value then
-		print("Toggle infjump")
 	end
 })
