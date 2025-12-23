@@ -105,8 +105,5 @@ local infjump = PlayerGroupbox:AddToggle("Infjump", {
 			end)
 		end
 	end
-
-		infjum:OnChanged(function(Value)
-    print("LS")
 })
 
