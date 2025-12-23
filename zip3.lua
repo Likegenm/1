@@ -92,7 +92,7 @@ local SpeedHack = PlayerGroupbox:AddInput("SpeedHACK", {
     end
 })
 
-local infjump = PlayerGroupbox:AddToggle("Infjump", {
+PlayerGroupbox:AddToggle("Infjump", {
 	Text = "InfJumps",
 	Default = false,
 	Tooltip = "Inf",
@@ -103,5 +103,6 @@ local infjump = PlayerGroupbox:AddToggle("Infjump", {
 					game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end)
+		end
+	end
 })
-
