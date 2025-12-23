@@ -92,7 +92,7 @@ local SpeedHack = PlayerGroupbox:AddInput("SpeedHACK", {
     end
 })
 
-PlayerGroupbox:AddToggle("Infjump", {
+local infjump = PlayerGroupbox:AddToggle("Infjump", {
 	Text = "InfJumps",
 	Default = false,
 	Tooltip = "Inf",
@@ -103,10 +103,10 @@ PlayerGroupbox:AddToggle("Infjump", {
 					game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end)
-		else
-			while task.wait(10000000000000000000000000) do
-					print("Likegenm scripts")
-				end
 		end
 	end
+
+		infjum:OnChanged(function(Value)
+    print("LS")
 })
+
