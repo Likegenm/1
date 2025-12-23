@@ -144,3 +144,5 @@ local Button = Groupbox:AddButton({
     end,
     DoubleClick = false
 })
+
+local PlayersBroupbox = MainTab
