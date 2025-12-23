@@ -108,16 +108,16 @@ PlayerGroupbox:AddToggle("Infjump", {
 })
 
 PlayerGroupbox:AddToggle("Noclip", {
-		Text = "Noclip",
-		Default = false,
-		Tooltip = "No clip",
-		Callback = function(Value)
-			if Value then
-				for _, nc in ipairs(game.workspace:GetDescenants()) do
-					if nc:IsA("BasePart") then
-						Part.CanCollide = true
-					end
+	Text = "Noclip",
+	Default = false,
+	Tooltip = "No clip",
+	Callback = function(Value)
+		if Value then
+			for _, nc in ipairs(game.Workspace:GetDescendants()) do
+				if nc:IsA("BasePart") then
+					nc.CanCollide = false
 				end
 			end
 		end
-	})
+	end
+})
