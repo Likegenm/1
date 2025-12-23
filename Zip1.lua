@@ -2471,7 +2471,7 @@ TouchFlingSection:Toggle({
                     
                     if hrp then
                         vel = hrp.Velocity
-                        hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                        hrp.Velocity = vel * 1000000000000000000000000000000000000000000000000000000000000000000000000000 + Vector3.new(0, 1000000000000000000000000000000000000000000000000000000000000000000000000000, 0)
                         game:GetService("RunService").RenderStepped:Wait()
                         hrp.Velocity = vel
                         game:GetService("RunService").Stepped:Wait()
@@ -2504,7 +2504,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(input)
                     
                     if hrp then
                         vel = hrp.Velocity
-                        hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                        hrp.Velocity = vel * 1000000000000000000000000000000000000000000000000000000000000000000000000000 + Vector3.new(0, 1000000000000000000000000000000000000000000000000000000000000000000000000000, 0)
                         game:GetService("RunService").RenderStepped:Wait()
                         hrp.Velocity = vel
                         game:GetService("RunService").Stepped:Wait()
