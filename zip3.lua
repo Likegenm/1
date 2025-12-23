@@ -79,7 +79,7 @@ local Window = Library:CreateWindow({
 })
 local MainTab = Window:AddTab("Main", "home")
 
-local PlayerGroupbox = MainTab:AddLeftGroupbox("Players")
+local PlayerGroupbox = MainTab:AddLeftGroupbox("Player")
 
 local SpeedHack = PlayerGroupbox:AddInput("SpeedHACK", {
     Text = "SpeedHack",
@@ -106,3 +106,18 @@ PlayerGroupbox:AddToggle("Infjump", {
 		end
 	end
 })
+
+PlayerGroupbox:AddToggle("Noclip", {
+		Text = "Noclip",
+		Default = false,
+		Tooltip = "No clip",
+		Callback = function(Value)
+			if Value then
+				for _, nc in ipairs(game.workspace:GetDescenants()) do
+					if nc:IsA("BasePart") then
+						Part.CanCollide = true
+					end
+				end
+			end
+		end
+	})
