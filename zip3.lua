@@ -107,17 +107,19 @@ PlayerGroupbox:AddToggle("Infjump", {
 	end
 })
 
-PlayerGroupbox:AddToggle("Noclip", {
-	Text = "Noclip",
-	Default = false,
-	Tooltip = "No clip",
-	Callback = function(Value)
-		if Value then
-			for _, nc in ipairs(game.Workspace:GetDescendants()) do
-				if nc:IsA("BasePart") then
-					nc.CanCollide = false
-				end
-			end
-		end
-	end
+local FloatToggle = PlayerGroupbox:AddToggle("Float", {
+    Text = "Float",
+    Default = false,
+    Tooltip = "slow fall",
+    Callback = function(Value)
+        if Value then
+            game:GetService("RunService").Heartbeat:Connect(function()
+                game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.X,
+                    0,
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Z
+                )
+            end)
+        end
+    end
 })
