@@ -135,6 +135,8 @@ local FloatToggle = PlayerGroupbox:AddToggle("Float", {
     end
 })
 
+local Groupbox = MainTab:AddLeftGroupbox("Idk")
+
 local Button = Groupbox:AddButton({
     Text = "Win!",
     Func = function()
