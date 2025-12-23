@@ -103,7 +103,5 @@ local infjump = PlayerGroupbox:AddToggle("Infjump", {
 					game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end)
-		end
-	end
 })
 
