@@ -134,3 +134,11 @@ local FloatToggle = PlayerGroupbox:AddToggle("Float", {
         end
     end
 })
+
+local Button = Groupbox:AddButton({
+    Text = "Win!",
+    Func = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(284.30, 347.25, -34.26
+    end,
+    DoubleClick = false
+})
