@@ -107,18 +107,29 @@ PlayerGroupbox:AddToggle("Infjump", {
 	end
 })
 
+local floatConnection
+
 local FloatToggle = PlayerGroupbox:AddToggle("Float", {
     Text = "Float",
     Default = false,
-    Tooltip = "slow fall",
+    Tooltip = "Float mode / slow fall",
     Callback = function(Value)
+        if floatConnection then
+            floatConnection:Disconnect()
+            floatConnection = nil
+        end
+        
         if Value then
-            game:GetService("RunService").Heartbeat:Connect(function()
-                game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.X,
-                    0,
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Z
-                )
+            floatConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                local root = game.Players.LocalPlayer.Character.HumanoidRootPart
+                root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
+                
+                local UIS = game:GetService("UserInputService")
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then
+                    root.Velocity = Vector3.new(root.Velocity.X, 50, root.Velocity.Z)
+                elseif UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                    root.Velocity = Vector3.new(root.Velocity.X, -50, root.Velocity.Z)
+                end
             end)
         end
     end
