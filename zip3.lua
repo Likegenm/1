@@ -145,34 +145,51 @@ local Button = Groupbox:AddButton({
     DoubleClick = false
 })
 
-local Troll = Window:AddTab("Troll")
+local TrollTab = Window:AddTab({Name = "Troll", "skull"})
 
-local TGB = Troll:AddLeftGroupbox("1Button")
+local TrollGroupbox = TrollTab:AddLeftGroupbox("1Button")
 
-TGB:AddToggle("Troll", {
-    Text = "1Button troll",
+local teleportActive = false
+local teleportTween = nil
+
+TrollGroupbox:AddToggle("Goto", {
+    Text = "Start Troll",
     Default = false,
     Callback = function(Value)
         teleportActive = Value
         
         if Value then
-            local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-14.92, 147.15, -80.60)
-				
-local point1 = Vector3.new(-14.92, 147.15, -80.60)
-local point2 = Vector3.new(-78.37, 148.41, -81.09)
-local toPoint2 = true
-
-while true do
-    local targetPosition = toPoint2 and point2 or point1
-    local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(3), {Position = targetPosition})
-    tween:Play()
-    tween.Completed:Wait()
-    toPoint2 = not toPoint2
-end
+            local char = game.Players.LocalPlayer.Character
+            if not char then return end
+            
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            
+            local point1 = Vector3.new(-14.92, 147.15, -80.60)
+            local point2 = Vector3.new(-78.37, 148.41, -81.09)
+            local toPoint2 = true
+            
+            teleportTween = game:GetService("RunService").Heartbeat:Connect(function()
+                if not teleportActive or not hrp.Parent then
+                    if teleportTween then
+                        teleportTween:Disconnect()
+                        teleportTween = nil
+                    end
+                    return
+                end
+                
+                local target = toPoint2 and point2 or point1
+                hrp.CFrame = CFrame.new(target)
+                
+                wait(3)
+                toPoint2 = not toPoint2
+            end)
+        else
+            if teleportTween then
+                teleportTween:Disconnect()
+                teleportTween = nil
+            end
+        end
+    end
 })
+
