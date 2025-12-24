@@ -135,7 +135,7 @@ local FloatToggle = PlayerGroupbox:AddToggle("Float", {
     end
 })
 
-local Groupbox = MainTab:AddLeftGroupbox("Idk")
+local Groupbox = MainTab:AddRightGroupbox("Idk")
 
 local Button = Groupbox:AddButton({
     Text = "Win!",
@@ -145,4 +145,6 @@ local Button = Groupbox:AddButton({
     DoubleClick = false
 })
 
-local PlayersBroupbox = MainTab
+local Troll = Window:AddTab("Troll")
+
+local TGB = Troll:AddLeftGroupbox("1Button")
