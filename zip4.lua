@@ -11,29 +11,14 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- Контроль прозрачности (исправленная версия)
-game:GetService("RunService").Heartbeat:Connect(function()
-    local character = game.Players.LocalPlayer.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                if part.Transparency > 0.7 then
-                    part.Transparency = 0.7
-                end
-            end
-        end
-    end
-end)
-
--- Контроль силы прыжка
 game:GetService("RunService").Heartbeat:Connect(function()
     local character = game.Players.LocalPlayer.Character
     if character and character:FindFirstChild("Humanoid") then
         local humanoid = character.Humanoid
         local currentJump = humanoid.JumpPower
         
-        if currentJump > 30 then
-            humanoid.JumpPower = math.random(10, 30)
+        if currentJump > 40 then
+            humanoid.JumpPower = math.random(25, 40)
         elseif currentJump < 10 then
             humanoid.JumpPower = math.clamp(currentJump + 10, 10, 30)
         end
@@ -46,13 +31,23 @@ lighting.FogStart = 0
 lighting.FogEnd = 50
 lighting.FogColor = Color3.new(0, 0, 0)
 
--- Отслеживаем изменение персонажа
-game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
-    task.wait(1)  -- Ждем загрузки
-    
-    -- Сбрасываем настройки для нового персонажа
-    if character:FindFirstChild("Humanoid") then
-        character.Humanoid.WalkSpeed = 13
-        character.Humanoid.JumpPower = math.clamp(character.Humanoid.JumpPower, 10, 30)
+-- Замедление ВСЕЙ музыки в игре в 3 раза
+for _, sound in pairs(game:GetDescendants()) do
+    if sound:IsA("Sound") then
+        sound.PlaybackSpeed = 1/3  -- В 3 раза медленнее
+    end
+end
+
+-- Отслеживаем новые звуки
+game.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("Sound") then
+        task.wait()  -- Даем звуку загрузиться
+        descendant.PlaybackSpeed = 1/3
     end
 end)
+
+-- Или для конкретного звука
+local workspaceMusic = workspace:FindFirstChildOfClass("Sound")
+if workspaceMusic then
+    workspaceMusic.PlaybackSpeed = 1/3
+end
