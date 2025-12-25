@@ -334,7 +334,7 @@ FreezeSection:Button({
 
 -- Hotkey F to toggle freeze
 game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.F then
+    if input.KeyCode == Enum.KeyCode.I then
         local player = game.Players.LocalPlayer
         local char = player.Character
         
