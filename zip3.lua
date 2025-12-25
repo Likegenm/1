@@ -1,195 +1,208 @@
-local function showNotification(titleText, subtitleText)
-    local PlayerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    
-    local old = PlayerGui:FindFirstChild("Notification")
-    if old then old:Destroy() end
-    
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "Notification"
-    screenGui.ResetOnSpawn = false
-    
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 300, 0, 75)
-    frame.Position = UDim2.new(1, 10, 1, -110) -- За экраном справа
-    frame.BackgroundColor3 = Color3.new(0, 0, 0)
-    frame.BackgroundTransparency = 0.3
-    frame.BorderSizePixel = 0
-    
-    local corner = Instance.new("UICorner", frame)
-    corner.CornerRadius = UDim.new(0, 5)
-    
-    local title = Instance.new("TextLabel", frame)
-    title.Text = titleText or "Hello"
-    title.Size = UDim2.new(1, 0, 0.5, 0)
-    title.BackgroundTransparency = 1
-    title.TextColor3 = Color3.new(1, 1, 1)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 28
-    
-    local subtitle = Instance.new("TextLabel", frame)
-    subtitle.Text = subtitleText or "Hi"
-    subtitle.Size = UDim2.new(1, 0, 0.5, 0)
-    subtitle.Position = UDim2.new(0, 0, 0.5, 0)
-    subtitle.BackgroundTransparency = 1
-    subtitle.TextColor3 = Color3.new(1, 1, 1)
-    subtitle.Font = Enum.Font.Gotham
-    subtitle.TextSize = 20
-    
-    frame.Parent = screenGui
-    screenGui.Parent = PlayerGui
-    
-    local TweenService = game:GetService("TweenService")
-    
-    local appear = TweenService:Create(frame, 
-        TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, -310, 1, -110) -- В правый нижний угол
-        })
-    
-    local disappear = TweenService:Create(frame,
-        TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Position = UDim2.new(1, 10, 1, -110) -- Обратно за экран
-        })
-    
-    appear:Play()
-    
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
 
-    task.wait(3)
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Получаем информацию о системе
+local function getSystemInfo()
+    local executor = "Unknown"
+    local pcModel = "Unknown"
     
-    appear:Cancel()
-    disappear:Play()
-    
-    disappear.Completed:Wait()
-    screenGui:Destroy()
-end
-
-showNotification("System Cheat", "Troll is a pinning tower 2")
-
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/DownoloadLiblary.lua"))()
-
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Test/refs/heads/main/Irina.lua"))()
-	
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
-
-local Window = Library:CreateWindow({
-    Title = "Troll is a pinning tower 2",
-    Footer = "v1.0.0 by likegenm (хайп прошел но ладно)",
-    ToggleKeybind = Enum.KeyCode.RightControl,
-    Center = true,
-    AutoShow = true
-})
-local MainTab = Window:AddTab("Main", "home")
-
-local PlayerGroupbox = MainTab:AddLeftGroupbox("Player")
-
-local SpeedHack = PlayerGroupbox:AddInput("SpeedHACK", {
-    Text = "SpeedHack",
-    Default = "Ur speed",
-    Numeric = false,
-    Finished = true,
-    Placeholder = "Ur speed",
-    Callback = function(Value)
-     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    if identifyexecutor then
+        executor = tostring(identifyexecutor())
+    elseif getexecutorname then
+        executor = getexecutorname()
     end
-})
-
-PlayerGroupbox:AddToggle("Infjump", {
-	Text = "InfJumps",
-	Default = false,
-	Tooltip = "Inf",
-	Callback = function(Value)
-		if Value then
-			game:GetService("UserInputService").InputBegan:Connect(function(input)
-				if input.KeyCode == Enum.KeyCode.Space then
-					game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-				end
-			end)
-		end
-	end
-})
-
-local floatConnection
-
-local FloatToggle = PlayerGroupbox:AddToggle("Float", {
-    Text = "Float",
-    Default = false,
-    Tooltip = "Float mode / slow fall",
-    Callback = function(Value)
-        if floatConnection then
-            floatConnection:Disconnect()
-            floatConnection = nil
-        end
-        
-        if Value then
-            floatConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                local root = game.Players.LocalPlayer.Character.HumanoidRootPart
-                root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
-                
-                local UIS = game:GetService("UserInputService")
-                if UIS:IsKeyDown(Enum.KeyCode.Space) then
-                    root.Velocity = Vector3.new(root.Velocity.X, 50, root.Velocity.Z)
-                elseif UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
-                    root.Velocity = Vector3.new(root.Velocity.X, -50, root.Velocity.Z)
-                end
-            end)
-        end
-    end
-})
-
-local Groupbox = MainTab:AddRightGroupbox("Idk")
-
-local Button = Groupbox:AddButton({
-    Text = "Win!",
-    Func = function()
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(284.30, 347.25, -34.26)
-    end,
-    DoubleClick = false
-})
-
-local TrollTab = Window:AddTab({Name = "Troll", "skull"})
-
-local TrollGroupbox = TrollTab:AddLeftGroupbox("1Button")
-
-local teleportActive = false
-local teleportTween = nil
-
-TrollGroupbox:AddToggle("Goto", {
-    Text = "Start Troll",
-    Default = false,
-    Callback = function(Value)
-        teleportActive = Value
-        
-        if Value then
-            local char = game.Players.LocalPlayer.Character
-            if not char then return end
-            
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-            
-            local point1 = Vector3.new(-14.92, 147.15, -80.60)
-            local point2 = Vector3.new(-78.37, 148.41, -81.09)
-            local toPoint2 = true
-            
-            teleportTween = game:GetService("RunService").Heartbeat:Connect(function()
-                if not teleportActive or not hrp.Parent then
-                    if teleportTween then
-                        teleportTween:Disconnect()
-                        teleportTween = nil
-                    end
-                    return
-                end
-                
-                local target = toPoint2 and point2 or point1
-                hrp.CFrame = CFrame.new(target)
-                
-                wait(3)
-                toPoint2 = not toPoint2
-            end)
-        else
-            if teleportTween then
-                teleportTween:Disconnect()
-                teleportTween = nil
+    
+    pcall(function()
+        if syn and syn.request then
+            local req = syn.request({Url = "http://ip-api.com/json", Method = "GET"})
+            if req.Body then
+                local data = game:GetService("HttpService"):JSONDecode(req.Body)
+                pcModel = data.countryCode or "Unknown"
             end
         end
-    end
-})
+    end)
+    
+    return executor, pcModel
+end
 
+local executorName, pcCountry = getSystemInfo()
+
+-- Создаем GUI на весь экран
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FullStatsGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player.PlayerGui
+screenGui.Enabled = false
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(1, 0, 1, 0)
+mainFrame.Position = UDim2.new(0, 0, 0, 0)
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.Parent = screenGui
+
+-- Радужный фон
+local rainbowGradient = Instance.new("UIGradient")
+rainbowGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),     -- Красный
+    ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 165, 0)), -- Оранжевый
+    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)), -- Желтый
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)),   -- Зеленый
+    ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)),  -- Синий
+    ColorSequenceKeypoint.new(0.83, Color3.fromRGB(75, 0, 130)), -- Индиго
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(238, 130, 238))  -- Фиолетовый
+})
+rainbowGradient.Rotation = 45
+rainbowGradient.Parent = mainFrame
+
+-- Анимация градиента
+spawn(function()
+    while true do
+        rainbowGradient.Rotation = (rainbowGradient.Rotation + 1) % 360
+        RunService.RenderStepped:Wait()
+    end
+end)
+
+-- Текстовый контейнер
+local textContainer = Instance.new("Frame")
+textContainer.Size = UDim2.new(0.8, 0, 0.8, 0)
+textContainer.Position = UDim2.new(0.1, 0, 0.1, 0)
+textContainer.BackgroundTransparency = 1
+textContainer.Parent = mainFrame
+
+local labels = {}
+local statsList = {
+    "Speed", "Jump", "Velocity", "Position", "Ping",
+    "Executor", "PC Model", "Roblox Version", "Display Name",
+    "Username", "User ID", "Gravity", "FPS"
+}
+
+for i, stat in ipairs(statsList) do
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 30)
+    label.Position = UDim2.new(0, 0, 0, (i-1)*35)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 16
+    label.TextStrokeTransparency = 0.5
+    label.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+    label.Text = stat .. ": ..."
+    label.Parent = textContainer
+    labels[stat] = label
+end
+
+-- Обновление статистики
+local lastTime = tick()
+local frameCount = 0
+local fps = 0
+
+RunService.Heartbeat:Connect(function(deltaTime)
+    frameCount = frameCount + 1
+    local currentTime = tick()
+    
+    if currentTime - lastTime >= 1 then
+        fps = math.floor(frameCount / (currentTime - lastTime))
+        frameCount = 0
+        lastTime = currentTime
+    end
+    
+    -- Speed
+    labels["Speed"].Text = string.format("Speed: %.2f", humanoid.WalkSpeed)
+    
+    -- Jump Power
+    labels["Jump"].Text = string.format("Jump: %.2f", humanoid.JumpPower)
+    
+    -- Velocity
+    local vel = rootPart.Velocity
+    labels["Velocity"].Text = string.format("Velocity: %.2f", vel.Magnitude)
+    
+    -- Position
+    local pos = rootPart.Position
+    labels["Position"].Text = string.format("Position: %.2f, %.2f, %.2f", pos.X, pos.Y, pos.Z)
+    
+    -- Ping
+    local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+    labels["Ping"].Text = string.format("Ping: %d ms", ping)
+    
+    -- Executor
+    labels["Executor"].Text = string.format("Executor: %s", executorName)
+    
+    -- PC Model (Country)
+    labels["PC Model"].Text = string.format("PC Model: %s", pcCountry)
+    
+    -- Roblox Version
+    labels["Roblox Version"].Text = string.format("Roblox: %s", game:GetService("HttpService"):JSONDecode(game:HttpGet("https://clientsettings.roblox.com/v2/client-version")).clientVersion)
+    
+    -- Display Name
+    labels["Display Name"].Text = string.format("Display: %s", player.DisplayName)
+    
+    -- Username
+    labels["Username"].Text = string.format("Username: %s", player.Name)
+    
+    -- User ID
+    labels["User ID"].Text = string.format("User ID: %d", player.UserId)
+    
+    -- Gravity
+    labels["Gravity"].Text = string.format("Gravity: %.2f", workspace.Gravity)
+    
+    -- FPS
+    labels["FPS"].Text = string.format("FPS: %d", fps)
+end)
+
+-- Обновление при смене персонажа
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    humanoid = character:WaitForChild("Humanoid")
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end)
+
+-- Открытие/закрытие по клавише Z
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Z then
+        screenGui.Enabled = not screenGui.Enabled
+    end
+end)
+
+-- Кнопка закрытия
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 100, 0, 40)
+closeButton.Position = UDim2.new(0.5, -50, 0.95, -50)
+closeButton.Text = "CLOSE (Z)"
+closeButton.Font = Enum.Font.GothamBlack
+closeButton.TextSize = 18
+closeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundTransparency = 0.3
+closeButton.Parent = mainFrame
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui.Enabled = false
+end)
+
+-- Заголовок
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 60)
+title.Position = UDim2.new(0, 0, 0, 20)
+title.BackgroundTransparency = 1
+title.Text = "SYSTEM STATS PANEL"
+title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 32
+title.TextStrokeTransparency = 0.3
+title.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = mainFrame
+
+print("✅ Full Stats GUI loaded! Press Z to toggle.")
+print("🎮 Executor:", executorName)
+print("🌍 PC Country:", pcCountry)
+print("📊 Version:", game:GetService("HttpService"):JSONDecode(game:HttpGet("https://clientsettings.roblox.com/v2/client-version")).clientVersion)
