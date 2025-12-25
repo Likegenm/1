@@ -39,67 +39,213 @@ local PlayerTab = Window:Tab({
     IconColor = Color3.fromHex("#FF0000"),
 })
 
-local SpeedSection = PlayerTab:Section({
-    Title = "Speed Hack"
+local VelocitySpeedSection = PlayerTab:Section({
+    Title = "Velocity Speed"
 })
 
-local speedMultiplier = 1
-local speedEnabled = false
-local speedConnection
+local velocitySpeedEnabled = false
+local velocitySpeedThread = nil
+local velocitySpeedValue = 30
+local velocitySpeedMax = 1000
+local velocitySavedWalkSpeed = 16
 
-SpeedSection:Slider({
-    Title = "Speed Multiplier",
-    Desc = "1 = 50, 2 = 100, etc.",
-    Step = 1,
-    Value = {
-        Min = 1,
-        Max = 50,
-        Default = 1,
-    },
-    Callback = function(value)
-        speedMultiplier = value
-        if speedEnabled then
-            updateSpeed()
-        end
-    end
-})
-
-local function updateSpeed()
-    if speedConnection then
-        speedConnection:Disconnect()
-        speedConnection = nil
+local function updateVelocitySpeed()
+    if velocitySpeedThread then
+        velocitySpeedThread = nil
     end
     
-    if speedEnabled then
-        local character = game.Players.LocalPlayer.Character
+    if velocitySpeedEnabled then
+        local player = game.Players.LocalPlayer
+        local UserInputService = game:GetService("UserInputService")
+        local RunService = game:GetService("RunService")
+        
+        -- Сохраняем оригинальную скорость ходьбы
+        local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.WalkSpeed = 50 * speedMultiplier
+            velocitySavedWalkSpeed = character.Humanoid.WalkSpeed
+            character.Humanoid.WalkSpeed = 0 -- Отключаем стандартное движение
         end
         
-        speedConnection = game:GetService("RunService").Heartbeat:Connect(function()
-            local character = game.Players.LocalPlayer.Character
+        velocitySpeedThread = task.spawn(function()
+            while velocitySpeedEnabled do
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local mv = Vector3.new(0, 0, 0)
+                    local hrp = player.Character.HumanoidRootPart
+                    
+                    -- Проверяем нажатые клавиши
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                        mv = mv + hrp.CFrame.LookVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                        mv = mv - hrp.CFrame.LookVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                        mv = mv - hrp.CFrame.RightVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                        mv = mv + hrp.CFrame.RightVector
+                    end
+                    
+                    if mv.Magnitude > 0 then
+                        -- Применяем скорость через Velocity
+                        hrp.Velocity = Vector3.new(
+                            mv.Unit.X * velocitySpeedValue,
+                            hrp.Velocity.Y, -- Сохраняем вертикальную скорость
+                            mv.Unit.Z * velocitySpeedValue
+                        )
+                    end
+                end
+                RunService.Heartbeat:Wait()
+            end
+            
+            -- Возвращаем стандартную скорость ходьбы
+            local character = player.Character
             if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid.WalkSpeed = 50 * speedMultiplier
+                character.Humanoid.WalkSpeed = velocitySavedWalkSpeed
             end
         end)
+        
+        WindUI:Notify({
+            Title = "Velocity Speed",
+            Content = "Velocity speed enabled! Speed: " .. velocitySpeedValue,
+            Icon = "zap"
+        })
     else
-        local character = game.Players.LocalPlayer.Character
+        -- Возвращаем стандартную скорость ходьбы
+        local player = game.Players.LocalPlayer
+        local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.WalkSpeed = 16
+            character.Humanoid.WalkSpeed = velocitySavedWalkSpeed
         end
+        
+        WindUI:Notify({
+            Title = "Velocity Speed",
+            Content = "Velocity speed disabled!",
+            Icon = "x"
+        })
     end
 end
 
-SpeedSection:Toggle({
-    Title = "Enable Speed Hack",
+VelocitySpeedSection:Toggle({
+    Title = "Velocity Speed",
+    Desc = "Control movement through Velocity instead of WalkSpeed",
     Icon = "zap",
     Callback = function(state)
-        speedEnabled = state
-        updateSpeed()
+        velocitySpeedEnabled = state
+        updateVelocitySpeed()
     end
 })
 
-SpeedSection:Space()
+VelocitySpeedSection:Slider({
+    Title = "Velocity Speed Value",
+    Desc = "Speed value (1-1000)",
+    Step = 1,
+    Value = {
+        Min = 1,
+        Max = velocitySpeedMax,
+        Default = 30,
+    },
+    Callback = function(value)
+        velocitySpeedValue = value
+        if velocitySpeedEnabled then
+            WindUI:Notify({
+                Title = "Velocity Speed",
+                Content = "Velocity speed updated to: " .. velocitySpeedValue,
+                Icon = "settings"
+            })
+        end
+    end
+})
+
+VelocitySpeedSection:Space()
+
+-- Кнопка для Space прыжка с Velocity
+local spaceJumpEnabled = false
+local spaceJumpThread = nil
+local spaceJumpPower = 50
+
+VelocitySpeedSection:Toggle({
+    Title = "Space Velocity Jump",
+    Desc = "Velocity-based jump when Space is pressed",
+    Icon = "arrow-up",
+    Callback = function(state)
+        spaceJumpEnabled = state
+        
+        if spaceJumpThread then
+            spaceJumpThread = nil
+        end
+        
+        if state then
+            spaceJumpThread = task.spawn(function()
+                local UserInputService = game:GetService("UserInputService")
+                local RunService = game:GetService("RunService")
+                
+                while spaceJumpEnabled do
+                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                        local player = game.Players.LocalPlayer
+                        local character = player.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local hrp = character.HumanoidRootPart
+                            hrp.Velocity = Vector3.new(
+                                hrp.Velocity.X,
+                                spaceJumpPower,
+                                hrp.Velocity.Z
+                            )
+                        end
+                        task.wait(0.1) -- Задержка между прыжками
+                    end
+                    RunService.Heartbeat:Wait()
+                end
+            end)
+        end
+    end
+})
+
+VelocitySpeedSection:Slider({
+    Title = "Jump Power",
+    Desc = "Jump velocity power (1-200)",
+    Step = 1,
+    Value = {
+        Min = 1,
+        Max = 200,
+        Default = 50,
+    },
+    Callback = function(value)
+        spaceJumpPower = value
+    end
+})
+
+VelocitySpeedSection:Space()
+
+-- Информационный текст
+VelocitySpeedSection:Text({
+    Title = "Controls:",
+    Content = "WASD - Movement\nSpace - Jump (if enabled)\nToggles work together"
+})
+
+-- Обработка смены персонажа
+game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    task.wait(0.5) -- Ждем загрузки
+    
+    if velocitySpeedEnabled then
+        -- Сохраняем новую скорость ходьбы
+        if character:FindFirstChild("Humanoid") then
+            velocitySavedWalkSpeed = character.Humanoid.WalkSpeed
+            character.Humanoid.WalkSpeed = 0
+        end
+        -- Перезапускаем поток
+        updateVelocitySpeed()
+    end
+end)
+
+game.Players.LocalPlayer.CharacterRemoving:Connect(function()
+    if velocitySpeedThread then
+        velocitySpeedThread = nil
+    end
+    if spaceJumpThread then
+        spaceJumpThread = nil
+    end
+end)
 
 local FlySection = PlayerTab:Section({
     Title = "Fly Hack"
