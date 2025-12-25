@@ -253,6 +253,135 @@ end)
 
 FlySection:Space()
 
+local FreezeSection = PlayerTab:Section({
+    Title = "Freeze"
+})
+
+local frozen = false
+local freezeCF = nil
+local freezeThread = nil
+
+FreezeSection:Button({
+    Title = "Freeze",
+    Desc = "Freeze/Unfreeze your character",
+    Icon = "snowflake",
+    Color = Color3.fromHex("#00AAFF"),
+    Justify = "Center",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        
+        if not char then return end
+        
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        
+        if not frozen then
+            -- Freeze
+            frozen = true
+            freezeCF = hrp.CFrame
+            
+            -- Anchor character
+            hrp.Anchored = true
+            
+            -- Stop all movement
+            if char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = 0
+                char.Humanoid.JumpPower = 0
+            end
+            
+            freezeThread = task.spawn(function()
+                while frozen do
+                    if hrp then
+                        hrp.CFrame = freezeCF
+                        hrp.Velocity = Vector3.new(0,0,0)
+                        hrp.RotVelocity = Vector3.new(0,0,0)
+                    end
+                    task.wait()
+                end
+            end)
+            
+            WindUI:Notify({
+                Title = "Freeze",
+                Content = "Character frozen!",
+                Icon = "snowflake"
+            })
+        else
+            -- Unfreeze
+            frozen = false
+            
+            if freezeThread then
+                freezeThread = nil
+            end
+            
+            if hrp then
+                hrp.Anchored = false
+            end
+            
+            if char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = 16
+                char.Humanoid.JumpPower = 50
+            end
+            
+            WindUI:Notify({
+                Title = "Freeze",
+                Content = "Character unfrozen!",
+                Icon = "check"
+            })
+        end
+    end
+})
+
+-- Hotkey F to toggle freeze
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F then
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        
+        if not char then return end
+        
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        
+        if not frozen then
+            frozen = true
+            freezeCF = hrp.CFrame
+            hrp.Anchored = true
+            
+            if char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = 0
+                char.Humanoid.JumpPower = 0
+            end
+            
+            freezeThread = task.spawn(function()
+                while frozen do
+                    if hrp then
+                        hrp.CFrame = freezeCF
+                        hrp.Velocity = Vector3.new(0,0,0)
+                        hrp.RotVelocity = Vector3.new(0,0,0)
+                    end
+                    task.wait()
+                end
+            end)
+        else
+            frozen = false
+            
+            if freezeThread then
+                freezeThread = nil
+            end
+            
+            if hrp then
+                hrp.Anchored = false
+            end
+            
+            if char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = 16
+                char.Humanoid.JumpPower = 50
+            end
+        end
+    end
+end)
+
 local JumpSection = PlayerTab:Section({
     Title = "Infinite Jump"
 })
