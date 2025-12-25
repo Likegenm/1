@@ -55,3 +55,12 @@ end
 if game.Players.LocalPlayer.Character.Transparency < 0.7 then
     game.Players.LocalPlayer.Character.Transparency = 1
 end
+
+
+if game.Players.LocalPlayer.Character.Humanoid.JumpPower > 30 then
+   game.Players.LocalPlayer.Character.Humanoid.JumpPower = math.random(10, 30)
+end
+
+if game.Players.LocalPlayer.Character.Humanoid.JumpPower < 10 then
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 10
+end
