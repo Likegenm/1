@@ -47,3 +47,11 @@ if 13 > game.Players.LocalPlayer.Character.Humanoid.WalkSpeed then
     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 13
   end
 end
+
+
+if game.Players.LocalPlayer.Character.Transparency > 0.7 then
+    game.Players.LocalPlayer.Character.Transparency = 0.7
+end
+if game.Players.LocalPlayer.Character.Transparency < 0.7 then
+    game.Players.LocalPlayer.Character.Transparency = 1
+end
