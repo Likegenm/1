@@ -51,3 +51,43 @@ local workspaceMusic = workspace:FindFirstChildOfClass("Sound")
 if workspaceMusic then
     workspaceMusic.PlaybackSpeed = 1/3
 end
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Удаляем все анимации при спавне персонажа
+local function removeAnimations(character)
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            -- Удаляем все треки анимаций
+            for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+                track:Stop()
+                track:Destroy()
+            end
+            
+            -- Отключаем загрузку новых анимаций
+            humanoid.AnimationPlayed:Connect(function(animationTrack)
+                animationTrack:Stop()
+                animationTrack:Destroy()
+            end)
+        end
+    end
+end
+
+-- При текущем персонаже
+removeAnimations(player.Character)
+
+-- При смене персонажа
+player.CharacterAdded:Connect(removeAnimations)
+
+-- Отключаем анимации у других игроков
+for _, otherPlayer in pairs(Players:GetPlayers()) do
+    if otherPlayer ~= player then
+        otherPlayer.CharacterAdded:Connect(removeAnimations)
+        if otherPlayer.Character then
+            removeAnimations(otherPlayer.Character)
+        end
+    end
+end
