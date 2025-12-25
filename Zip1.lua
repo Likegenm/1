@@ -295,6 +295,30 @@ MouseTeleportSection:Toggle({
     end
 })
 
+local InvisibleSection = PlayerTab:Section({
+    Title = "Invisible"
+})
+
+-- Новая кнопка для загрузки внешнего скрипта
+InvisibleSection:Button({
+    Title = "Load Invisible",
+    Desc = "Load Mohamedguguu's invisibility script",
+    Icon = "download",
+    Color = Color3.fromHex("#00AAFF"),
+    Justify = "Center",
+    Callback = function()
+        -- КОД ДЛЯ ЗАГРУЗКИ ВНЕШНЕГО СКРИПТА
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Mohamedguguu/invisible-V1-BY-MU/refs/heads/main/Maincode"))()
+        
+        -- Уведомление о загрузке
+        WindUI:Notify({
+            Title = "External Script",
+            Content = "Mohamedguguu's invisibility script loaded!",
+            Icon = "check"
+        })
+    end
+})
+
 local OrbitSection = PlayerTab:Section({
     Title = "Orbit"
 })
