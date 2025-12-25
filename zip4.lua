@@ -64,3 +64,8 @@ end
 if game.Players.LocalPlayer.Character.Humanoid.JumpPower < 10 then
     game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 10
 end
+
+local lighting = game:GetService("Lighting")
+lighting.FogStart = 0
+lighting.FogEnd = 50
+lighting.FogColor = Color3.new(0, 0, 0)
