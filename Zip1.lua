@@ -157,9 +157,6 @@ VelocitySpeedSection:Slider({
     end
 })
 
-VelocitySpeedSection:Space()
-
-
 local FlySection = PlayerTab:Section({
     Title = "Fly Hack"
 })
