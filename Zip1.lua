@@ -4135,3 +4135,76 @@ AutoClickerSection:Toggle({
         end
     end
 })
+
+-- Создаем таб Info
+local InfoTab = Window:Tab({
+    Title = "Info",
+    Icon = "info",
+    Desc = "Info"
+})
+
+-- Секция Credits
+local CreditsSection = InfoTab:Section({
+    Title = "Credits",
+    TextSize = 22,
+    TextXAlignment = "Center",
+    Opened = true,
+    Box = true
+})
+
+-- Текст с именами разработчиков
+CreditsSection:Section({
+    Title = "Library: Footagesus",
+    TextSize = 16,
+    TextXAlignment = "Left"
+})
+
+CreditsSection:Divider()
+
+CreditsSection:Section({
+    Title = "Главный (Main): Likegenm",
+    TextSize = 16,
+    TextXAlignment = "Left"
+})
+
+CreditsSection:Divider()
+
+CreditsSection:Section({
+    Title = "Main scripter: PePel0cHeK",
+    TextSize = 16,
+    TextXAlignment = "Left"
+})
+
+CreditsSection:Divider()
+
+CreditsSection:Section({
+    Title = "Second scripter: Likegenm",
+    TextSize = 16,
+    TextXAlignment = "Left"
+})
+
+-- Разделитель
+InfoTab:Divider()
+
+-- Секция "How Create tsb script"
+local TSBsection = InfoTab:Section({
+    Title = "How Create tsb script",
+    TextSize = 22,
+    TextXAlignment = "Center",
+    Opened = true,
+    Box = true
+})
+
+
+TSBsection:Code({
+    Title = "HelperTSB",
+    Code = "Copy in clipboard",
+    Language = "lua",
+    OnCopy = function()
+        WindUI:Notify({
+            Title = "Copy",
+            Content = "Paste in google",
+            Duration = 2
+        })
+    end
+})
