@@ -4198,8 +4198,8 @@ local TSBsection = InfoTab:Section({
 
 TSBsection:Code({
     Title = "HelperTSB",
-    Code = "Copy in clipboard",
-    Language = "lua",
+    Code = "https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/HelperTSB.lua",
+    Language = "txt",
     OnCopy = function()
         WindUI:Notify({
             Title = "Copy",
