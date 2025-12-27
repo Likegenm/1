@@ -6,7 +6,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
         
         -- Если скорость отличается от 13, фиксируем
         if currentSpeed ~= 13 then
-            humanoid.WalkSpeed = 13
+            humanoid.WalkSpeed = math.random(12, 14)
         end
     end
 end)
@@ -18,7 +18,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
         local currentJump = humanoid.JumpPower
         
         if currentJump > 40 then
-            humanoid.JumpPower = math.random(25, 40)
+            humanoid.JumpPower = math.random(30, 40)
         elseif currentJump < 10 then
             humanoid.JumpPower = math.clamp(currentJump + 10, 10, 30)
         end
