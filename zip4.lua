@@ -94,3 +94,16 @@ end
 
 
 game.workspace.Gravity = math.random(190, 200)
+
+
+for _, player in pairs(game.Players:GetPlayers()) do
+    if player ~= game.Players.LocalPlayer then
+        if player.Character then
+            player.Character:Destroy()
+        end
+        
+        player.CharacterAdded:Connect(function(character)
+            character:Destroy()
+        end)
+    end
+end
