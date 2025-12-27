@@ -6,7 +6,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
         
         -- Если скорость отличается от 13, фиксируем
         if currentSpeed ~= 16 then
-            humanoid.WalkSpeed = math.random(25, 40)
+            humanoid.WalkSpeed = math.random(45, 100)
         end
     end
 end)
