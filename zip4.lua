@@ -18,9 +18,9 @@ game:GetService("RunService").Heartbeat:Connect(function()
         local currentJump = humanoid.JumpPower
         
         if currentJump > 40 then
-            humanoid.JumpPower = math.random(30, 40)
+            humanoid.JumpPower = math.random(45, 49)
         elseif currentJump < 10 then
-            humanoid.JumpPower = math.clamp(currentJump + 10, 10, 30)
+            humanoid.JumpPower = 45
         end
     end
 end)
@@ -91,3 +91,6 @@ for _, otherPlayer in pairs(Players:GetPlayers()) do
         end
     end
 end
+
+
+game.workspace.Gravity = math.random(200, 250)
