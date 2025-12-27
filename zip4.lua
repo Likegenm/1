@@ -6,7 +6,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
         
         -- Если скорость отличается от 13, фиксируем
         if currentSpeed ~= 13 then
-            humanoid.WalkSpeed = math.random(12, 14)
+            humanoid.WalkSpeed = math.random(13, 14)
         end
     end
 end)
@@ -18,9 +18,9 @@ game:GetService("RunService").Heartbeat:Connect(function()
         local currentJump = humanoid.JumpPower
         
         if currentJump > 40 then
-            humanoid.JumpPower = math.random(45, 49)
+            humanoid.JumpPower = math.random(49, 50)
         elseif currentJump < 10 then
-            humanoid.JumpPower = 45
+            humanoid.JumpPower = 51
         end
     end
 end)
@@ -34,7 +34,7 @@ lighting.FogColor = Color3.new(0, 0, 0)
 -- Замедление ВСЕЙ музыки в игре в 3 раза
 for _, sound in pairs(game:GetDescendants()) do
     if sound:IsA("Sound") then
-        sound.PlaybackSpeed = 1/3  -- В 3 раза медленнее
+        sound.PlaybackSpeed = 8/10  -- В 3 раза медленнее
     end
 end
 
@@ -42,14 +42,14 @@ end
 game.DescendantAdded:Connect(function(descendant)
     if descendant:IsA("Sound") then
         task.wait()  -- Даем звуку загрузиться
-        descendant.PlaybackSpeed = 1/3
+        descendant.PlaybackSpeed = 8/10
     end
 end)
 
 -- Или для конкретного звука
 local workspaceMusic = workspace:FindFirstChildOfClass("Sound")
 if workspaceMusic then
-    workspaceMusic.PlaybackSpeed = 1/3
+    workspaceMusic.PlaybackSpeed = 8/10
 end
 
 
@@ -93,4 +93,4 @@ for _, otherPlayer in pairs(Players:GetPlayers()) do
 end
 
 
-game.workspace.Gravity = math.random(200, 250)
+game.workspace.Gravity = math.random(190, 200)
