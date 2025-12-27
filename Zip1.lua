@@ -1878,53 +1878,25 @@ local AdminTab = Window:Tab({
     IconColor = Color3.fromHex("#0000FF"),
 })
 
--- Section 1: Command Input
-local ExecuteSection = AdminTab:Section({
-    Title = "Execute"
+-- Section 1: Player Selection
+local PlayerSection = AdminTab:Section({
+    Title = "Player Selection",
+    Opened = true
 })
 
-local commandInput = ""
 local selectedPlayer = ""
 local flingCube = nil
-local flingSavedPos = nil
 local loopThreads = {}
 local whitelist = {}
-
--- Командный инпут
-ExecuteSection:Input({
-    Title = "Command Bar",
-    Desc = "Type commands here",
-    Callback = function(value)
-        commandInput = value
-    end
-})
+local cameraThread = nil
 
 -- Инпут для выбора игрока
-ExecuteSection:Input({
+local playerInput = PlayerSection:Input({
     Title = "Player Name",
-    Desc = "Enter player name (optional for commands)",
+    Desc = "Enter player name or 'All'",
     Callback = function(value)
         selectedPlayer = value
     end
-})
-
--- Кнопка выполнения
-ExecuteSection:Button({
-    Title = "Execute Command",
-    Desc = "Run the typed command",
-    Icon = "terminal",
-    Color = Color3.fromHex("#FFAA00"),
-    Justify = "Center",
-    Callback = function()
-        executeCommand(commandInput)
-    end
-})
-
-ExecuteSection:Space()
-
--- Section 2: Command Buttons
-local CommandsSection = AdminTab:Section({
-    Title = "Commands"
 })
 
 -- Функции для работы с игроками
@@ -1968,13 +1940,19 @@ local function teleportToPlayer(targetPlayer)
     return false
 end
 
-local function viewPlayer(targetPlayer)
+local function viewPlayer(targetPlayer, duration)
+    if cameraThread then
+        cameraThread = nil
+    end
+    
     local camera = workspace.CurrentCamera
     local originalType = camera.CameraType
-    camera.CameraType = Enum.CameraType.Scriptable
     
-    return task.spawn(function()
-        while camera.CameraType == Enum.CameraType.Scriptable do
+    cameraThread = task.spawn(function()
+        camera.CameraType = Enum.CameraType.Scriptable
+        local startTime = tick()
+        
+        while cameraThread and tick() - startTime < (duration or 3) do
             local targetChar = targetPlayer.Character
             if targetChar then
                 local hrp = targetChar:FindFirstChild("HumanoidRootPart")
@@ -1987,13 +1965,17 @@ local function viewPlayer(targetPlayer)
             end
             task.wait()
         end
-        camera.CameraType = originalType
+        
+        if camera.CameraType == Enum.CameraType.Scriptable then
+            camera.CameraType = originalType
+        end
+        cameraThread = nil
     end)
 end
 
 local function createFlingCube()
     if flingCube and flingCube.Parent then
-        flingCube:Destroy()
+        return flingCube
     end
     
     flingCube = Instance.new("Part")
@@ -2053,8 +2035,8 @@ local function performSkidFling(targetPlayer)
         return false
     end
     
-    -- Сохраняем позицию
-    flingSavedPos = rootPart.CFrame
+    -- Создаем куб если его нет
+    createFlingCube()
     
     -- Проверяем, находится ли игрок в кубе
     if not isPlayerInCube(targetPlayer) then
@@ -2066,22 +2048,20 @@ local function performSkidFling(targetPlayer)
         return false
     end
     
-    -- Создаем куб если его нет
-    if not flingCube then
-        createFlingCube()
-    end
+    -- Сохраняем позицию
+    local savedPos = rootPart.CFrame
+    local savedVelocity = rootPart.Velocity
+    local savedRotVelocity = rootPart.RotVelocity
     
     -- Начинаем флинг
-    local oldPos = rootPart.CFrame
-    workspace.CurrentCamera.CameraSubject = tHead or tHumanoid
+    local camera = workspace.CurrentCamera
+    local savedCameraSubject = camera.CameraSubject
     
-    local function fPos(basePart, pos, ang)
-        rootPart.CFrame = CFrame.new(basePart.Position) * pos * ang
-        rootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
-        rootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+    if tHead then
+        camera.CameraSubject = tHead
+    elseif tHumanoid then
+        camera.CameraSubject = tHumanoid
     end
-    
-    workspace.FallenPartsDestroyHeight = 0/0
     
     local bv = Instance.new("BodyVelocity")
     bv.Name = "EpixVel"
@@ -2096,442 +2076,88 @@ local function performSkidFling(targetPlayer)
     local startTime = tick()
     
     while tick() - startTime < timeToWait do
+        if not rootPart or not tRootPart then break end
+        
         if tRootPart.Velocity.Magnitude < 50 then
             angle = angle + 100
             
-            fPos(tRootPart, CFrame.new(0, 1.5, 0) + tHumanoid.MoveDirection * tRootPart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
-            task.wait()
+            rootPart.CFrame = tRootPart.CFrame * CFrame.new(0, 1.5, 0) + tHumanoid.MoveDirection * tRootPart.Velocity.Magnitude / 1.25
+            rootPart.CFrame = rootPart.CFrame * CFrame.Angles(math.rad(angle), 0, 0)
+            task.wait(0.01)
             
-            fPos(tRootPart, CFrame.new(0, -1.5, 0) + tHumanoid.MoveDirection * tRootPart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
-            task.wait()
-            
-            fPos(tRootPart, CFrame.new(2.25, 1.5, -2.25) + tHumanoid.MoveDirection * tRootPart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
-            task.wait()
-            
-            fPos(tRootPart, CFrame.new(-2.25, -1.5, 2.25) + tHumanoid.MoveDirection * tRootPart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(angle), 0, 0))
-            task.wait()
+            rootPart.CFrame = tRootPart.CFrame * CFrame.new(0, -1.5, 0) + tHumanoid.MoveDirection * tRootPart.Velocity.Magnitude / 1.25
+            rootPart.CFrame = rootPart.CFrame * CFrame.Angles(math.rad(angle), 0, 0)
+            task.wait(0.01)
         else
-            fPos(tRootPart, CFrame.new(0, 1.5, tHumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
-            task.wait()
+            rootPart.CFrame = tRootPart.CFrame * CFrame.new(0, 1.5, tHumanoid.WalkSpeed)
+            rootPart.CFrame = rootPart.CFrame * CFrame.Angles(math.rad(90), 0, 0)
+            task.wait(0.01)
             
-            fPos(tRootPart, CFrame.new(0, -1.5, -tHumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
-            task.wait()
+            rootPart.CFrame = tRootPart.CFrame * CFrame.new(0, -1.5, -tHumanoid.WalkSpeed)
+            task.wait(0.01)
         end
     end
     
+    -- Восстанавливаем
     bv:Destroy()
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-    workspace.CurrentCamera.CameraSubject = humanoid
+    camera.CameraSubject = savedCameraSubject
     
-    -- Возвращаемся на сохраненную позицию
-    while (rootPart.Position - flingSavedPos.p).Magnitude > 25 do
-        rootPart.CFrame = flingSavedPos
-        rootPart.Velocity = Vector3.new(0, 0, 0)
-        rootPart.RotVelocity = Vector3.new(0, 0, 0)
-        task.wait()
+    -- Восстанавливаем позицию
+    if rootPart then
+        rootPart.CFrame = savedPos
+        rootPart.Velocity = savedVelocity
+        rootPart.RotVelocity = savedRotVelocity
     end
     
-    workspace.FallenPartsDestroyHeight = 500
     return true
 end
 
-local function executeCommand(cmd)
-    if not cmd or cmd == "" then
-        WindUI:Notify({
-            Title = "Command",
-            Content = "Enter a command!",
-            Icon = "x"
-        })
-        return
-    end
-    
-    local args = {}
-    for word in cmd:gmatch("%S+") do
-        table.insert(args, word)
-    end
-    
-    local command = args[1]:lower()
-    local playerName = selectedPlayer
-    
-    if #args >= 2 and not playerName then
-        playerName = table.concat(args, " ", 2)
-    end
-    
-    if command == "goto" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "Goto",
-                Content = "Enter player name!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        local target = getPlayerByName(playerName)
-        if target then
-            if teleportToPlayer(target) then
-                WindUI:Notify({
-                    Title = "Goto",
-                    Content = "Teleported to " .. target.DisplayName,
-                    Icon = "check"
-                })
-            end
-        else
-            WindUI:Notify({
-                Title = "Goto",
-                Content = "Player not found!",
-                Icon = "x"
-            })
-        end
-        
-    elseif command == "loopgoto" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "LoopGoto",
-                Content = "Enter player name!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        local target = getPlayerByName(playerName)
-        if not target then
-            WindUI:Notify({
-                Title = "LoopGoto",
-                Content = "Player not found!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        if loopThreads["goto_" .. target.Name] then
-            WindUI:Notify({
-                Title = "LoopGoto",
-                Content = "Already loop-gotoing " .. target.DisplayName,
-                Icon = "x"
-            })
-            return
-        end
-        
-        loopThreads["goto_" .. target.Name] = task.spawn(function()
-            while loopThreads["goto_" .. target.Name] do
-                teleportToPlayer(target)
-                task.wait(0.01)
-            end
-        end)
-        
-        WindUI:Notify({
-            Title = "LoopGoto",
-            Content = "Loop-goto to " .. target.DisplayName,
-            Icon = "check"
-        })
-        
-    elseif command == "unloopgoto" then
-        if playerName then
-            local target = getPlayerByName(playerName)
-            if target and loopThreads["goto_" .. target.Name] then
-                loopThreads["goto_" .. target.Name] = nil
-                WindUI:Notify({
-                    Title = "UnLoopGoto",
-                    Content = "Stopped loop-goto",
-                    Icon = "check"
-                })
-            end
-        else
-            -- Останавливаем все loopgoto
-            for name, thread in pairs(loopThreads) do
-                if name:find("goto_") then
-                    loopThreads[name] = nil
-                end
-            end
-            WindUI:Notify({
-                Title = "UnLoopGoto",
-                Content = "Stopped all loop-gotos",
-                Icon = "check"
-            })
-        end
-        
-    elseif command == "view" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "View",
-                Content = "Enter player name!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        local target = getPlayerByName(playerName)
-        if not target then
-            WindUI:Notify({
-                Title = "View",
-                Content = "Player not found!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        if loopThreads["view"] then
-            loopThreads["view"] = nil
-            task.wait(0.1)
-        end
-        
-        loopThreads["view"] = viewPlayer(target)
-        WindUI:Notify({
-            Title = "View",
-            Content = "Viewing " .. target.DisplayName,
-            Icon = "check"
-        })
-        
-    elseif command == "loopview" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "LoopView",
-                Content = "Enter player name!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        local target = getPlayerByName(playerName)
-        if not target then
-            WindUI:Notify({
-                Title = "LoopView",
-                Content = "Player not found!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        if loopThreads["view"] then
-            loopThreads["view"] = nil
-            task.wait(0.1)
-        end
-        
-        loopThreads["view"] = viewPlayer(target)
-        WindUI:Notify({
-            Title = "LoopView",
-            Content = "Loop viewing " .. target.DisplayName,
-            Icon = "check"
-        })
-        
-    elseif command == "unloopview" then
-        if loopThreads["view"] then
-            loopThreads["view"] = nil
-            WindUI:Notify({
-                Title = "UnLoopView",
-                Content = "Stopped viewing",
-                Icon = "check"
-            })
-        end
-        
-    elseif command == "whitelist" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "Whitelist",
-                Content = "Enter player name!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        local target = getPlayerByName(playerName)
-        if target then
-            whitelist[target.Name] = true
-            WindUI:Notify({
-                Title = "Whitelist",
-                Content = target.DisplayName .. " added to whitelist",
-                Icon = "check"
-            })
-        else
-            WindUI:Notify({
-                Title = "Whitelist",
-                Content = "Player not found!",
-                Icon = "x"
-            })
-        end
-        
-    elseif command == "unwhitelist" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "UnWhitelist",
-                Content = "Enter player name!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        local target = getPlayerByName(playerName)
-        if target and whitelist[target.Name] then
-            whitelist[target.Name] = nil
-            WindUI:Notify({
-                Title = "UnWhitelist",
-                Content = target.DisplayName .. " removed from whitelist",
-                Icon = "check"
-            })
-        else
-            WindUI:Notify({
-                Title = "UnWhitelist",
-                Content = "Player not in whitelist!",
-                Icon = "x"
-            })
-        end
-        
-    elseif command == "fling" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "Fling",
-                Content = "Enter player name or 'All'!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        if playerName:lower() == "all" then
-            local players = getAllPlayers()
-            local flingCount = 0
-            
-            for _, player in pairs(players) do
-                if not whitelist[player.Name] then
-                    performSkidFling(player)
-                    flingCount = flingCount + 1
-                    task.wait(0.5)
-                end
-            end
-            
-            WindUI:Notify({
-                Title = "Fling All",
-                Content = "Flinging " .. flingCount .. " players",
-                Icon = "check"
-            })
-        else
-            local target = getPlayerByName(playerName)
-            if not target then
-                WindUI:Notify({
-                    Title = "Fling",
-                    Content = "Player not found!",
-                    Icon = "x"
-                })
-                return
-            end
-            
-            if whitelist[target.Name] then
-                WindUI:Notify({
-                    Title = "Fling",
-                    Content = target.DisplayName .. " is whitelisted!",
-                    Icon = "x"
-                })
-                return
-            end
-            
-            if performSkidFling(target) then
-                WindUI:Notify({
-                    Title = "Fling",
-                    Content = "Flinging " .. target.DisplayName,
-                    Icon = "check"
-                })
-            end
-        end
-        
-    elseif command == "loopfling" then
-        if not playerName then
-            WindUI:Notify({
-                Title = "LoopFling",
-                Content = "Enter player name or 'All'!",
-                Icon = "x"
-            })
-            return
-        end
-        
-        if playerName:lower() == "all" then
-            -- Останавливаем предыдущий loopfling all
-            if loopThreads["fling_all"] then
-                loopThreads["fling_all"] = nil
-            end
-            
-            loopThreads["fling_all"] = task.spawn(function()
-                while loopThreads["fling_all"] do
-                    local players = getAllPlayers()
-                    for _, player in pairs(players) do
-                        if not whitelist[player.Name] and isPlayerInCube(player) then
-                            performSkidFling(player)
-                        end
-                    end
-                    task.wait(0.1)
-                end
-            end)
-            
-            WindUI:Notify({
-                Title = "LoopFling All",
-                Content = "Loop flinging all in zone",
-                Icon = "check"
-            })
-        else
-            local target = getPlayerByName(playerName)
-            if not target then
-                WindUI:Notify({
-                    Title = "LoopFling",
-                    Content = "Player not found!",
-                    Icon = "x"
-                })
-                return
-            end
-            
-            if whitelist[target.Name] then
-                WindUI:Notify({
-                    Title = "LoopFling",
-                    Content = target.DisplayName .. " is whitelisted!",
-                    Icon = "x"
-                })
-                return
-            end
-            
-            local threadName = "fling_" .. target.Name
-            if loopThreads[threadName] then
-                loopThreads[threadName] = nil
-                WindUI:Notify({
-                    Title = "LoopFling",
-                    Content = "Stopped loop flinging " .. target.DisplayName,
-                    Icon = "check"
-                })
-                return
-            end
-            
-            loopThreads[threadName] = task.spawn(function()
-                while loopThreads[threadName] do
-                    if isPlayerInCube(target) then
-                        performSkidFling(target)
-                    end
-                    task.wait(0.1)
-                end
-            end)
-            
-            WindUI:Notify({
-                Title = "LoopFling",
-                Content = "Loop flinging " .. target.DisplayName,
-                Icon = "check"
-            })
-        end
-        
-    else
-        WindUI:Notify({
-            Title = "Command",
-            Content = "Unknown command!",
-            Icon = "x"
-        })
-    end
-end
+-- Автоматически создаем куб при запуске
+task.spawn(function()
+    task.wait(2)
+    createFlingCube()
+end)
 
--- Кнопки команд
-CommandsSection:Button({
+-- Section 2: Teleport Commands
+local TeleportSection = AdminTab:Section({
+    Title = "Teleport",
+    Opened = true
+})
+
+TeleportSection:Button({
     Title = "Goto (Player)",
-    Desc = "Teleport to player",
+    Desc = "Teleport to selected player",
     Icon = "map-pin",
     Color = Color3.fromHex("#55FF55"),
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("goto " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                WindUI:Notify({
+                    Title = "Goto",
+                    Content = "Cannot teleport to 'All'!",
+                    Icon = "x"
+                })
+                return
+            end
+            
+            local target = getPlayerByName(selectedPlayer)
+            if target then
+                if teleportToPlayer(target) then
+                    WindUI:Notify({
+                        Title = "Goto",
+                        Content = "Teleported to " .. target.DisplayName,
+                        Icon = "check"
+                    })
+                end
+            else
+                WindUI:Notify({
+                    Title = "Goto",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+            end
         else
             WindUI:Notify({
                 Title = "Goto",
@@ -2542,7 +2168,7 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Button({
+TeleportSection:Button({
     Title = "LoopGoto (Player)",
     Desc = "Continuously teleport to player",
     Icon = "refresh-cw",
@@ -2550,7 +2176,48 @@ CommandsSection:Button({
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("loopgoto " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                WindUI:Notify({
+                    Title = "LoopGoto",
+                    Content = "Cannot loop teleport to 'All'!",
+                    Icon = "x"
+                })
+                return
+            end
+            
+            local target = getPlayerByName(selectedPlayer)
+            if not target then
+                WindUI:Notify({
+                    Title = "LoopGoto",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+                return
+            end
+            
+            local threadName = "goto_" .. target.Name
+            if loopThreads[threadName] then
+                loopThreads[threadName] = nil
+                WindUI:Notify({
+                    Title = "LoopGoto",
+                    Content = "Stopped loop-goto to " .. target.DisplayName,
+                    Icon = "check"
+                })
+                return
+            end
+            
+            loopThreads[threadName] = task.spawn(function()
+                while loopThreads[threadName] do
+                    teleportToPlayer(target)
+                    task.wait(0.1)
+                end
+            end)
+            
+            WindUI:Notify({
+                Title = "LoopGoto",
+                Content = "Loop-goto to " .. target.DisplayName,
+                Icon = "check"
+            })
         else
             WindUI:Notify({
                 Title = "LoopGoto",
@@ -2561,26 +2228,76 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Button({
+TeleportSection:Button({
     Title = "UnLoopGoto",
     Desc = "Stop loop teleport",
     Icon = "x",
     Color = Color3.fromHex("#FF5555"),
     Justify = "Center",
     Callback = function()
-        executeCommand("unloopgoto")
+        local stopped = false
+        for name, thread in pairs(loopThreads) do
+            if name:find("goto_") then
+                loopThreads[name] = nil
+                stopped = true
+            end
+        end
+        
+        if stopped then
+            WindUI:Notify({
+                Title = "UnLoopGoto",
+                Content = "Stopped all loop-gotos",
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "UnLoopGoto",
+                Content = "No active loop-gotos",
+                Icon = "x"
+            })
+        end
     end
 })
 
-CommandsSection:Button({
-    Title = "View (Player)",
-    Desc = "Spectate player",
+-- Section 3: View Commands
+local ViewSection = AdminTab:Section({
+    Title = "View",
+    Opened = true
+})
+
+ViewSection:Button({
+    Title = "View (3 seconds)",
+    Desc = "Spectate player for 3 seconds",
     Icon = "eye",
     Color = Color3.fromHex("#55AAFF"),
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("view " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                WindUI:Notify({
+                    Title = "View",
+                    Content = "Cannot spectate 'All'!",
+                    Icon = "x"
+                })
+                return
+            end
+            
+            local target = getPlayerByName(selectedPlayer)
+            if target then
+                viewPlayer(target, 3)
+                WindUI:Notify({
+                    Title = "View",
+                    Content = "Viewing " .. target.DisplayName .. " for 3 seconds",
+                    Icon = "check",
+                    Duration = 3
+                })
+            else
+                WindUI:Notify({
+                    Title = "View",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+            end
         else
             WindUI:Notify({
                 Title = "View",
@@ -2591,7 +2308,7 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Button({
+ViewSection:Button({
     Title = "LoopView (Player)",
     Desc = "Continuously spectate",
     Icon = "eye",
@@ -2599,7 +2316,35 @@ CommandsSection:Button({
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("loopview " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                WindUI:Notify({
+                    Title = "LoopView",
+                    Content = "Cannot spectate 'All'!",
+                    Icon = "x"
+                })
+                return
+            end
+            
+            local target = getPlayerByName(selectedPlayer)
+            if target then
+                if cameraThread then
+                    cameraThread = nil
+                    task.wait(0.1)
+                end
+                
+                viewPlayer(target, 999999) -- Очень долгий просмотр
+                WindUI:Notify({
+                    Title = "LoopView",
+                    Content = "Loop viewing " .. target.DisplayName,
+                    Icon = "check"
+                })
+            else
+                WindUI:Notify({
+                    Title = "LoopView",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+            end
         else
             WindUI:Notify({
                 Title = "LoopView",
@@ -2610,18 +2355,37 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Button({
+ViewSection:Button({
     Title = "UnLoopView",
     Desc = "Stop spectating",
     Icon = "eye-off",
     Color = Color3.fromHex("#FF5555"),
     Justify = "Center",
     Callback = function()
-        executeCommand("unloopview")
+        if cameraThread then
+            cameraThread = nil
+            WindUI:Notify({
+                Title = "UnLoopView",
+                Content = "Stopped viewing",
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "UnLoopView",
+                Content = "Not viewing anyone",
+                Icon = "x"
+            })
+        end
     end
 })
 
-CommandsSection:Button({
+-- Section 4: Whitelist Commands
+local WhitelistSection = AdminTab:Section({
+    Title = "Whitelist",
+    Opened = true
+})
+
+WhitelistSection:Button({
     Title = "Whitelist (Player)",
     Desc = "Add to whitelist",
     Icon = "shield",
@@ -2629,7 +2393,30 @@ CommandsSection:Button({
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("whitelist " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                WindUI:Notify({
+                    Title = "Whitelist",
+                    Content = "Cannot whitelist 'All'!",
+                    Icon = "x"
+                })
+                return
+            end
+            
+            local target = getPlayerByName(selectedPlayer)
+            if target then
+                whitelist[target.Name] = true
+                WindUI:Notify({
+                    Title = "Whitelist",
+                    Content = target.DisplayName .. " added to whitelist",
+                    Icon = "check"
+                })
+            else
+                WindUI:Notify({
+                    Title = "Whitelist",
+                    Content = "Player not found!",
+                    Icon = "x"
+                })
+            end
         else
             WindUI:Notify({
                 Title = "Whitelist",
@@ -2640,7 +2427,7 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Button({
+WhitelistSection:Button({
     Title = "UnWhitelist (Player)",
     Desc = "Remove from whitelist",
     Icon = "shield-off",
@@ -2648,7 +2435,32 @@ CommandsSection:Button({
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("unwhitelist " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                -- Удаляем всех из вайтлиста
+                whitelist = {}
+                WindUI:Notify({
+                    Title = "UnWhitelist",
+                    Content = "All players removed from whitelist",
+                    Icon = "check"
+                })
+                return
+            end
+            
+            local target = getPlayerByName(selectedPlayer)
+            if target and whitelist[target.Name] then
+                whitelist[target.Name] = nil
+                WindUI:Notify({
+                    Title = "UnWhitelist",
+                    Content = target.DisplayName .. " removed from whitelist",
+                    Icon = "check"
+                })
+            else
+                WindUI:Notify({
+                    Title = "UnWhitelist",
+                    Content = "Player not in whitelist!",
+                    Icon = "x"
+                })
+            end
         else
             WindUI:Notify({
                 Title = "UnWhitelist",
@@ -2659,7 +2471,13 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Button({
+-- Section 5: Fling Commands
+local FlingSection = AdminTab:Section({
+    Title = "Fling",
+    Opened = true
+})
+
+FlingSection:Button({
     Title = "Fling (Player)",
     Desc = "Fling player once",
     Icon = "wind",
@@ -2667,7 +2485,51 @@ CommandsSection:Button({
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("fling " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                local players = getAllPlayers()
+                local flingCount = 0
+                
+                for _, player in pairs(players) do
+                    if not whitelist[player.Name] then
+                        performSkidFling(player)
+                        flingCount = flingCount + 1
+                        task.wait(0.1)
+                    end
+                end
+                
+                WindUI:Notify({
+                    Title = "Fling All",
+                    Content = "Flinging " .. flingCount .. " players",
+                    Icon = "check"
+                })
+            else
+                local target = getPlayerByName(selectedPlayer)
+                if not target then
+                    WindUI:Notify({
+                        Title = "Fling",
+                        Content = "Player not found!",
+                        Icon = "x"
+                    })
+                    return
+                end
+                
+                if whitelist[target.Name] then
+                    WindUI:Notify({
+                        Title = "Fling",
+                        Content = target.DisplayName .. " is whitelisted!",
+                        Icon = "x"
+                    })
+                    return
+                end
+                
+                if performSkidFling(target) then
+                    WindUI:Notify({
+                        Title = "Fling",
+                        Content = "Flinging " .. target.DisplayName,
+                        Icon = "check"
+                    })
+                end
+            end
         else
             WindUI:Notify({
                 Title = "Fling",
@@ -2678,7 +2540,7 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Button({
+FlingSection:Button({
     Title = "LoopFling (Player)",
     Desc = "Continuously fling player",
     Icon = "repeat",
@@ -2686,7 +2548,82 @@ CommandsSection:Button({
     Justify = "Center",
     Callback = function()
         if selectedPlayer and selectedPlayer ~= "" then
-            executeCommand("loopfling " .. selectedPlayer)
+            if selectedPlayer:lower() == "all" then
+                local threadName = "fling_all"
+                if loopThreads[threadName] then
+                    loopThreads[threadName] = nil
+                    WindUI:Notify({
+                        Title = "LoopFling All",
+                        Content = "Stopped loop flinging all",
+                        Icon = "check"
+                    })
+                    return
+                end
+                
+                loopThreads[threadName] = task.spawn(function()
+                    while loopThreads[threadName] do
+                        local players = getAllPlayers()
+                        for _, player in pairs(players) do
+                            if not whitelist[player.Name] and isPlayerInCube(player) then
+                                performSkidFling(player)
+                                task.wait(0.1)
+                            end
+                        end
+                        task.wait(0.1)
+                    end
+                end)
+                
+                WindUI:Notify({
+                    Title = "LoopFling All",
+                    Content = "Loop flinging all in zone",
+                    Icon = "check"
+                })
+            else
+                local target = getPlayerByName(selectedPlayer)
+                if not target then
+                    WindUI:Notify({
+                        Title = "LoopFling",
+                        Content = "Player not found!",
+                        Icon = "x"
+                    })
+                    return
+                end
+                
+                if whitelist[target.Name] then
+                    WindUI:Notify({
+                        Title = "LoopFling",
+                        Content = target.DisplayName .. " is whitelisted!",
+                        Icon = "x"
+                    })
+                    return
+                end
+                
+                local threadName = "fling_" .. target.Name
+                if loopThreads[threadName] then
+                    loopThreads[threadName] = nil
+                    WindUI:Notify({
+                        Title = "LoopFling",
+                        Content = "Stopped loop flinging " .. target.DisplayName,
+                        Icon = "check"
+                    })
+                    return
+                end
+                
+                loopThreads[threadName] = task.spawn(function()
+                    while loopThreads[threadName] do
+                        if isPlayerInCube(target) then
+                            performSkidFling(target)
+                        end
+                        task.wait(0.1)
+                    end
+                end)
+                
+                WindUI:Notify({
+                    Title = "LoopFling",
+                    Content = "Loop flinging " .. target.DisplayName,
+                    Icon = "check"
+                })
+            end
         else
             WindUI:Notify({
                 Title = "LoopFling",
@@ -2697,43 +2634,43 @@ CommandsSection:Button({
     end
 })
 
-CommandsSection:Space()
-
--- Кнопка создания флинг куба
-CommandsSection:Button({
-    Title = "Create Fling Zone",
-    Desc = "Create invisible fling cube",
-    Icon = "cube",
-    Color = Color3.fromHex("#AA00FF"),
+FlingSection:Button({
+    Title = "UnLoopFling",
+    Desc = "Stop loop fling",
+    Icon = "x",
+    Color = Color3.fromHex("#AA0000"),
     Justify = "Center",
     Callback = function()
-        createFlingCube()
-        WindUI:Notify({
-            Title = "Fling Zone",
-            Content = "Fling zone created at position!",
-            Icon = "check"
-        })
-    end
-})
-
--- Кнопка удаления флинг куба
-CommandsSection:Button({
-    Title = "Remove Fling Zone",
-    Desc = "Remove fling cube",
-    Icon = "trash",
-    Color = Color3.fromHex("#FF5555"),
-    Justify = "Center",
-    Callback = function()
-        if flingCube then
-            flingCube:Destroy()
-            flingCube = nil
+        local stopped = false
+        for name, thread in pairs(loopThreads) do
+            if name:find("fling_") then
+                loopThreads[name] = nil
+                stopped = true
+            end
+        end
+        
+        if stopped then
             WindUI:Notify({
-                Title = "Fling Zone",
-                Content = "Fling zone removed!",
+                Title = "UnLoopFling",
+                Content = "Stopped all loop flings",
                 Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "UnLoopFling",
+                Content = "No active loop flings",
+                Icon = "x"
             })
         end
     end
+})
+
+-- Информация о флинг зоне
+FlingSection:Section({
+    Title = "Fling Zone: Auto-created",
+    TextSize = 12,
+    TextTransparency = 0.3,
+    TextXAlignment = "Center"
 })
 
 -- Очистка при смене персонажа
@@ -2743,10 +2680,20 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
         loopThreads[name] = nil
     end
     
-    -- Удаляем флинг куб
-    if flingCube then
-        flingCube:Destroy()
-        flingCube = nil
+    -- Останавливаем просмотр
+    if cameraThread then
+        cameraThread = nil
+    end
+end)
+
+-- Очистка при выходе
+game.Players.LocalPlayer.CharacterRemoving:Connect(function()
+    for name, thread in pairs(loopThreads) do
+        loopThreads[name] = nil
+    end
+    
+    if cameraThread then
+        cameraThread = nil
     end
 end)
 
