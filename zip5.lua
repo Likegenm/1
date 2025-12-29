@@ -31,3 +31,23 @@ local Window = WindUI:createWindow({
         ButtonsType = "Mac",
     },
   
+KeySystem = {
+        Title = "bot check",
+        Note = "Key: 1234",
+        KeyValidator = function(EnteredKey)
+            if EnteredKey == "1234" then
+                createPopup()
+                return true
+            end
+            return false
+            return EnteredKey == "1234"
+        end
+    }
+    })
+
+    Window:Tag({
+        Title = "1.0.0",
+        Icon = "github",
+        Color = Color3.fromHex("#ffff00"),
+        Border = true,
+    })
