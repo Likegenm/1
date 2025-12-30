@@ -443,28 +443,370 @@ ItemsGB:AddSlider('ESPTransparency', {
     end
 })
 
-RunService.RenderStepped:Connect(function()
-    if not espEnabled then return end
+local PlayerESPGB = VTab:AddLeftGroupbox("Player ESP")
+
+local playerEspEnabled = false
+local playerEspColor = Color3.new(0, 1, 0)
+local playerEspTransparency = 0.3
+local playerEspRainbow = false
+local playerEspDistance = 500
+local playerShowName = true
+local playerShowDistance = true
+local playerShowHealth = true
+local highlightedPlayers = {}
+
+local playerRainbowConnection
+
+local function CreatePlayerHighlight(character)
+    if not character:IsA("Model") then return end
+    if highlightedPlayers[character] then return end
     
-    for model, esp in pairs(highlightedItems) do
-        if model and model.Parent then
-            if esp.Billboard and esp.Billboard.Adornee then
-                local camera = workspace.CurrentCamera
-                local adorneePos = esp.Billboard.Adornee.Position
-                local distance = (camera.CFrame.Position - adorneePos).Magnitude
-                
-                esp.Billboard.Enabled = distance <= espDistance
-                esp.Highlight.Enabled = distance <= espDistance
-                
-                local textLabel = esp.Billboard:FindFirstChild("TextLabel")
-                if textLabel then
-                    textLabel.TextSize = math.clamp(14 - (distance / 100), 8, 14)
+    local player = Players:GetPlayerFromCharacter(character)
+    if player and player == Players.LocalPlayer then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "PlayerHighlight"
+    highlight.FillColor = playerEspColor
+    highlight.OutlineColor = Color3.new(1, 1, 0)
+    highlight.FillTransparency = playerEspTransparency
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = character
+    highlight.Enabled = playerEspEnabled
+    highlight.Parent = character
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "PlayerESP"
+    billboard.Size = UDim2.new(0, 200, 0, 80)
+    billboard.StudsOffset = Vector3.new(0, 5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = playerEspDistance
+    
+    if rootPart then
+        billboard.Adornee = rootPart
+    end
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.Parent = billboard
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = "Name"
+    nameLabel.Size = UDim2.new(1, 0, 0.3, 0)
+    nameLabel.Position = UDim2.new(0, 0, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player and player.Name or character.Name
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 14
+    nameLabel.TextScaled = false
+    nameLabel.Visible = playerShowName
+    nameLabel.Parent = frame
+    
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Name = "Distance"
+    distanceLabel.Size = UDim2.new(1, 0, 0.3, 0)
+    distanceLabel.Position = UDim2.new(0, 0, 0.3, 0)
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.Text = "0m"
+    distanceLabel.TextColor3 = Color3.new(1, 1, 1)
+    distanceLabel.TextStrokeTransparency = 0
+    distanceLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    distanceLabel.Font = Enum.Font.Gotham
+    distanceLabel.TextSize = 12
+    distanceLabel.Visible = playerShowDistance
+    distanceLabel.Parent = frame
+    
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Name = "Health"
+    healthLabel.Size = UDim2.new(1, 0, 0.3, 0)
+    healthLabel.Position = UDim2.new(0, 0, 0.6, 0)
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Text = "HP: 100/100"
+    healthLabel.TextColor3 = Color3.new(1, 1, 1)
+    healthLabel.TextStrokeTransparency = 0
+    healthLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    healthLabel.Font = Enum.Font.Gotham
+    healthLabel.TextSize = 12
+    healthLabel.Visible = playerShowHealth
+    healthLabel.Parent = frame
+    
+    billboard.Parent = character
+    billboard.Enabled = playerEspEnabled
+    
+    highlightedPlayers[character] = {
+        Highlight = highlight,
+        Billboard = billboard,
+        Player = player,
+        Humanoid = humanoid
+    }
+end
+
+local function UpdatePlayerESP()
+    if not playerEspEnabled then return end
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer and player.Character then
+            CreatePlayerHighlight(player.Character)
+        end
+    end
+    
+    local activeHumanoids = workspace:FindFirstChild("ActiveHumanoids")
+    if activeHumanoids then
+        for _, model in pairs(activeHumanoids:GetChildren()) do
+            if model:IsA("Model") and not Players:GetPlayerFromCharacter(model) then
+                CreatePlayerHighlight(model)
+            end
+        end
+    end
+end
+
+local function ClearPlayerESP()
+    for character, esp in pairs(highlightedPlayers) do
+        if esp.Highlight then esp.Highlight:Destroy() end
+        if esp.Billboard then esp.Billboard:Destroy() end
+    end
+    highlightedPlayers = {}
+end
+
+PlayerESPGB:AddToggle('PlayerESPEnabled', {
+    Text = 'Player ESP ON/OFF',
+    Default = false,
+    Tooltip = 'Toggle Player ESP',
+    Callback = function(Value)
+        playerEspEnabled = Value
+        
+        if Value then
+            UpdatePlayerESP()
+            
+            Players.PlayerAdded:Connect(function(player)
+                player.CharacterAdded:Connect(function(character)
+                    task.wait(1)
+                    if playerEspEnabled then
+                        CreatePlayerHighlight(character)
+                    end
+                end)
+            end)
+            
+            Players.PlayerRemoving:Connect(function(player)
+                local character = player.Character
+                if character and highlightedPlayers[character] then
+                    if highlightedPlayers[character].Highlight then
+                        highlightedPlayers[character].Highlight:Destroy()
+                    end
+                    if highlightedPlayers[character].Billboard then
+                        highlightedPlayers[character].Billboard:Destroy()
+                    end
+                    highlightedPlayers[character] = nil
                 end
+            end)
+            
+            local activeHumanoids = workspace:FindFirstChild("ActiveHumanoids")
+            if activeHumanoids then
+                activeHumanoids.ChildAdded:Connect(function(child)
+                    if child:IsA("Model") then
+                        task.wait(0.5)
+                        if playerEspEnabled then
+                            CreatePlayerHighlight(child)
+                        end
+                    end
+                end)
             end
         else
-            if esp.Highlight then esp.Highlight:Destroy() end
-            if esp.Billboard then esp.Billboard:Destroy() end
-            highlightedItems[model] = nil
+            ClearPlayerESP()
+        end
+    end
+})
+
+PlayerESPGB:AddLabel('Player ESP Color'):AddColorPicker('PlayerESPColor', {
+    Default = Color3.new(0, 1, 0),
+    Title = 'Player ESP Color',
+    Transparency = 0,
+    
+    Callback = function(Value)
+        playerEspColor = Value
+        for character, esp in pairs(highlightedPlayers) do
+            if esp.Highlight then
+                esp.Highlight.FillColor = Value
+            end
+        end
+    end
+})
+
+PlayerESPGB:AddToggle('PlayerESPRainbow', {
+    Text = 'Rainbow Color',
+    Default = false,
+    Tooltip = 'Toggle rainbow effect for players',
+    Callback = function(Value)
+        playerEspRainbow = Value
+        
+        if Value then
+            playerRainbowConnection = RunService.Heartbeat:Connect(function()
+                if not playerEspRainbow then return end
+                
+                local hue = tick() % 5 / 5
+                local color = Color3.fromHSV(hue, 1, 1)
+                
+                for character, esp in pairs(highlightedPlayers) do
+                    if esp.Highlight then
+                        esp.Highlight.FillColor = color
+                    end
+                end
+                
+                playerEspColor = color
+            end)
+        else
+            if playerRainbowConnection then
+                playerRainbowConnection:Disconnect()
+                playerRainbowConnection = nil
+            end
+        end
+    end
+})
+
+PlayerESPGB:AddSlider('PlayerESPDistance', {
+    Text = 'Distance',
+    Default = 500,
+    Min = 50,
+    Max = 2000,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+        playerEspDistance = Value
+        for character, esp in pairs(highlightedPlayers) do
+            if esp.Billboard then
+                esp.Billboard.MaxDistance = Value
+            end
+        end
+    end
+})
+
+PlayerESPGB:AddSlider('PlayerESPTransparency', {
+    Text = 'Transparency',
+    Default = 0.3,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        playerEspTransparency = Value
+        for character, esp in pairs(highlightedPlayers) do
+            if esp.Highlight then
+                esp.Highlight.FillTransparency = Value
+            end
+        end
+    end
+})
+
+PlayerESPGB:AddToggle('PlayerShowName', {
+    Text = 'Show Name',
+    Default = true,
+    Callback = function(Value)
+        playerShowName = Value
+        for character, esp in pairs(highlightedPlayers) do
+            if esp.Billboard then
+                local nameLabel = esp.Billboard.Frame:FindFirstChild("Name")
+                if nameLabel then
+                    nameLabel.Visible = Value
+                end
+            end
+        end
+    end
+})
+
+PlayerESPGB:AddToggle('PlayerShowDistance', {
+    Text = 'Show Distance',
+    Default = true,
+    Callback = function(Value)
+        playerShowDistance = Value
+        for character, esp in pairs(highlightedPlayers) do
+            if esp.Billboard then
+                local distanceLabel = esp.Billboard.Frame:FindFirstChild("Distance")
+                if distanceLabel then
+                    distanceLabel.Visible = Value
+                end
+            end
+        end
+    end
+})
+
+PlayerESPGB:AddToggle('PlayerShowHealth', {
+    Text = 'Show Health',
+    Default = true,
+    Callback = function(Value)
+        playerShowHealth = Value
+        for character, esp in pairs(highlightedPlayers) do
+            if esp.Billboard then
+                local healthLabel = esp.Billboard.Frame:FindFirstChild("Health")
+                if healthLabel then
+                    healthLabel.Visible = Value
+                end
+            end
+        end
+    end
+})
+
+RunService.RenderStepped:Connect(function()
+    if espEnabled then
+        for model, esp in pairs(highlightedItems) do
+            if model and model.Parent then
+                if esp.Billboard and esp.Billboard.Adornee then
+                    local camera = workspace.CurrentCamera
+                    local adorneePos = esp.Billboard.Adornee.Position
+                    local distance = (camera.CFrame.Position - adorneePos).Magnitude
+                    
+                    esp.Billboard.Enabled = distance <= espDistance
+                    esp.Highlight.Enabled = distance <= espDistance
+                    
+                    local textLabel = esp.Billboard:FindFirstChild("TextLabel")
+                    if textLabel then
+                        textLabel.TextSize = math.clamp(14 - (distance / 100), 8, 14)
+                    end
+                end
+            else
+                if esp.Highlight then esp.Highlight:Destroy() end
+                if esp.Billboard then esp.Billboard:Destroy() end
+                highlightedItems[model] = nil
+            end
+        end
+    end
+    
+    if playerEspEnabled then
+        for character, esp in pairs(highlightedPlayers) do
+            if character and character.Parent then
+                local camera = workspace.CurrentCamera
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                
+                if rootPart and esp.Billboard then
+                    local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
+                    
+                    esp.Billboard.Enabled = distance <= playerEspDistance
+                    esp.Highlight.Enabled = distance <= playerEspDistance
+                    
+                    if esp.Billboard.Frame then
+                        local distanceLabel = esp.Billboard.Frame:FindFirstChild("Distance")
+                        if distanceLabel and playerShowDistance then
+                            distanceLabel.Text = math.floor(distance) .. "m"
+                        end
+                        
+                        local healthLabel = esp.Billboard.Frame:FindFirstChild("Health")
+                        if healthLabel and playerShowHealth and esp.Humanoid then
+                            healthLabel.Text = "HP: " .. math.floor(esp.Humanoid.Health) .. "/" .. math.floor(esp.Humanoid.MaxHealth)
+                            healthLabel.TextColor3 = Color3.fromHSV(esp.Humanoid.Health / esp.Humanoid.MaxHealth * 0.3, 1, 1)
+                        end
+                    end
+                end
+            else
+                if esp.Highlight then esp.Highlight:Destroy() end
+                if esp.Billboard then esp.Billboard:Destroy() end
+                highlightedPlayers[character] = nil
+            end
         end
     end
 end)
@@ -476,7 +818,9 @@ MenuGroup:AddButton('Unload', function()
     if fogConnection then fogConnection:Disconnect() end
     if dayConnection then dayConnection:Disconnect() end
     if rainbowConnection then rainbowConnection:Disconnect() end
+    if playerRainbowConnection then playerRainbowConnection:Disconnect() end
     ClearESP()
+    ClearPlayerESP()
     Library:Unload() 
 end)
 
@@ -524,7 +868,9 @@ Library:OnUnload(function()
     if fogConnection then fogConnection:Disconnect() end
     if dayConnection then dayConnection:Disconnect() end
     if rainbowConnection then rainbowConnection:Disconnect() end
+    if playerRainbowConnection then playerRainbowConnection:Disconnect() end
     ClearESP()
+    ClearPlayerESP()
     print('Unloaded!')
     Library.Unloaded = true
 end)
