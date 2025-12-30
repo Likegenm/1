@@ -443,7 +443,7 @@ ItemsGB:AddSlider('ESPTransparency', {
     end
 })
 
-local PlayerESPGB = VTab:AddLeftGroupbox("Player ESP")
+local PlayerESPGB = VTab:AddLeftGroupbox("NPC esp")
 
 local playerEspEnabled = false
 local playerEspColor = Color3.new(0, 1, 0)
@@ -479,7 +479,7 @@ local function CreatePlayerHighlight(character)
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     
     local billboard = Instance.new("BillboardGui")
-    billboard.Name = "PlayerESP"
+    billboard.Name = "NPCESP"
     billboard.Size = UDim2.new(0, 200, 0, 80)
     billboard.StudsOffset = Vector3.new(0, 5, 0)
     billboard.AlwaysOnTop = true
@@ -576,7 +576,7 @@ local function ClearPlayerESP()
 end
 
 PlayerESPGB:AddToggle('PlayerESPEnabled', {
-    Text = 'Player ESP ON/OFF',
+    Text = 'NPC ESP ON/OFF',
     Default = false,
     Tooltip = 'Toggle Player ESP',
     Callback = function(Value)
@@ -624,9 +624,9 @@ PlayerESPGB:AddToggle('PlayerESPEnabled', {
     end
 })
 
-PlayerESPGB:AddLabel('Player ESP Color'):AddColorPicker('PlayerESPColor', {
+PlayerESPGB:AddLabel('Npc color'):AddColorPicker('PlayerESPColor', {
     Default = Color3.new(0, 1, 0),
-    Title = 'Player ESP Color',
+    Title = 'NPC esp color',
     Transparency = 0,
     
     Callback = function(Value)
