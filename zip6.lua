@@ -203,6 +203,33 @@ local Ggb = VTab:AddLeftGroupbox("Grafic")
 local fogConnection
 local dayConnection
 
+Ggb:AddToggle('NoFog', {
+    Text = 'NoFog',
+    Default = true,
+    Tooltip = 'FogEnd 100000',
+    Callback = function(Value)
+        local lighting = game:GetService("Lighting")
+        if Value then
+            fogConnection = RunService.Heartbeat:Connect(function()
+                lighting.FogEnd = 100000
+                lighting.FogStart = 0
+                lighting.FogColor = Color3.new(1, 1, 1)
+            end)
+            lighting.FogEnd = 100000
+            lighting.FogStart = 0
+            lighting.FogColor = Color3.new(1, 1, 1)
+        else
+            if fogConnection then
+                fogConnection:Disconnect()
+                fogConnection = nil
+            end
+            lighting.FogEnd = 100000
+            lighting.FogStart = 100
+            lighting.FogColor = Color3.new(0.5, 0.5, 0.5)
+        end
+    end
+})
+
 Ggb:AddToggle('AlwaysDay', {
     Text = 'AlwaysDay',
     Default = true,
@@ -225,10 +252,234 @@ Ggb:AddToggle('AlwaysDay', {
     end
 })
 
+local ItemsGB = VTab:AddRightGroupbox("Items ESP")
+
+local espEnabled = false
+local espColor = Color3.new(1, 0, 0)
+local espTransparency = 0.3
+local espRainbow = false
+local espDistance = 500
+local highlightedItems = {}
+
+local rainbowConnection
+
+local function CreateItemHighlight(model)
+    if not model:IsA("Model") then return end
+    if highlightedItems[model] then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ItemHighlight"
+    highlight.FillColor = espColor
+    highlight.OutlineColor = Color3.new(1, 1, 0)
+    highlight.FillTransparency = espTransparency
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Adornee = model
+    highlight.Enabled = espEnabled
+    highlight.Parent = model
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ItemNameTag"
+    billboard.Size = UDim2.new(0, 200, 0, 40)
+    billboard.StudsOffset = Vector3.new(0, 5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = espDistance
+    
+    local adornee = model:FindFirstChild("HumanoidRootPart") or 
+                   model:FindFirstChild("Head") or 
+                   model:FindFirstChild("Torso") or
+                   model.PrimaryPart or model
+    
+    if adornee then
+        billboard.Adornee = adornee
+    end
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = model.Name
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 14
+    nameLabel.TextScaled = false
+    nameLabel.Parent = billboard
+    
+    billboard.Parent = model
+    billboard.Enabled = espEnabled
+    
+    highlightedItems[model] = {
+        Highlight = highlight,
+        Billboard = billboard
+    }
+end
+
+local function UpdateESP()
+    if not espEnabled then return end
+    
+    local itemsFolder = workspace:FindFirstChild("Items")
+    if not itemsFolder then return end
+    
+    for _, model in pairs(itemsFolder:GetChildren()) do
+        if model:IsA("Model") and not highlightedItems[model] then
+            CreateItemHighlight(model)
+        end
+    end
+end
+
+local function ClearESP()
+    for model, esp in pairs(highlightedItems) do
+        if esp.Highlight then esp.Highlight:Destroy() end
+        if esp.Billboard then esp.Billboard:Destroy() end
+    end
+    highlightedItems = {}
+end
+
+ItemsGB:AddToggle('ESPEnabled', {
+    Text = 'ESP ON/OFF',
+    Default = false,
+    Tooltip = 'Toggle Items ESP',
+    Callback = function(Value)
+        espEnabled = Value
+        
+        if Value then
+            UpdateESP()
+            
+            local itemsFolder = workspace:FindFirstChild("Items")
+            if itemsFolder then
+                itemsFolder.ChildAdded:Connect(function(child)
+                    if child:IsA("Model") then
+                        task.wait(0.5)
+                        if espEnabled then
+                            CreateItemHighlight(child)
+                        end
+                    end
+                end)
+            end
+        else
+            ClearESP()
+        end
+    end
+})
+
+ItemsGB:AddLabel('ESP Color'):AddColorPicker('ESPColor', {
+    Default = Color3.new(1, 0, 0),
+    Title = 'ESP Color',
+    Transparency = 0,
+    
+    Callback = function(Value)
+        espColor = Value
+        for model, esp in pairs(highlightedItems) do
+            if esp.Highlight then
+                esp.Highlight.FillColor = Value
+            end
+        end
+    end
+})
+
+ItemsGB:AddToggle('ESPRainbow', {
+    Text = 'Rainbow Color',
+    Default = false,
+    Tooltip = 'Toggle rainbow effect',
+    Callback = function(Value)
+        espRainbow = Value
+        
+        if Value then
+            rainbowConnection = RunService.Heartbeat:Connect(function()
+                if not espRainbow then return end
+                
+                local hue = tick() % 5 / 5
+                local color = Color3.fromHSV(hue, 1, 1)
+                
+                for model, esp in pairs(highlightedItems) do
+                    if esp.Highlight then
+                        esp.Highlight.FillColor = color
+                    end
+                end
+                
+                espColor = color
+            end)
+        else
+            if rainbowConnection then
+                rainbowConnection:Disconnect()
+                rainbowConnection = nil
+            end
+        end
+    end
+})
+
+ItemsGB:AddSlider('ESPDistance', {
+    Text = 'Distance',
+    Default = 500,
+    Min = 50,
+    Max = 2000,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+        espDistance = Value
+        for model, esp in pairs(highlightedItems) do
+            if esp.Billboard then
+                esp.Billboard.MaxDistance = Value
+            end
+        end
+    end
+})
+
+ItemsGB:AddSlider('ESPTransparency', {
+    Text = 'Transparency',
+    Default = 0.3,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        espTransparency = Value
+        for model, esp in pairs(highlightedItems) do
+            if esp.Highlight then
+                esp.Highlight.FillTransparency = Value
+            end
+        end
+    end
+})
+
+RunService.RenderStepped:Connect(function()
+    if not espEnabled then return end
+    
+    for model, esp in pairs(highlightedItems) do
+        if model and model.Parent then
+            if esp.Billboard and esp.Billboard.Adornee then
+                local camera = workspace.CurrentCamera
+                local adorneePos = esp.Billboard.Adornee.Position
+                local distance = (camera.CFrame.Position - adorneePos).Magnitude
+                
+                esp.Billboard.Enabled = distance <= espDistance
+                esp.Highlight.Enabled = distance <= espDistance
+                
+                local textLabel = esp.Billboard:FindFirstChild("TextLabel")
+                if textLabel then
+                    textLabel.TextSize = math.clamp(14 - (distance / 100), 8, 14)
+                end
+            end
+        else
+            if esp.Highlight then esp.Highlight:Destroy() end
+            if esp.Billboard then esp.Billboard:Destroy() end
+            highlightedItems[model] = nil
+        end
+    end
+end)
+
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
-MenuGroup:AddButton('Unload', function() Library:Unload() end)
+MenuGroup:AddButton('Unload', function() 
+    if fogConnection then fogConnection:Disconnect() end
+    if dayConnection then dayConnection:Disconnect() end
+    if rainbowConnection then rainbowConnection:Disconnect() end
+    ClearESP()
+    Library:Unload() 
+end)
+
 MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' })
 
 Library.ToggleKeybind = Options.MenuKeybind
@@ -270,11 +521,10 @@ end)
 
 Library:OnUnload(function()
     WatermarkConnection:Disconnect()
-    if fogConnection then
-        fogConnection:Disconnect()
-    end
-    if dayConnection then
-        dayConnection:Disconnect()
-    end
+    if fogConnection then fogConnection:Disconnect() end
+    if dayConnection then dayConnection:Disconnect() end
+    if rainbowConnection then rainbowConnection:Disconnect() end
+    ClearESP()
+    print('Unloaded!')
     Library.Unloaded = true
 end)
