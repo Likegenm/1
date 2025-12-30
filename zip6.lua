@@ -196,6 +196,35 @@ flygb:AddLabel('Fly Hotkey'):AddKeyPicker('FlyKeybind', {
     end
 })
 
+local VTab = Window:AddTab("Visual")
+
+local Ggb = VTab:AddLeftGroupbox("Grafic")
+
+local fogConnection
+local dayConnection
+
+Ggb:AddToggle('AlwaysDay', {
+    Text = 'AlwaysDay',
+    Default = true,
+    Tooltip = 'Always day',
+    Callback = function(Value)
+        local lighting = game:GetService("Lighting")
+        if Value then
+            dayConnection = RunService.Heartbeat:Connect(function()
+                lighting.ClockTime = 14
+                lighting.GeographicLatitude = 0
+            end)
+            lighting.ClockTime = 14
+            lighting.GeographicLatitude = 0
+        else
+            if dayConnection then
+                dayConnection:Disconnect()
+                dayConnection = nil
+            end
+        end
+    end
+})
+
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
@@ -241,6 +270,11 @@ end)
 
 Library:OnUnload(function()
     WatermarkConnection:Disconnect()
-    print('Unloaded!')
+    if fogConnection then
+        fogConnection:Disconnect()
+    end
+    if dayConnection then
+        dayConnection:Disconnect()
+    end
     Library.Unloaded = true
 end)
