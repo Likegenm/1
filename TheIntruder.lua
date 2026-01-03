@@ -9,4 +9,5 @@ local sc = game.workspace.Cameras
 local SL = sc.1 and sc.2 and sc.3 and sc.4 and sc.5
 local LK = game.workspace.Lobby
 local OAK = LK.OldMan and LK.Woman and LK.Worker and LK.HackingTool
-local Subway = PG.YouWin
+local Subway = game:GetService("Players").LocalPlayer.PlayerGui.YouWin
+local DM = PG.Basement and PG.FrontDoor and PG.Hallway and PG.LivingRoom and PG.Mall and PG.Outside and PG.Secret and PG.Well
