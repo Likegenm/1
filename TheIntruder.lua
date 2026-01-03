@@ -5,3 +5,5 @@ local Hallways = PG.Hallway1 and PG.Hallway2 and PG.Hallway3
 local mall = PG.Diner and PG.Escalator and PG.Hallway and PG.Hallway2 and PG.Hallway3 and PG.Janitor and PG.Outside and PG.SecondFloor and PG.ShoeStore
 local mine = not PG and not lobby
 local MH = Hallways and PG.North and PG.Storage and PG.Study and PG.Vent
+local sc = game.workspace.Cameras
+local SL = sc.1 and sc.2 and sc.3 and sc.4 and sc.5
