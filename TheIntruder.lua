@@ -1,13 +1,13 @@
 local PG = game:GetService("Players").LocalPlayer.PlayerGui.Rooms
+local LK = game.workspace.Lobby
+local sc = game.workspace.Cameras
 local lobby = game:GetService("Players").LocalPlayer.PlayerGui.Room
 local home = PG.Basement and PG.BasementStairs and PG.Bathroom and PG.FrontDoor and PG.Hallway and PG.LivingRoom and PG.Outside and PG.Street and PG.Vent
 local Hallways = PG.Hallway1 and PG.Hallway2 and PG.Hallway3
 local mall = PG.Diner and PG.Escalator and PG.Hallway and PG.Hallway2 and PG.Hallway3 and PG.Janitor and PG.Outside and PG.SecondFloor and PG.ShoeStore
 local mine = not PG and not lobby
 local MH = Hallways and PG.North and PG.Storage and PG.Study and PG.Vent
-local sc = game.workspace.Cameras
 local SL = sc.1 and sc.2 and sc.3 and sc.4 and sc.5
-local LK = game.workspace.Lobby
 local OAK = LK.OldMan and LK.Woman and LK.Worker and LK.HackingTool
 local Subway = game:GetService("Players").LocalPlayer.PlayerGui.YouWin
 local DM = PG.Basement and PG.FrontDoor and PG.Hallway and PG.LivingRoom and PG.Mall and PG.Outside and PG.Secret and PG.Well
