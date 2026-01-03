@@ -7,3 +7,5 @@ local mine = not PG and not lobby
 local MH = Hallways and PG.North and PG.Storage and PG.Study and PG.Vent
 local sc = game.workspace.Cameras
 local SL = sc.1 and sc.2 and sc.3 and sc.4 and sc.5
+local LK = game.workspace.Lobby
+local OAK = LK.OldMan and LK.Woman and LK.Worker and LK.HackingTool
