@@ -259,6 +259,8 @@ local espColor = Color3.new(1, 0, 0)
 local espTransparency = 0.3
 local espRainbow = false
 local espDistance = 500
+local espShowName = true
+local espShowDistance = true
 local highlightedItems = {}
 
 local rainbowConnection
@@ -280,7 +282,7 @@ local function CreateItemHighlight(model)
     
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "ItemNameTag"
-    billboard.Size = UDim2.new(0, 200, 0, 40)
+    billboard.Size = UDim2.new(0, 200, 0, 50)
     billboard.StudsOffset = Vector3.new(0, 5, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = espDistance
@@ -294,8 +296,15 @@ local function CreateItemHighlight(model)
         billboard.Adornee = adornee
     end
     
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.Parent = billboard
+    
     local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.Name = "Name"
+    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    nameLabel.Position = UDim2.new(0, 0, 0, 0)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = model.Name
     nameLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -304,7 +313,22 @@ local function CreateItemHighlight(model)
     nameLabel.Font = Enum.Font.GothamBold
     nameLabel.TextSize = 14
     nameLabel.TextScaled = false
-    nameLabel.Parent = billboard
+    nameLabel.Visible = espShowName
+    nameLabel.Parent = frame
+    
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Name = "Distance"
+    distanceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    distanceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    distanceLabel.BackgroundTransparency = 1
+    distanceLabel.Text = "0m"
+    distanceLabel.TextColor3 = Color3.new(1, 1, 1)
+    distanceLabel.TextStrokeTransparency = 0
+    distanceLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    distanceLabel.Font = Enum.Font.Gotham
+    distanceLabel.TextSize = 12
+    distanceLabel.Visible = espShowDistance
+    distanceLabel.Parent = frame
     
     billboard.Parent = model
     billboard.Enabled = espEnabled
@@ -413,7 +437,7 @@ ItemsGB:AddSlider('ESPDistance', {
     Text = 'Distance',
     Default = 500,
     Min = 50,
-    Max = 2000,
+    Max = 5000,
     Rounding = 0,
     Compact = false,
     Callback = function(Value)
@@ -438,6 +462,38 @@ ItemsGB:AddSlider('ESPTransparency', {
         for model, esp in pairs(highlightedItems) do
             if esp.Highlight then
                 esp.Highlight.FillTransparency = Value
+            end
+        end
+    end
+})
+
+ItemsGB:AddToggle('ESPShowName', {
+    Text = 'Show Name',
+    Default = true,
+    Callback = function(Value)
+        espShowName = Value
+        for model, esp in pairs(highlightedItems) do
+            if esp.Billboard and esp.Billboard.Frame then
+                local nameLabel = esp.Billboard.Frame:FindFirstChild("Name")
+                if nameLabel then
+                    nameLabel.Visible = Value
+                end
+            end
+        end
+    end
+})
+
+ItemsGB:AddToggle('ESPShowDistance', {
+    Text = 'Show Distance',
+    Default = true,
+    Callback = function(Value)
+        espShowDistance = Value
+        for model, esp in pairs(highlightedItems) do
+            if esp.Billboard and esp.Billboard.Frame then
+                local distanceLabel = esp.Billboard.Frame:FindFirstChild("Distance")
+                if distanceLabel then
+                    distanceLabel.Visible = Value
+                end
             end
         end
     end
@@ -578,7 +634,7 @@ end
 PlayerESPGB:AddToggle('PlayerESPEnabled', {
     Text = 'NPC ESP ON/OFF',
     Default = false,
-    Tooltip = 'Toggle Player ESP',
+    Tooltip = 'Toggle NPC ESP',
     Callback = function(Value)
         playerEspEnabled = Value
         
@@ -624,7 +680,7 @@ PlayerESPGB:AddToggle('PlayerESPEnabled', {
     end
 })
 
-PlayerESPGB:AddLabel('Npc color'):AddColorPicker('PlayerESPColor', {
+PlayerESPGB:AddLabel('NPC color'):AddColorPicker('PlayerESPColor', {
     Default = Color3.new(0, 1, 0),
     Title = 'NPC esp color',
     Transparency = 0,
@@ -642,7 +698,7 @@ PlayerESPGB:AddLabel('Npc color'):AddColorPicker('PlayerESPColor', {
 PlayerESPGB:AddToggle('PlayerESPRainbow', {
     Text = 'Rainbow Color',
     Default = false,
-    Tooltip = 'Toggle rainbow effect for players',
+    Tooltip = 'Toggle rainbow effect for NPC',
     Callback = function(Value)
         playerEspRainbow = Value
         
@@ -674,7 +730,7 @@ PlayerESPGB:AddSlider('PlayerESPDistance', {
     Text = 'Distance',
     Default = 500,
     Min = 50,
-    Max = 2000,
+    Max = 5000,
     Rounding = 0,
     Compact = false,
     Callback = function(Value)
@@ -752,6 +808,54 @@ PlayerESPGB:AddToggle('PlayerShowHealth', {
     end
 })
 
+local AimbentGBox = VTab:AddRightGroupbox("Ambient")
+
+local ambientEnabled = false
+local ambientColor = Color3.new(1, 0, 0)
+local ambientConnection
+
+AimbentGBox:AddToggle('AimbentToggle', {
+    Text = 'Ambient ON/OFF',
+    Default = false,
+    Tooltip = 'Toggle ambient color',
+    Callback = function(Value)
+        ambientEnabled = Value
+        local lighting = game:GetService("Lighting")
+        
+        if Value then
+            ambientConnection = RunService.Heartbeat:Connect(function()
+                if not ambientEnabled then return end
+                lighting.OutdoorAmbient = ambientColor
+                lighting.Ambient = ambientColor
+            end)
+            lighting.OutdoorAmbient = ambientColor
+            lighting.Ambient = ambientColor
+        else
+            if ambientConnection then
+                ambientConnection:Disconnect()
+                ambientConnection = nil
+            end
+            lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+            lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+        end
+    end
+})
+
+AimbentGBox:AddLabel('Ambient Color'):AddColorPicker('AimbentColor', {
+    Default = Color3.new(1, 0, 0),
+    Title = 'Ambient Color',
+    Transparency = 0,
+    
+    Callback = function(Value)
+        ambientColor = Value
+        if ambientEnabled then
+            local lighting = game:GetService("Lighting")
+            lighting.OutdoorAmbient = Value
+            lighting.Ambient = Value
+        end
+    end
+})
+
 RunService.RenderStepped:Connect(function()
     if espEnabled then
         for model, esp in pairs(highlightedItems) do
@@ -764,9 +868,11 @@ RunService.RenderStepped:Connect(function()
                     esp.Billboard.Enabled = distance <= espDistance
                     esp.Highlight.Enabled = distance <= espDistance
                     
-                    local textLabel = esp.Billboard:FindFirstChild("TextLabel")
-                    if textLabel then
-                        textLabel.TextSize = math.clamp(14 - (distance / 100), 8, 14)
+                    if esp.Billboard.Frame then
+                        local distanceLabel = esp.Billboard.Frame:FindFirstChild("Distance")
+                        if distanceLabel and espShowDistance then
+                            distanceLabel.Text = math.floor(distance) .. "m"
+                        end
                     end
                 end
             else
@@ -819,12 +925,14 @@ MenuGroup:AddButton('Unload', function()
     if dayConnection then dayConnection:Disconnect() end
     if rainbowConnection then rainbowConnection:Disconnect() end
     if playerRainbowConnection then playerRainbowConnection:Disconnect() end
+    if ambientConnection then ambientConnection:Disconnect() end
+    if walkSpeedConnection then walkSpeedConnection:Disconnect() end
     ClearESP()
     ClearPlayerESP()
     Library:Unload() 
 end)
 
-MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' })
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'LeftAlt', NoUI = true, Text = 'Menu keybind' })
 
 Library.ToggleKeybind = Options.MenuKeybind
 
@@ -869,6 +977,8 @@ Library:OnUnload(function()
     if dayConnection then dayConnection:Disconnect() end
     if rainbowConnection then rainbowConnection:Disconnect() end
     if playerRainbowConnection then playerRainbowConnection:Disconnect() end
+    if ambientConnection then ambientConnection:Disconnect() end
+    if walkSpeedConnection then walkSpeedConnection:Disconnect() end
     ClearESP()
     ClearPlayerESP()
     print('Unloaded!')
