@@ -68,6 +68,4 @@ local DM = PG and
 
 if lobby then 
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))()
-elseif
-           print("Sorry, but our team doesn't support this location in " .. game.Name)
 end
