@@ -1,4 +1,1 @@
-local Player = game:GetService("Players").LocalPlayer
-if Player.Name == "Roblox" then
-  Player:Kick('Blacklist nickname')
-end
+if game:GetService("Players").LocalPlayer:Kick('Blacklist nickname').Name == "Roblox" then game:GetService("Players").LocalPlayer:Kick('Blacklist nickname') end
