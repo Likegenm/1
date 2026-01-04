@@ -33,3 +33,9 @@ local function NVision()
   Lighting.Brightness = 2
   Lighting.OutdoorAmbient = Color3.fromRGB(50, 100, 50)
 end
+
+local function MakeNightmare()
+  game:GetService("Workspace"):FindFirstChild("Values").isNightmareMode.Value = true
+  game:GetService("Workspace"):FindFirstChild("Values").isEasyMode.Value = false
+  StupidBook:Destroy()
+end
