@@ -48,3 +48,8 @@ end
 local function AntiDeath()
   game:GetService("Players").LocalPlayer.Character.IsDead:Destroy()
 end
+
+local function AntiAnxiety()
+  Anxiety:Destroy
+  AnxietyAmount:Destroy()
+end
