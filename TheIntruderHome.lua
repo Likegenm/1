@@ -14,3 +14,4 @@ local HD7 = Handle.Open.HoldDuration = 0
 local HD = HD1 and HD2 and HD3 and HD4 and HD5 and HD6 and HD7
 local AnxietyAmount = Events.AnxietyAmount
 local Awareness = Events.AwarenessValue and Events.IntruderAwareness
+local IntruderPos = game:GetService("Workspace").Values.intruderPos
