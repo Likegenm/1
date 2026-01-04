@@ -50,6 +50,6 @@ local function AntiDeath()
 end
 
 local function AntiAnxiety()
-  Anxiety:Destroy
+  Anxiety:Destroy()
   AnxietyAmount:Destroy()
 end
