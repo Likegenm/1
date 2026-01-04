@@ -1715,96 +1715,13 @@ end
 
 TrashcanSection:Button({
     Title = "Get Trashcan",
-    Desc = "Save position and auto-click random trashcan",
+    Desc = "Script",
     Icon = "trash",
     Color = Color3.fromHex("#FF5500"),
     Justify = "Center",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if not character or not character:FindFirstChild("HumanoidRootPart") then
-            return
-        end
-        
-        savedPosition = character.HumanoidRootPart.Position
-        
-        local trashcan = getRandomTrashcan()
-        if trashcan then
-            lastTrashcan = trashcan
-            lastTrashcanTime = tick()
-            
-            character.HumanoidRootPart.CFrame = CFrame.new(trashcan.Position + Vector3.new(0, 1, 0))
-            WindUI:Notify({
-                Title = "Trashcan",
-                Content = "Teleported to random trashcan!",
-                Icon = "check"
-            })
-            
-            trashcanEnabled = true
-            trashcanThread = task.spawn(function()
-                local RunService = game:GetService("RunService")
-                local mouse = player:GetMouse()
-                
-                task.wait(0.5)
-                
-                mouse.Target = trashcan
-                mouse.Hit = CFrame.new(trashcan.Position)
-                
-                task.wait(0.2)
-                
-                if trashcanEnabled then
-                    mouse.Button1Down:Fire()
-                    mouse.Button1Up:Fire()
-                    
-                    WindUI:Notify({
-                        Title = "Trashcan",
-                        Content = "Auto-clicked trashcan!",
-                        Icon = "check"
-                    })
-                    
-                    task.wait(3)
-                    
-                    if savedPosition and trashcanEnabled then
-                        character.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
-                        WindUI:Notify({
-                            Title = "Trashcan",
-                            Content = "Auto-returned to saved position!",
-                            Icon = "check"
-                        })
-                    end
-                end
-                
-                trashcanEnabled = false
-            end)
-        else
-            WindUI:Notify({
-                Title = "Trashcan",
-                Content = "No trashcans found!",
-                Icon = "x"
-            })
-        end
-    end
-})
-
-TrashcanSection:Space()
-
-TrashcanSection:Button({
-    Title = "Stop Trashcan",
-    Desc = "Stop trashcan script",
-    Icon = "x",
-    Color = Color3.fromHex("#FF5555"),
-    Justify = "Center",
-    Callback = function()
-        trashcanEnabled = false
-        if trashcanThread then
-            trashcanThread = nil
-        end
-        WindUI:Notify({
-            Title = "Trashcan",
-            Content = "Trashcan script stopped!",
-            Icon = "check"
-        })
-    end
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/GetTrashcan.lua"))()
+		end
 })
 
 local WallComboSection = ExploitsTab:Section({
@@ -2998,7 +2915,6 @@ FollowSection:Toggle({
         end
     end
 })
-
 FollowSection:Space()
 
 local TSBSection = AnimationsTab:Section({
@@ -4124,7 +4040,7 @@ CreditsSection:Section({
 CreditsSection:Divider()
 
 CreditsSection:Section({
-    Title = "Главный (Main): Likegenm",
+    Title = "Main: Likegenm",
     TextSize = 16,
     TextXAlignment = "Left"
 })
