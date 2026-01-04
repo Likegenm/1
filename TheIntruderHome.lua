@@ -45,8 +45,8 @@ local function NoAnim()
   game:GetService("Players").LocalPlayer.Character.Idle:Destroy
 end
 
-local function AntiDeath()
-  game:GetService("Players").LocalPlayer.Character.IsDead:Destroy()
+local function KillIntruder()
+  game:GetService("Workspace"):FindFirstChild("Map").Intruder:Destroy()
 end
 
 local function AntiAnxiety()
@@ -109,3 +109,6 @@ local function SetVelocitySpeed(Value)
       end
   end)
 end
+
+local IntsuderPos = game:GetService("Workspace"):FIndFirstChild("Values").intruderPos
+
