@@ -66,6 +66,6 @@ local DM = PG and
           PG:FindFirstChild("Secret") and 
           PG:FindFirstChild("Well")
 
-if lobby then 
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))()
-end
+if lobby then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))() end
+
+if home then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/TheIntruderHome.lua"))() end
