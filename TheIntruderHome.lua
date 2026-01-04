@@ -44,3 +44,7 @@ local function NoAnim()
   PlrAnim:Destroy
   game:GetService("Players").LocalPlayer.Character.Idle:Destroy
 end
+
+local function AntiDeath()
+  game:GetService("Players").LocalPlayer.Character.IsDead:Destroy()
+end
