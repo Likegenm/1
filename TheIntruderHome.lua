@@ -15,3 +15,21 @@ local function InteractClick()
   game.workspace.Map.ClosetDoor.Handle.Close.HoldDuration = 0
   game.workspace.Map.ClosetDoor.Handle.Open.HoldDuration = 0
 end
+
+local function NVision()
+  local Players = game:GetService("Players")
+  local Lighting = game:GetService("Lighting")
+  local LocalPlayer = Players.LocalPlayer
+  local Camera = workspace.CurrentCamera
+  local nightVision = Instance.new("ColorCorrectionEffect")
+  nightVision.Name = "GreenNightVision"
+  nightVision.Parent = Lighting
+  nightVision.TintColor = Color3.fromRGB(100, 255, 100)
+  nightVision.Brightness = 0.1
+  nightVision.Contrast = 0.5
+  nightVision.Saturation = 0.3
+  nightVision.Enabled = true
+  Lighting.Ambient = Color3.fromRGB(50, 100, 50)
+  Lighting.Brightness = 2
+  Lighting.OutdoorAmbient = Color3.fromRGB(50, 100, 50)
+end
