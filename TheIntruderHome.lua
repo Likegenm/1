@@ -1,19 +1,17 @@
 local Events = game.worksapce.Events
 local Anxiety = Events.Anxiety
-local Phone = game.workspace.Map.Phone
-local Speak = Phone.Speaker
-local HD1 = Speak.AnswerGuide.HoldDuration = 0
-local HD2 = Speak.AnswerGuide2.HoldDuration = 0
-local HD3 = Speak.FixPhone.HoldDuration = 0
-local LightS = game.workspace.Map.LightSwitch
-local HD4 = LightS.DownSwitch.ProximityPrompt.HoldDuration = 0
-local HD5 = LightS.UpSwitch.ProximityPrompt.HoldDuration = 0
-local Handle = game.workspace.Map.ClosetDoor.Handle
-local HD6 = Handle.Close.HoldDuration = 0
-local HD7 = Handle.Open.HoldDuration = 0
-local HD = HD1 and HD2 and HD3 and HD4 and HD5 and HD6 and HD7
 local AnxietyAmount = Events.AnxietyAmount
 local Awareness = Events.AwarenessValue and Events.IntruderAwareness
 local IntruderPos = game:GetService("Workspace").Values.intruderPos
 local PlrAnim = game:GetService("Players").LocalPlayer.Character.Animate
 local CamMovement = game:GetService("Players").LocalPlayer.Character.RealisticCameraMovement
+local StupidBook = game:GetService("Players").Book
+local function InteractClick(Seconds)
+  game:GetService("Workspace").Map.Speaker.AnswerGuide.HoldDuration = 0
+  game:GetService("Workspace").Map.Speaker.AnswerGuide2.HoldDuration = 0
+  game:GetService("Workspace").Map.Speaker.FixPhone.HoldDuration = 0
+  game:GetSevice("Workspace").Map.LightSwitch.DownSwitch.ProximityPrompt.HoldDuration = 0
+  game:GetSevice("Workspace").Map.LightSwitch.UpSwitch.ProximityPrompt.HoldDuration = 0
+  game:GetService("Workspace").Map.ClosetDoor.Handle.Close.HoldDuration = 0
+  game:GetService("Workspace").Map.ClosetDoor.Handle.Open.HoldDuration = 0
+end
