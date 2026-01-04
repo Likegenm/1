@@ -33,14 +33,13 @@ local mall = PG and
             PG:FindFirstChild("SecondFloor") and 
             PG:FindFirstChild("ShoeStore")
 
-local mine = game.workspace.Generators
+local mine = workspace:FindFirstChild("Generators") ~= nil
 
 local MH = Hallways and 
           PG:FindFirstChild("North") and 
           PG:FindFirstChild("Storage") and 
           PG:FindFirstChild("Study") and 
           PG:FindFirstChild("Vent")
-
 
 local SL = sc and 
           sc:FindFirstChild("1") and 
@@ -55,7 +54,7 @@ local OAK = LK and
            LK:FindFirstChild("Worker") and 
            LK:FindFirstChild("HackingTool")
 
-local Subway = not PG and not lobby and not
+local Subway = not PG and not lobby and not home and not mall and not mine and not MH and not SL and not OAK
 
 local DM = PG and 
           PG:FindFirstChild("Basement") and 
@@ -69,6 +68,6 @@ local DM = PG and
 
 if lobby then 
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))()
+elseif
+           print("Sorry, but our team doesn't support this location in " .. game.Name)
 end
-else
-print("Sorry, but our team dont create this location for ".. game.Name)
