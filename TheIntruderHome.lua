@@ -53,3 +53,8 @@ local function AntiAnxiety()
   Anxiety:Destroy()
   AnxietyAmount:Destroy()
 end
+
+local function AntiAwarness()
+  Events.IntruderAwareness:Destroy()
+  Events.AwarenessValue:Destroy()
+end
