@@ -70,3 +70,5 @@ local DM = PG and
 if lobby then 
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))()
 end
+else
+print("Sorry, but our team dont create this location for ".. game.Name)
