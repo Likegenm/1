@@ -39,3 +39,8 @@ local function MakeNightmare()
   game:GetService("Workspace"):FindFirstChild("Values").isEasyMode.Value = false
   StupidBook:Destroy()
 end
+
+local function NoAnim()
+  PlrAnim:Destroy
+  game:GetService("Players").LocalPlayer.Character.Idle:Destroy
+end
