@@ -33,7 +33,7 @@ local mall = PG and
             PG:FindFirstChild("SecondFloor") and 
             PG:FindFirstChild("ShoeStore")
 
-local mine = not PG and not lobby
+local mine = game.workspace.Generators
 
 local MH = Hallways and 
           PG:FindFirstChild("North") and 
@@ -55,7 +55,7 @@ local OAK = LK and
            LK:FindFirstChild("Worker") and 
            LK:FindFirstChild("HackingTool")
 
-local Subway = not mine and not PG and not lobby
+local Subway = not PG and not lobby and not
 
 local DM = PG and 
           PG:FindFirstChild("Basement") and 
