@@ -1,11 +1,11 @@
-local Events = game.worksapce.Events
+local Events = game:GetService("Workspace"):FindFirstChild("Events")
 local Anxiety = Events.Anxiety
 local AnxietyAmount = Events.AnxietyAmount
 local Awareness = Events.AwarenessValue and Events.IntruderAwareness
 local IntruderPos = game:GetService("Workspace").Values.intruderPos
 local PlrAnim = game:GetService("Players").LocalPlayer.Character.Animate
 local CamMovement = game:GetService("Players").LocalPlayer.Character.RealisticCameraMovement
-local StupidBook = game:GetService("Players").Book
+local StupidBook = game:GetService("Workspace").Book
 local function InteractClick()
   game.workspace.Map.Speaker.AnswerGuide.HoldDuration = 0
   game.workspace.Map.Speaker.AnswerGuide2.HoldDuration = 0
