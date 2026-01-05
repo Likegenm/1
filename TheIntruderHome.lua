@@ -94,65 +94,7 @@ SGB:AddToggle('SpeedToggle', {
     end
 })
 
-local JGB = PT:AddRightGroupbox('JumpPower')
-
-local jumpPower = 50
-local jumpEnabled = false
-local jumpConnection
-
-local function SetupJumpPower(power)
-    local LocalPlayer = Players.LocalPlayer
-    local Character = LocalPlayer.Character
-    local Humanoid = Character and Character:FindFirstChild("Humanoid")
-    
-    if Character and Humanoid then
-        Humanoid.JumpPower = power
-    end
-end
-
-JGB:AddSlider('JumpPower', {
-    Text = 'Jump Power:',
-    Default = 50,
-    Min = 50,
-    Max = 500,
-    Rounding = 0,
-    Compact = false,
-    Callback = function(Value)
-        jumpPower = Value
-    end
-})
-
-JGB:AddToggle('JumpToggle', {
-    Text = 'Enable Jump Power',
-    Default = false,
-    Tooltip = 'Toggle jump power',
-    Callback = function(Value)
-        jumpEnabled = Value
-        
-        if Value then
-            jumpConnection = RunService.Heartbeat:Connect(function()
-                if jumpEnabled then
-                    SetupJumpPower(jumpPower)
-                end
-            end)
-        else
-            if jumpConnection then
-                jumpConnection:Disconnect()
-                jumpConnection = nil
-            end
-            
-            local LocalPlayer = Players.LocalPlayer
-            local Character = LocalPlayer.Character
-            local Humanoid = Character and Character:FindFirstChild("Humanoid")
-            
-            if Character and Humanoid then
-                Humanoid.JumpPower = 50
-            end
-        end
-    end
-})
-
-local FGB = PT:AddLeftGroupbox('Fly')
+local FGB = PT:AddRightGroupbox('Fly')
 
 local flySpeed = 40
 local flyEnabled = false
@@ -263,7 +205,6 @@ local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
 MenuGroup:AddButton('Unload', function() 
     if velocityConnection then velocityConnection:Disconnect() end
-    if jumpConnection then jumpConnection:Disconnect() end
     if flyConnection then flyConnection:Disconnect() end
     if flyTween then flyTween:Cancel() end
     Library:Unload() 
@@ -313,7 +254,6 @@ end)
 Library:OnUnload(function()
     WatermarkConnection:Disconnect()
     if velocityConnection then velocityConnection:Disconnect() end
-    if jumpConnection then jumpConnection:Disconnect() end
     if flyConnection then flyConnection:Disconnect() end
     if flyTween then flyTween:Cancel() end
     Library.Unloaded = true
