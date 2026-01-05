@@ -69,3 +69,5 @@ local DM = PG and
 if lobby then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))() end
 
 if home then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/TheIntruderHome.lua"))() end
+
+if mall then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/TheIntruderMall.lua"))() end
