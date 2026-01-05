@@ -14,63 +14,307 @@ local Window = Library:CreateWindow({
 
 local PT = Window:AddTab('LocalPlayer')
 
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
 local SGB = PT:AddLeftGroupbox('SpeedHack')
 
+local velocitySpeed = 16
+local velocityEnabled = false
+local velocityConnection
+
+local function SetupVelocityMovement(speed)
+    local Camera = workspace.CurrentCamera
+    local LocalPlayer = Players.LocalPlayer
+    local Character = LocalPlayer.Character
+    local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+    
+    if not Character or not HumanoidRootPart then return end
+    
+    local cameraCFrame = Camera.CFrame
+    local lookVector = cameraCFrame.LookVector
+    local rightVector = cameraCFrame.RightVector
+    
+    local mv = Vector3.new(0, 0, 0)
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+        mv = mv + Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+        mv = mv - Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+        mv = mv - Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+        mv = mv + Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+    end
+    
+    if mv.Magnitude > 0 then
+        HumanoidRootPart.Velocity = Vector3.new(
+            mv.X * speed,
+            HumanoidRootPart.Velocity.Y,
+            mv.Z * speed
+        )
+    end
+end
+
 SGB:AddSlider('Speedhack', {
-    Text = 'Speed:'
+    Text = 'Speed:',
     Default = 16,
     Min = 12,
     Max = 50,
     Rounding = 0,
     Compact = false,
     Callback = function(Value)
-      local speed = Value
+        velocitySpeed = Value
+    end
+})
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
-
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-
-LocalPlayer.CharacterAdded:Connect(function(newCharacter) 
-    Character = newCharacter
-    Humanoid = Character:WaitForChild("Humanoid")
-    HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-end)
-
-RunService.Heartbeat:Connect(function()
-    if Character and HumanoidRootPart then
-        local cameraCFrame = Camera.CFrame
-        local lookVector = cameraCFrame.LookVector
-        local rightVector = cameraCFrame.RightVector
+SGB:AddToggle('SpeedToggle', {
+    Text = 'Enable Speed',
+    Default = false,
+    Tooltip = 'Toggle velocity movement',
+    Callback = function(Value)
+        velocityEnabled = Value
         
-        local mv = Vector3.new(0, 0, 0)
-
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            mv = mv + Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            mv = mv - Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            mv = mv - Vector3.new(rightVector.X, 0, rightVector.Z).Unit
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            mv = mv + Vector3.new(rightVector.X, 0, rightVector.Z).Unit
-        end
-        
-        if mv.Magnitude > 0 then
-            HumanoidRootPart.Velocity = Vector3.new(
-                mv.X * speed,
-                HumanoidRootPart.Velocity.Y,
-                mv.Z * speed
-            )
+        if Value then
+            velocityConnection = RunService.Heartbeat:Connect(function()
+                if velocityEnabled then
+                    SetupVelocityMovement(velocitySpeed)
+                end
+            end)
+        else
+            if velocityConnection then
+                velocityConnection:Disconnect()
+                velocityConnection = nil
+            end
         end
     end
-end)
+})
+
+local JGB = PT:AddRightGroupbox('JumpPower')
+
+local jumpPower = 50
+local jumpEnabled = false
+local jumpConnection
+
+local function SetupJumpPower(power)
+    local LocalPlayer = Players.LocalPlayer
+    local Character = LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+    
+    if Character and Humanoid then
+        Humanoid.JumpPower = power
     end
-  })
+end
+
+JGB:AddSlider('JumpPower', {
+    Text = 'Jump Power:',
+    Default = 50,
+    Min = 50,
+    Max = 500,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+        jumpPower = Value
+    end
+})
+
+JGB:AddToggle('JumpToggle', {
+    Text = 'Enable Jump Power',
+    Default = false,
+    Tooltip = 'Toggle jump power',
+    Callback = function(Value)
+        jumpEnabled = Value
+        
+        if Value then
+            jumpConnection = RunService.Heartbeat:Connect(function()
+                if jumpEnabled then
+                    SetupJumpPower(jumpPower)
+                end
+            end)
+        else
+            if jumpConnection then
+                jumpConnection:Disconnect()
+                jumpConnection = nil
+            end
+            
+            local LocalPlayer = Players.LocalPlayer
+            local Character = LocalPlayer.Character
+            local Humanoid = Character and Character:FindFirstChild("Humanoid")
+            
+            if Character and Humanoid then
+                Humanoid.JumpPower = 50
+            end
+        end
+    end
+})
+
+local FGB = PT:AddLeftGroupbox('Fly')
+
+local flySpeed = 40
+local flyEnabled = false
+local flyConnection
+local flyTween
+
+local function SetupFly(speed)
+    local player = Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    local camera = workspace.CurrentCamera
+    local lookVector = camera.CFrame.LookVector
+    local rightVector = camera.CFrame.RightVector
+    
+    local targetVelocity = Vector3.new(0, 0, 0)
+    
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+        targetVelocity = targetVelocity + lookVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+        targetVelocity = targetVelocity - lookVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+        targetVelocity = targetVelocity - rightVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+        targetVelocity = targetVelocity + rightVector
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+        targetVelocity = targetVelocity + Vector3.new(0, 1, 0)
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        targetVelocity = targetVelocity + Vector3.new(0, -1, 0)
+    end
+    
+    if targetVelocity.Magnitude > 0 then
+        targetVelocity = targetVelocity.Unit * speed
+    end
+    
+    if flyTween then
+        flyTween:Cancel()
+    end
+    
+    local TweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(
+        0.1,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.Out
+    )
+    
+    flyTween = TweenService:Create(humanoidRootPart, tweenInfo, {Velocity = targetVelocity})
+    flyTween:Play()
+end
+
+FGB:AddSlider('FlySpeed', {
+    Text = 'Fly Speed:',
+    Default = 40,
+    Min = 16,
+    Max = 200,
+    Rounding = 0,
+    Compact = false,
+    Callback = function(Value)
+        flySpeed = Value
+    end
+})
+
+FGB:AddToggle('FlyToggle', {
+    Text = 'Enable Fly',
+    Default = false,
+    Tooltip = 'Toggle fly',
+    Callback = function(Value)
+        flyEnabled = Value
+        
+        if Value then
+            flyConnection = RunService.Heartbeat:Connect(function()
+                if flyEnabled then
+                    SetupFly(flySpeed)
+                end
+            end)
+        else
+            if flyConnection then
+                flyConnection:Disconnect()
+                flyConnection = nil
+            end
+            
+            if flyTween then
+                flyTween:Cancel()
+                flyTween = nil
+            end
+            
+            local character = Players.LocalPlayer.Character
+            if character then
+                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end
+    end
+})
+
+local UITab = Window:AddTab('UI Settings')
+local MenuGroup = UITab:AddLeftGroupbox('Menu')
+
+MenuGroup:AddButton('Unload', function() 
+    if velocityConnection then velocityConnection:Disconnect() end
+    if jumpConnection then jumpConnection:Disconnect() end
+    if flyConnection then flyConnection:Disconnect() end
+    if flyTween then flyTween:Cancel() end
+    Library:Unload() 
+end)
+
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { 
+    Default = 'RightShift', 
+    NoUI = true, 
+    Text = 'Menu keybind' 
+})
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library)
+ThemeManager:SetFolder('IntruderScript')
+
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+SaveManager:SetFolder('IntruderScript/game')
+
+SaveManager:BuildConfigSection(UITab)
+ThemeManager:ApplyToTab(UITab)
+SaveManager:LoadAutoloadConfig()
+
+Library:SetWatermarkVisibility(true)
+
+local FrameTimer = tick()
+local FrameCounter = 0
+local FPS = 60
+
+local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+    FrameCounter = FrameCounter + 1
+
+    if (tick() - FrameTimer) >= 1 then
+        FPS = FrameCounter
+        FrameTimer = tick()
+        FrameCounter = 0
+    end
+
+    Library:SetWatermark(('Intruder Script | %s fps | %s ms'):format(
+        math.floor(FPS),
+        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+    ))
+end)
+
+Library:OnUnload(function()
+    WatermarkConnection:Disconnect()
+    if velocityConnection then velocityConnection:Disconnect() end
+    if jumpConnection then jumpConnection:Disconnect() end
+    if flyConnection then flyConnection:Disconnect() end
+    if flyTween then flyTween:Cancel() end
+    Library.Unloaded = true
+end)
