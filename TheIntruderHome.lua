@@ -204,19 +204,19 @@ local GameplayTab = Window:AddTab('Gameplay')
 
 local InteractGB = GameplayTab:AddLeftGroupbox('Interact click')
 
-InteractGB:AddButton('Interact click', {
-    Text = 'Interact click',
-    Func = function()
-        game.workspace.Map.Phone.Speaker.AnswerGuide.HoldDuration = 0
-        game.workspace.Map.Phone.Speaker.AnswerGuide2.HoldDuration = 0
-        game.workspace.Map.Phone.Speaker.FixPhone.HoldDuration = 0
-        game.workspace.Map.LightSwitch.DownSwitch.ProximityPrompt.HoldDuration = 0
-        game.workspace.Map.LightSwitch.UpSwitch.ProximityPrompt.HoldDuration = 0
-        game.workspace.Map.ClosetDoor.Handle.Close.HoldDuration = 0
-        game.workspace.Map.ClosetDoor.Handle.Open.HoldDuration = 0
-    end,
-    DoubleClick = false,
-    Tooltip = 'Make all interactions instant'
+InteractGB:AddToggle('Interact click', {
+	Text = 'Interact click',
+    Default = false,
+    Tooltip = 'cd: 0',
+	Callback = function()
+			game.workspace.Map.Phone.Speaker.AnswerGuide.HoldDuration = 0
+			game.workspace.Map.Phone.Speaker.AnswerGuide2.HoldDuration = 0
+			game.workspace.Map.Phone.Speaker.FixPhone.HoldDuration = 0
+			game.workspace.Map.LightSwitch.DownSwitch.ProximityPrompt.HoldDuration = 0
+			game.workspace.Map.LightSwitch.UpSwitch.ProximityPrompt.HoldDuration = 0
+			game.workspace.Map.ClosetDoor.Handle.Close.HoldDuration = 0
+			game.workspace.Map.ClosetDoor.Handle.Open.HoldDuration = 0
+		end
 })
 
 local UITab = Window:AddTab('UI Settings')
@@ -225,7 +225,9 @@ local MenuGroup = UITab:AddLeftGroupbox('Menu')
 MenuGroup:AddButton('Unload', function() 
     if velocityConnection then velocityConnection:Disconnect() end
     if flyConnection then flyConnection:Disconnect() end
+    if interactConnection then interactConnection:Disconnect() end
     if flyTween then flyTween:Cancel() end
+    RestoreOriginalDurations()
     Library:Unload() 
 end)
 
@@ -274,6 +276,8 @@ Library:OnUnload(function()
     WatermarkConnection:Disconnect()
     if velocityConnection then velocityConnection:Disconnect() end
     if flyConnection then flyConnection:Disconnect() end
+    if interactConnection then interactConnection:Disconnect() end
     if flyTween then flyTween:Cancel() end
+    RestoreOriginalDurations()
     Library.Unloaded = true
 end)
