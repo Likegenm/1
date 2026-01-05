@@ -1550,111 +1550,13 @@ local SkillBringSection = FightTab:Section({
     Title = "SkillBring"
 })
 
-local skillBringKey = "1"
-local skillBringEnabled = false
-local skillBringThread = nil
-local skillBringSavedPos = nil
-
-SkillBringSection:Dropdown({
-    Title = "Keybind",
-    Values = {"1", "2", "3", "4", "M1"},
-    Value = "1",
-    Callback = function(value)
-        skillBringKey = value
-    end
-})
-
-local function isSkillBringKeyPressed()
-    local UserInputService = game:GetService("UserInputService")
-    
-    if skillBringKey == "M1" then
-        return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
-    else
-        local keyCode
-        if skillBringKey == "1" then keyCode = Enum.KeyCode.One
-        elseif skillBringKey == "2" then keyCode = Enum.KeyCode.Two
-        elseif skillBringKey == "3" then keyCode = Enum.KeyCode.Three
-        elseif skillBringKey == "4" then keyCode = Enum.KeyCode.Four
-        end
-        
-        if keyCode then
-            return UserInputService:IsKeyDown(keyCode)
-        end
-    end
-    
-    return false
-end
-
-local function getPlayerInRange(range)
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
-        return nil
-    end
-    
-    local myPos = character.HumanoidRootPart.Position
-    
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = (myPos - p.Character.HumanoidRootPart.Position).Magnitude
-            if distance <= range then
-                return p
-            end
-        end
-    end
-    
-    return nil
-end
-
-SkillBringSection:Toggle({
-    Title = "SkillBring",
-    Desc = "Teleport player to void and back",
-    Icon = "arrow-right-left",
-    Callback = function(state)
-        skillBringEnabled = state
-        
-        if skillBringThread then
-            skillBringThread = nil
-        end
-        
-        if state then
-            skillBringThread = task.spawn(function()
-                local player = game.Players.LocalPlayer
-                local TweenService = game:GetService("TweenService")
-                
-                while skillBringEnabled do
-                    if isSkillBringKeyPressed() then
-                        local targetPlayer = getPlayerInRange(5)
-                        if targetPlayer then
-                            local myChar = player.Character
-                            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                                local hrp = myChar.HumanoidRootPart
-                                
-                                task.wait(1)
-                                skillBringSavedPos = hrp.Position
-                                
-                                local voidPos = Vector3.new(-81.32, -496.50, -313.57)
-                                local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear)
-                                local voidTween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(voidPos)})
-                                voidTween:Play()
-                                voidTween.Completed:Wait()
-                                
-                                task.wait(3)
-                                
-                                if skillBringSavedPos then
-                                    local returnTween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(skillBringSavedPos)})
-                                    returnTween:Play()
-                                    returnTween.Completed:Wait()
-                                    skillBringSavedPos = nil
-                                end
-                            end
-                        end
-                    end
-                    task.wait(0.1)
-                end
-            end)
-        end
-    end
+SkillBringSection:Button({
+	Title = "SkillBring script (By Pepelochek)",
+	Desc = "Script",
+	Icon = "code",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/NotMySkillBring.lua"))()
+	end
 })
 
 local VisualTab = Window:Tab({
@@ -1674,44 +1576,6 @@ local ExploitsTab = Window:Tab({
 local TrashcanSection = ExploitsTab:Section({
     Title = "Trashcan"
 })
-
-local savedPosition = nil
-local trashcanThread = nil
-local trashcanEnabled = false
-local lastTrashcan = nil
-local lastTrashcanTime = 0
-
-local function getRandomTrashcan()
-    local map = game.Workspace:FindFirstChild("Map")
-    if not map then return nil end
-    
-    local trash = map:FindFirstChild("Trash")
-    if not trash then return nil end
-    
-    local trashcans = {}
-    for _, obj in pairs(trash:GetDescendants()) do
-        if obj.Name == "Trashcan" then
-            table.insert(trashcans, obj)
-        end
-    end
-    
-    if #trashcans == 0 then return nil end
-    
-    local availableTrashcans = {}
-    local currentTime = tick()
-    
-    for _, trashcan in pairs(trashcans) do
-        if trashcan ~= lastTrashcan or (currentTime - lastTrashcanTime) > 60 then
-            table.insert(availableTrashcans, trashcan)
-        end
-    end
-    
-    if #availableTrashcans == 0 then
-        return trashcans[math.random(1, #trashcans)]
-    end
-    
-    return availableTrashcans[math.random(1, #availableTrashcans)]
-end
 
 TrashcanSection:Button({
     Title = "Get Trashcan",
@@ -3273,7 +3137,7 @@ local noCameraAnimations = false
 local originalCameraAnimations = {}
 
 DetectorSection:Toggle({
-    Title = "No Camera Animations",
+    Title = "???",
     Callback = function(state)
         noCameraAnimations = state
         
