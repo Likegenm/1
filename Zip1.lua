@@ -1588,6 +1588,91 @@ TrashcanSection:Button({
 		end
 })
 
+local SpeedTrashcanSection = ExploitsTab:Section({
+    Title = "Speed Trashcan"
+})
+
+local speedTrashcanValue = 1000
+local speedTrashcanEnabled = false
+local speedTrashcanThread = nil
+
+SpeedTrashcanSection:Input({
+    Title = "Speed Trashcan",
+    Desc = "Enter value (1000-25000)",
+    Value = "1000",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num >= 1000 and num <= 25000 then
+            speedTrashcanValue = num
+            WindUI:Notify({
+                Title = "Speed Trashcan",
+                Content = "Speed set to: " .. speedTrashcanValue,
+                Icon = "check"
+            })
+        else
+            WindUI:Notify({
+                Title = "Speed Trashcan",
+                Content = "Enter number between 1000-25000!",
+                Icon = "x"
+            })
+        end
+    end
+})
+
+-- Toggle для включения/выключения
+SpeedTrashcanSection:Toggle({
+    Title = "ON/OFF",
+    Icon = "zap",
+    Callback = function(state)
+        speedTrashcanEnabled = state
+        
+        if speedTrashcanThread then
+            speedTrashcanThread = nil
+        end
+        
+        if state then
+            speedTrashcanThread = task.spawn(function()
+                local lp = game.Players.LocalPlayer
+                local c, hrp, vel, movel = nil, nil, nil, 0.1
+                
+                WindUI:Notify({
+                    Title = "Speed Trashcan",
+                    Content = "Enabled! Speed: " .. speedTrashcanValue,
+                    Icon = "check"
+                })
+                
+                while speedTrashcanEnabled do
+                    game:GetService("RunService").Heartbeat:Wait()
+                    c = lp.Character
+                    hrp = c and c:FindFirstChild("HumanoidRootPart")
+                    
+                    if hrp then
+                        vel = hrp.Velocity
+                        hrp.Velocity = vel * speedTrashcanValue
+                        game:GetService("RunService").RenderStepped:Wait()
+                        hrp.Velocity = vel
+                        game:GetService("RunService").Stepped:Wait()
+                        hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                        movel = -movel
+                    end
+                end
+                
+                WindUI:Notify({
+                    Title = "Speed Trashcan",
+                    Content = "Disabled!",
+                    Icon = "x"
+                })
+            end)
+        else
+            WindUI:Notify({
+                Title = "Speed Trashcan",
+                Content = "Disabled!",
+                Icon = "x"
+            })
+        end
+    end
+})
+
 local WallComboSection = ExploitsTab:Section({
     Title = "WallCombo"
 })
