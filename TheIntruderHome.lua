@@ -266,25 +266,6 @@ VisualGB:AddToggle('FullBrightToggle', {
 
 local IntruderGB = GameplayTab:AddLeftGroupbox('Intruder')
 
-local function ShowIntruderPos()
-    local values = game.workspace.Values
-    if values and values:FindFirstChild("intruderPos") then
-        local pos = values.intruderPos.Value
-        Library:Notify(string.format("Intruder Position: X=%.2f, Y=%.2f, Z=%.2f", pos.X, pos.Y, pos.Z), 5)
-    else
-        Library:Notify("IntruderPos not found", 3)
-    end
-end
-
-IntruderGB:AddButton('Show IntruderPos', {
-    Text = 'Show IntruderPos',
-    Func = function()
-        ShowIntruderPos()
-    end,
-    DoubleClick = false,
-    Tooltip = 'Show intruder position'
-})
-
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
