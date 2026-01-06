@@ -205,12 +205,84 @@ local GameplayTab = Window:AddTab('Gameplay')
 local InteractGB = GameplayTab:AddLeftGroupbox('Interact click')
 
 InteractGB:AddToggle('Interact click', {
-	Text = 'Interact click',
+    Text = 'Interact click',
     Default = false,
     Tooltip = 'cd: 0',
-	Callback = function()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/InteractClickIntruderHome.lua"))()
-	end
+    Callback = function(Value)
+        if Value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/InteractClickIntruderHome.lua"))()
+        end
+    end
+})
+
+local VisualGB = GameplayTab:AddRightGroupbox('Visual')
+
+local fullBrightEnabled = false
+local fullBrightConnection
+
+local function ApplyFullBright()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(1, 1, 1)
+    lighting.Brightness = 2
+    lighting.GlobalShadows = false
+    lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 0
+end
+
+local function ResetLighting()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+    lighting.Brightness = 1
+    lighting.GlobalShadows = true
+    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 100
+end
+
+VisualGB:AddToggle('FullBrightToggle', {
+    Text = 'FullBright',
+    Default = false,
+    Tooltip = 'Toggle FullBright',
+    Callback = function(Value)
+        fullBrightEnabled = Value
+        
+        if Value then
+            fullBrightConnection = RunService.Heartbeat:Connect(function()
+                if fullBrightEnabled then
+                    ApplyFullBright()
+                end
+            end)
+            ApplyFullBright()
+        else
+            if fullBrightConnection then
+                fullBrightConnection:Disconnect()
+                fullBrightConnection = nil
+            end
+            ResetLighting()
+        end
+    end
+})
+
+local IntruderGB = GameplayTab:AddLeftGroupbox('Intruder')
+
+local function ShowIntruderPos()
+    local values = game.workspace.Values
+    if values and values:FindFirstChild("intruderPos") then
+        local pos = values.intruderPos.Value
+        Library:Notify(string.format("Intruder Position: X=%.2f, Y=%.2f, Z=%.2f", pos.X, pos.Y, pos.Z), 5)
+    else
+        Library:Notify("IntruderPos not found", 3)
+    end
+end
+
+IntruderGB:AddButton('Show IntruderPos', {
+    Text = 'Show IntruderPos',
+    Func = function()
+        ShowIntruderPos()
+    end,
+    DoubleClick = false,
+    Tooltip = 'Show intruder position'
 })
 
 local UITab = Window:AddTab('UI Settings')
@@ -219,9 +291,9 @@ local MenuGroup = UITab:AddLeftGroupbox('Menu')
 MenuGroup:AddButton('Unload', function() 
     if velocityConnection then velocityConnection:Disconnect() end
     if flyConnection then flyConnection:Disconnect() end
-    if interactConnection then interactConnection:Disconnect() end
+    if fullBrightConnection then fullBrightConnection:Disconnect() end
     if flyTween then flyTween:Cancel() end
-    RestoreOriginalDurations()
+    ResetLighting()
     Library:Unload() 
 end)
 
@@ -270,8 +342,8 @@ Library:OnUnload(function()
     WatermarkConnection:Disconnect()
     if velocityConnection then velocityConnection:Disconnect() end
     if flyConnection then flyConnection:Disconnect() end
-    if interactConnection then interactConnection:Disconnect() end
+    if fullBrightConnection then fullBrightConnection:Disconnect() end
     if flyTween then flyTween:Cancel() end
-    RestoreOriginalDurations()
+    ResetLighting()
     Library.Unloaded = true
 end)
