@@ -266,13 +266,13 @@ VisualGB:AddToggle('FullBrightToggle', {
 
 local IntruderGB = GameplayTab:AddLeftGroupbox('Intruder')
 
-IntruderGB:AddButton('Pos:', {
-        Text = 'Intruder Pos',
-        Default = false,
-        Tooltip = 'positionIntruder',
-        Callback = function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/HomePosIntruder.lua"))()
-        end
+IntruderGB:AddButton({
+    Text = 'Intruder Pos',
+    Func = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/HomePosIntruder.lua"))()
+    end,
+    DoubleClick = false,
+    Tooltip = 'Show intruder position'
 })
 
 local UITab = Window:AddTab('UI Settings')
