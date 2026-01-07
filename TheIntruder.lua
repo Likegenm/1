@@ -46,17 +46,13 @@ local SL = sc and
            sc:FindFirstChild("2") and 
            sc:FindFirstChild("3") and 
            sc:FindFirstChild("4") and 
-           sc:FindFirstChild("5") and
-           not sc:FIndFirstChild("6") and
-           not sc:FindFirstChild("7")
+           sc:FindFirstChild("5")
 
 local OAK = LK and 
            LK:FindFirstChild("OldMan") and 
            LK:FindFirstChild("Woman") and 
            LK:FindFirstChild("Worker") and 
            LK:FindFirstChild("HackingTool")
-
-local Subway = not PG and not lobby and not home and not mall and not mine and not MH and not SL and not OAK
 
 local DM = PG and 
           PG:FindFirstChild("Basement") and 
@@ -68,8 +64,14 @@ local DM = PG and
           PG:FindFirstChild("Secret") and 
           PG:FindFirstChild("Well")
 
-if lobby then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))() end
+if lobby then 
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/Intruder(Lobby).lua"))() 
+end
 
-if home then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/TheIntruderHome.lua"))() end
+if home then 
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/TheIntruderHome.lua"))() 
+end
 
-if mall then loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/TheIntruderMall.lua"))() end
+if mall then 
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/TheIntruderMall.lua"))() 
+end
