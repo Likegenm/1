@@ -1,339 +1,156 @@
-local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
-
-local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
-local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
-local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
-
-local Window = Library:CreateWindow({
-    Title = 'The Intruder script. Location:Home. By Likegenm Team',
-    Center = true,
-    AutoShow = true,
-    TabPadding = 8,
-    MenuFadeTime = 0.2
-})
-
-local PT = Window:AddTab('LocalPlayer')
-
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
-local SGB = PT:AddLeftGroupbox('SpeedHack')
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NotificationGUI"
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 2147483647
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
-local velocitySpeed = 16
-local velocityEnabled = false
-local velocityConnection
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 75)
+frame.Position = UDim2.new(1, -310, 1, -110)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.3
+frame.ZIndex = 2147483647
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
 
-local function SetupVelocityMovement(speed)
-    local Camera = workspace.CurrentCamera
-    local LocalPlayer = Players.LocalPlayer
-    local Character = LocalPlayer.Character
-    local HumanoidRootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-    
-    if not Character or not HumanoidRootPart then return end
-    
-    local cameraCFrame = Camera.CFrame
-    local lookVector = cameraCFrame.LookVector
-    local rightVector = cameraCFrame.RightVector
-    
-    local mv = Vector3.new(0, 0, 0)
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = frame
 
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-        mv = mv + Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-        mv = mv - Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-        mv = mv - Vector3.new(rightVector.X, 0, rightVector.Z).Unit
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-        mv = mv + Vector3.new(rightVector.X, 0, rightVector.Z).Unit
-    end
-    
-    if mv.Magnitude > 0 then
-        HumanoidRootPart.Velocity = Vector3.new(
-            mv.X * speed,
-            HumanoidRootPart.Velocity.Y,
-            mv.Z * speed
-        )
-    end
+local title = Instance.new("TextLabel")
+title.Text = "IntruderPos:"
+title.Size = UDim2.new(1, 0, 0.5, 0)
+title.ZIndex = 2147483647
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 28
+title.Parent = frame
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Name = "ValueLabel"
+subtitle.Text = "Loading..."
+subtitle.Size = UDim2.new(1, 0, 0.5, 0)
+subtitle.Position = UDim2.new(0, 0, 0.5, 0)
+subtitle.ZIndex = 2147483647
+subtitle.BackgroundTransparency = 1
+subtitle.TextColor3 = Color3.new(1, 1, 1)
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 20
+subtitle.Parent = frame
+
+local topDragBar = Instance.new("Frame")
+topDragBar.Size = UDim2.new(1, 0, 0, 15)
+topDragBar.ZIndex = 2147483647
+topDragBar.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+topDragBar.BackgroundTransparency = 0.8
+topDragBar.BorderSizePixel = 0
+topDragBar.Parent = frame
+
+local bottomDragBar = Instance.new("Frame")
+bottomDragBar.Size = UDim2.new(1, 0, 0, 15)
+bottomDragBar.Position = UDim2.new(0, 0, 1, -15)
+bottomDragBar.ZIndex = 2147483647
+bottomDragBar.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+bottomDragBar.BackgroundTransparency = 0.8
+bottomDragBar.BorderSizePixel = 0
+bottomDragBar.Parent = frame
+
+local leftDragBar = Instance.new("Frame")
+leftDragBar.Size = UDim2.new(0, 15, 1, -30)
+leftDragBar.Position = UDim2.new(0, 0, 0, 15)
+leftDragBar.ZIndex = 2147483647
+leftDragBar.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+leftDragBar.BackgroundTransparency = 0.8
+leftDragBar.BorderSizePixel = 0
+leftDragBar.Parent = frame
+
+local rightDragBar = Instance.new("Frame")
+rightDragBar.Size = UDim2.new(0, 15, 1, -30)
+rightDragBar.Position = UDim2.new(1, -15, 0, 15)
+rightDragBar.ZIndex = 2147483647
+rightDragBar.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+rightDragBar.BackgroundTransparency = 0.8
+rightDragBar.BorderSizePixel = 0
+rightDragBar.Parent = frame
+
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Color = Color3.new(1, 1, 1)
+frameStroke.Thickness = 3
+frameStroke.Transparency = 0.5
+frameStroke.Parent = frame
+
+local titleStroke = Instance.new("TextStroke")
+titleStroke.Color = Color3.new(0, 0, 0)
+titleStroke.Thickness = 2
+titleStroke.Transparency = 0.3
+titleStroke.Parent = title
+
+local subtitleStroke = Instance.new("TextStroke")
+subtitleStroke.Color = Color3.new(0, 0, 0)
+subtitleStroke.Thickness = 2
+subtitleStroke.Transparency = 0.3
+subtitleStroke.Parent = subtitle
+
+local isDragging = false
+local dragOffset = Vector2.new(0, 0)
+
+local function startDragging(input)
+    isDragging = true
+    local framePos = frame.AbsolutePosition
+    local mousePos = input.Position
+    dragOffset = Vector2.new(framePos.X - mousePos.X, framePos.Y - mousePos.Y)
 end
 
-SGB:AddSlider('Speedhack', {
-    Text = 'Speed:',
-    Default = 16,
-    Min = 12,
-    Max = 50,
-    Rounding = 0,
-    Compact = false,
-    Callback = function(Value)
-        velocitySpeed = Value
-    end
-})
-
-SGB:AddToggle('SpeedToggle', {
-    Text = 'Enable Speed',
-    Default = false,
-    Tooltip = 'Toggle velocity movement',
-    Callback = function(Value)
-        velocityEnabled = Value
-        
-        if Value then
-            velocityConnection = RunService.Heartbeat:Connect(function()
-                if velocityEnabled then
-                    SetupVelocityMovement(velocitySpeed)
-                end
-            end)
-        else
-            if velocityConnection then
-                velocityConnection:Disconnect()
-                velocityConnection = nil
-            end
+local dragBars = {topDragBar, bottomDragBar, leftDragBar, rightDragBar}
+for _, dragBar in pairs(dragBars) do
+    dragBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            startDragging(input)
         end
-    end
-})
-
-local FGB = PT:AddRightGroupbox('Fly')
-
-local flySpeed = 40
-local flyEnabled = false
-local flyConnection
-local flyTween
-
-local function SetupFly(speed)
-    local player = Players.LocalPlayer
-    local character = player.Character
-    if not character then return end
-    
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then return end
-    
-    local camera = workspace.CurrentCamera
-    local lookVector = camera.CFrame.LookVector
-    local rightVector = camera.CFrame.RightVector
-    
-    local targetVelocity = Vector3.new(0, 0, 0)
-    
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-        targetVelocity = targetVelocity + lookVector
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-        targetVelocity = targetVelocity - lookVector
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-        targetVelocity = targetVelocity - rightVector
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-        targetVelocity = targetVelocity + rightVector
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-        targetVelocity = targetVelocity + Vector3.new(0, 1, 0)
-    end
-    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-        targetVelocity = targetVelocity + Vector3.new(0, -1, 0)
-    end
-    
-    if targetVelocity.Magnitude > 0 then
-        targetVelocity = targetVelocity.Unit * speed
-    end
-    
-    if flyTween then
-        flyTween:Cancel()
-    end
-    
-    local TweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(
-        0.1,
-        Enum.EasingStyle.Linear,
-        Enum.EasingDirection.Out
-    )
-    
-    flyTween = TweenService:Create(humanoidRootPart, tweenInfo, {Velocity = targetVelocity})
-    flyTween:Play()
+    end)
 end
 
-FGB:AddSlider('FlySpeed', {
-    Text = 'Fly Speed:',
-    Default = 40,
-    Min = 16,
-    Max = 200,
-    Rounding = 0,
-    Compact = false,
-    Callback = function(Value)
-        flySpeed = Value
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        startDragging(input)
     end
-})
-
-FGB:AddToggle('FlyToggle', {
-    Text = 'Enable Fly',
-    Default = false,
-    Tooltip = 'Toggle fly',
-    Callback = function(Value)
-        flyEnabled = Value
-        
-        if Value then
-            flyConnection = RunService.Heartbeat:Connect(function()
-                if flyEnabled then
-                    SetupFly(flySpeed)
-                end
-            end)
-        else
-            if flyConnection then
-                flyConnection:Disconnect()
-                flyConnection = nil
-            end
-            
-            if flyTween then
-                flyTween:Cancel()
-                flyTween = nil
-            end
-            
-            local character = Players.LocalPlayer.Character
-            if character then
-                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-                end
-            end
-        end
-    end
-})
-
-local GameplayTab = Window:AddTab('Gameplay')
-
-local InteractGB = GameplayTab:AddLeftGroupbox('Interact click')
-
-InteractGB:AddToggle('Interact click', {
-    Text = 'Interact click',
-    Default = false,
-    Tooltip = 'cd: 0',
-    Callback = function(Value)
-        if Value then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/InteractClickIntruderHome.lua"))()
-        end
-    end
-})
-
-local VisualGB = GameplayTab:AddRightGroupbox('Visual')
-
-local fullBrightEnabled = false
-local fullBrightConnection
-
-local function ApplyFullBright()
-    local lighting = game:GetService("Lighting")
-    lighting.Ambient = Color3.new(1, 1, 1)
-    lighting.Brightness = 2
-    lighting.GlobalShadows = false
-    lighting.OutdoorAmbient = Color3.new(1, 1, 1)
-    lighting.FogEnd = 100000
-    lighting.FogStart = 0
-end
-
-local function ResetLighting()
-    local lighting = game:GetService("Lighting")
-    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
-    lighting.Brightness = 1
-    lighting.GlobalShadows = true
-    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
-    lighting.FogEnd = 100000
-    lighting.FogStart = 100
-end
-
-VisualGB:AddToggle('FullBrightToggle', {
-    Text = 'FullBright',
-    Default = false,
-    Tooltip = 'Toggle FullBright',
-    Callback = function(Value)
-        fullBrightEnabled = Value
-        
-        if Value then
-            fullBrightConnection = RunService.Heartbeat:Connect(function()
-                if fullBrightEnabled then
-                    ApplyFullBright()
-                end
-            end)
-            ApplyFullBright()
-        else
-            if fullBrightConnection then
-                fullBrightConnection:Disconnect()
-                fullBrightConnection = nil
-            end
-            ResetLighting()
-        end
-    end
-})
-
-local IntruderGB = GameplayTab:AddLeftGroupbox('Intruder')
-
-IntruderGB:AddButton({
-    Text = 'Intruder Pos',
-    Func = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/HomePosIntruder.lua"))()
-    end,
-    DoubleClick = false,
-    Tooltip = 'Show intruder position'
-})
-
-local UITab = Window:AddTab('UI Settings')
-local MenuGroup = UITab:AddLeftGroupbox('Menu')
-
-MenuGroup:AddButton('Unload', function() 
-    if velocityConnection then velocityConnection:Disconnect() end
-    if flyConnection then flyConnection:Disconnect() end
-    if fullBrightConnection then fullBrightConnection:Disconnect() end
-    if flyTween then flyTween:Cancel() end
-    ResetLighting()
-    Library:Unload() 
 end)
 
-MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { 
-    Default = 'RightShift', 
-    NoUI = true, 
-    Text = 'Menu keybind' 
-})
-
-Library.ToggleKeybind = Options.MenuKeybind
-
-ThemeManager:SetLibrary(Library)
-ThemeManager:SetFolder('IntruderScript')
-
-SaveManager:SetLibrary(Library)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
-SaveManager:SetFolder('IntruderScript/game')
-
-SaveManager:BuildConfigSection(UITab)
-ThemeManager:ApplyToTab(UITab)
-SaveManager:LoadAutoloadConfig()
-
-Library:SetWatermarkVisibility(true)
-
-local FrameTimer = tick()
-local FrameCounter = 0
-local FPS = 60
-
-local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
-    FrameCounter = FrameCounter + 1
-
-    if (tick() - FrameTimer) >= 1 then
-        FPS = FrameCounter
-        FrameTimer = tick()
-        FrameCounter = 0
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = false
     end
-
-    Library:SetWatermark(('Intruder Script | %s fps | %s ms'):format(
-        math.floor(FPS),
-        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-    ))
 end)
 
-Library:OnUnload(function()
-    WatermarkConnection:Disconnect()
-    if velocityConnection then velocityConnection:Disconnect() end
-    if flyConnection then flyConnection:Disconnect() end
-    if fullBrightConnection then fullBrightConnection:Disconnect() end
-    if flyTween then flyTween:Cancel() end
-    ResetLighting()
-    Library.Unloaded = true
+RunService.RenderStepped:Connect(function()
+    if isDragging then
+        local mousePos = UserInputService:GetMouseLocation()
+        frame.Position = UDim2.new(0, mousePos.X + dragOffset.X, 0, mousePos.Y + dragOffset.Y)
+    end
+end)
+
+local function updateValue()
+    local success, result = pcall(function()
+        return game.workspace.Values.intruderPos.Value
+    end)
+    
+    if success and result then
+        subtitle.Text = tostring(result)
+    else
+        subtitle.Text = "Error"
+    end
+end
+
+task.spawn(function()
+    while true do
+        updateValue()
+        task.wait(1)
+    end
 end)
