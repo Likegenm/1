@@ -42,11 +42,13 @@ local MH = Hallways and
           PG:FindFirstChild("Vent")
 
 local SL = sc and 
-          sc:FindFirstChild("1") and 
-          sc:FindFirstChild("2") and 
-          sc:FindFirstChild("3") and 
-          sc:FindFirstChild("4") and 
-          sc:FindFirstChild("5")
+           sc:FindFirstChild("1") and 
+           sc:FindFirstChild("2") and 
+           sc:FindFirstChild("3") and 
+           sc:FindFirstChild("4") and 
+           sc:FindFirstChild("5") and
+           not sc:FIndFirstChild("6") and
+           not sc:FindFirstChild("7")
 
 local OAK = LK and 
            LK:FindFirstChild("OldMan") and 
