@@ -292,3 +292,70 @@ MusicGB:AddSlider('MusicSpeed', {
         UpdateMusicSettings()
     end
 })
+
+local UITab = Window:AddTab('UI Settings')
+local MenuGroup = UITab:AddLeftGroupbox('Menu')
+
+MenuGroup:AddButton({
+    Text = 'Unload',
+    Func = function()
+            print("ok")
+        StopMenuMusic()
+        ResetLighting()
+        Library:Unload() 
+    end,
+    DoubleClick = false,
+    Tooltip = 'Unload script'
+})
+
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { 
+    Default = 'RightShift', 
+    NoUI = true, 
+    Text = 'Menu keybind' 
+})
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library)
+ThemeManager:SetFolder('IntruderScript')
+
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+SaveManager:SetFolder('IntruderScript/game')
+
+SaveManager:BuildConfigSection(UITab)
+ThemeManager:ApplyToTab(UITab)
+SaveManager:LoadAutoloadConfig()
+
+Library:SetWatermarkVisibility(true)
+
+local FrameTimer = tick()
+local FrameCounter = 0
+local FPS = 60
+
+local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+    FrameCounter = FrameCounter + 1
+
+    if (tick() - FrameTimer) >= 1 then
+        FPS = FrameCounter
+        FrameTimer = tick()
+        FrameCounter = 0
+    end
+
+    Library:SetWatermark(('Intruder Script:Mental Hospital | %s fps | %s ms'):format(
+        math.floor(FPS),
+        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+    ))
+end)
+
+Library:OnUnload(function()
+    WatermarkConnection:Disconnect()
+    if velocityConnection then velocityConnection:Disconnect() end
+    if flyConnection then flyConnection:Disconnect() end
+    if fullBrightConnection then fullBrightConnection:Disconnect() end
+    if flyTween then flyTween:Cancel() end
+    StopMenuMusic()
+    ResetLighting()
+    Library.Unloaded = true
+end)
