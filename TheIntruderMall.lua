@@ -462,7 +462,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'PC',
     Func = function()
-        TeleportTo(Vector3.new(8.45, 4.14, 9.78))
+        TeleportTo(Vector3.new(-29.68, 4.09, -42.59))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to PC'
@@ -471,7 +471,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'LightSwitcher',
     Func = function()
-        TeleportTo(Vector3.new(11.26, 4.14, -8.52))
+        TeleportTo(Vector3.new(3.57, 4.09, -67.31))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to LightSwitcher'
