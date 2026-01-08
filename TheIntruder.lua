@@ -49,7 +49,7 @@ local SL = sc and
            sc:FindFirstChild("5") and not
            sc:FindFirstChild("6") and not
            sc:FindFirstChild("7") and not
-           sc:FindFirstChild("8") and not
+           sc:FindFirstChild("8")
 
 local OAK = LK and 
            LK:FindFirstChild("OldMan") and 
