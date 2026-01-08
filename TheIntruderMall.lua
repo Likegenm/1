@@ -426,7 +426,7 @@ end
 TeleportGB:AddButton({
     Text = 'Locker1',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(-28.75, 4.09, -44.27))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Closet'
@@ -435,7 +435,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'Locker2',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(-28.23, 4.09, -40.44))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Closet'
@@ -444,7 +444,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'Locker3',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(-7.28, 4.09, -32.87))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Closet'
@@ -453,7 +453,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'Locker4',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(-1.34, 4.09, -32.28))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Closet'
@@ -462,7 +462,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = '1',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(-20.13, 4.09, -43.03))
     end,
     DoubleClick = false,
     Tooltip = 'Телепорт к кнопке тревоги'
@@ -471,7 +471,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = '2',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(-6.39, 4.09, -55.05))
     end,
     DoubleClick = false,
     Tooltip = 'Телепорт к кнопке тревоги'
@@ -480,7 +480,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = '3',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(0.50, 4.09, -68.25))
     end,
     DoubleClick = false,
     Tooltip = 'Телепорт к кнопке тревоги'
@@ -489,7 +489,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = '4',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(2.74, 4.09, -31.19))
     end,
     DoubleClick = false,
     Tooltip = 'Телепорт к кнопке тревоги'
