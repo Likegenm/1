@@ -645,6 +645,408 @@ IntruderGB:AddButton({
     Tooltip = 'Destroy intruder'
 })
 
+local GeneratorESPGB = VisualTab:AddRightGroupbox('Generator ESP')
+
+local generatorNameESP = false
+local generatorTracers = false
+local generatorChams = false
+local generatorRainbow = false
+local generatorDistance = false
+local generatorChamsColor = Color3.new(1, 1, 0)
+local generatorHighlights = {}
+local generatorBillboards = {}
+local generatorTracersObj = {}
+local generatorUpdateConnection = nil
+local generatorRainbowConnection = nil
+
+local function UpdateGeneratorESP()
+    local gensFolder = workspace:FindFirstChild("Generators")
+    if not gensFolder then return end
+    
+    local localPlayer = game:GetService("Players").LocalPlayer
+    local character = localPlayer.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    
+    for _, generator in pairs(gensFolder:GetChildren()) do
+        local mainPart = nil
+        if generator:IsA("Model") then
+            mainPart = generator.PrimaryPart or generator:FindFirstChildWhichIsA("BasePart")
+        elseif generator:IsA("BasePart") then
+            mainPart = generator
+        end
+        
+        if not mainPart then continue end
+        
+        if generatorChams then
+            if not generatorHighlights[generator] then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "GeneratorChams"
+                highlight.FillColor = generatorChamsColor
+                highlight.OutlineColor = Color3.new(1, 1, 1)
+                highlight.FillTransparency = 0.3
+                highlight.OutlineTransparency = 0
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                highlight.Adornee = generator
+                highlight.Parent = generator
+                generatorHighlights[generator] = highlight
+            else
+                generatorHighlights[generator].Adornee = generator
+                generatorHighlights[generator].Parent = generator
+            end
+        else
+            if generatorHighlights[generator] then
+                generatorHighlights[generator]:Destroy()
+                generatorHighlights[generator] = nil
+            end
+        end
+        
+        if generatorNameESP then
+            if not generatorBillboards[generator] then
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = "GeneratorName"
+                billboard.Size = UDim2.new(0, 200, 0, 80)
+                billboard.StudsOffset = Vector3.new(0, 4, 0)
+                billboard.AlwaysOnTop = true
+                billboard.MaxDistance = 500
+                
+                local nameLabel = Instance.new("TextLabel")
+                nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                nameLabel.BackgroundTransparency = 1
+                nameLabel.Text = generator.Name
+                nameLabel.TextColor3 = generatorChamsColor
+                nameLabel.TextStrokeTransparency = 0
+                nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+                nameLabel.Font = Enum.Font.GothamBold
+                nameLabel.TextSize = 16
+                nameLabel.Parent = billboard
+                
+                local stateLabel = Instance.new("TextLabel")
+                stateLabel.Position = UDim2.new(0, 0, 0.5, 0)
+                stateLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                stateLabel.BackgroundTransparency = 1
+                stateLabel.Text = ""
+                stateLabel.TextColor3 = Color3.new(1, 1, 1)
+                stateLabel.TextStrokeTransparency = 0
+                stateLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+                stateLabel.Font = Enum.Font.Gotham
+                stateLabel.TextSize = 14
+                stateLabel.Parent = billboard
+                
+                billboard.Parent = generator
+                generatorBillboards[generator] = {billboard = billboard, nameLabel = nameLabel, stateLabel = stateLabel}
+            else
+                generatorBillboards[generator].billboard.Parent = generator
+                
+                if rootPart and generatorDistance then
+                    local distance = (mainPart.Position - rootPart.Position).Magnitude
+                    generatorBillboards[generator].stateLabel.Text = string.format("[%.1f studs]", distance)
+                else
+                    generatorBillboards[generator].stateLabel.Text = ""
+                end
+                
+                local healthValue = generator:FindFirstChild("health")
+                local inUseValue = generator:FindFirstChild("inUse")
+                local plrUsingValue = generator:FindFirstChild("plrUsing")
+                
+                if healthValue then
+                    local stateText = string.format("Health: %d", healthValue.Value)
+                    if inUseValue and inUseValue.Value and plrUsingValue then
+                        stateText = stateText .. string.format("\nUsing: %s", plrUsingValue.Value)
+                    end
+                    generatorBillboards[generator].stateLabel.Text = stateText
+                end
+            end
+        else
+            if generatorBillboards[generator] then
+                generatorBillboards[generator].billboard:Destroy()
+                generatorBillboards[generator] = nil
+            end
+        end
+        
+        if generatorTracers and rootPart then
+            if not generatorTracersObj[generator] then
+                local tracer = Instance.new("Beam")
+                tracer.Name = "GeneratorTracer"
+                tracer.Color = ColorSequence.new(generatorChamsColor)
+                tracer.Width0 = 0.15
+                tracer.Width1 = 0.15
+                tracer.Texture = "rbxassetid://446111271"
+                tracer.TextureLength = 8
+                tracer.TextureMode = Enum.TextureMode.Wrap
+                tracer.TextureSpeed = 1.5
+                tracer.ZOffset = 0.5
+                
+                local genAttachment = Instance.new("Attachment")
+                genAttachment.Name = "TracerAttachment"
+                genAttachment.Parent = mainPart
+                
+                local localAttachment = Instance.new("Attachment")
+                localAttachment.Name = "TracerAttachment"
+                localAttachment.Parent = rootPart
+                
+                tracer.Attachment0 = genAttachment
+                tracer.Attachment1 = localAttachment
+                tracer.Parent = workspace
+                
+                generatorTracersObj[generator] = {tracer = tracer, genAttachment = genAttachment, localAttachment = localAttachment}
+            else
+                generatorTracersObj[generator].tracer.Enabled = true
+                generatorTracersObj[generator].genAttachment.Parent = mainPart
+                generatorTracersObj[generator].localAttachment.Parent = rootPart
+            end
+        else
+            if generatorTracersObj[generator] then
+                generatorTracersObj[generator].tracer.Enabled = false
+            end
+        end
+        
+        if generatorRainbow then
+            local hue = (tick() % 5 / 5) + (tonumber(string.sub(generator.Name, -1)) or 0) * 0.2
+            local rainbowColor = Color3.fromHSV(hue % 1, 1, 1)
+            
+            if generatorHighlights[generator] then
+                generatorHighlights[generator].FillColor = rainbowColor
+            end
+            
+            if generatorBillboards[generator] then
+                generatorBillboards[generator].nameLabel.TextColor3 = rainbowColor
+            end
+            
+            if generatorTracersObj[generator] then
+                generatorTracersObj[generator].tracer.Color = ColorSequence.new(rainbowColor)
+            end
+        elseif not generatorRainbow then
+            if generatorHighlights[generator] then
+                generatorHighlights[generator].FillColor = generatorChamsColor
+            end
+            
+            if generatorBillboards[generator] then
+                generatorBillboards[generator].nameLabel.TextColor3 = generatorChamsColor
+            end
+            
+            if generatorTracersObj[generator] then
+                generatorTracersObj[generator].tracer.Color = ColorSequence.new(generatorChamsColor)
+            end
+        end
+    end
+end
+
+local function ClearGeneratorESP()
+    for generator, highlight in pairs(generatorHighlights) do
+        highlight:Destroy()
+    end
+    generatorHighlights = {}
+    
+    for generator, data in pairs(generatorBillboards) do
+        data.billboard:Destroy()
+    end
+    generatorBillboards = {}
+    
+    for generator, data in pairs(generatorTracersObj) do
+        data.tracer:Destroy()
+        if data.genAttachment then data.genAttachment:Destroy() end
+        if data.localAttachment then data.localAttachment:Destroy() end
+    end
+    generatorTracersObj = {}
+end
+
+GeneratorESPGB:AddToggle('GeneratorNameESP', {
+    Text = 'Name ESP',
+    Default = false,
+    Tooltip = 'Show name above generators',
+    Callback = function(Value)
+        generatorNameESP = Value
+        
+        if Value or generatorChams or generatorTracers then
+            if not generatorUpdateConnection then
+                generatorUpdateConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                    UpdateGeneratorESP()
+                end)
+            end
+            UpdateGeneratorESP()
+        else
+            if not generatorChams and not generatorTracers then
+                if generatorUpdateConnection then
+                    generatorUpdateConnection:Disconnect()
+                    generatorUpdateConnection = nil
+                end
+            end
+            ClearGeneratorESP()
+        end
+    end
+})
+
+GeneratorESPGB:AddToggle('GeneratorTracers', {
+    Text = 'Tracers',
+    Default = false,
+    Tooltip = 'Show tracers to generators',
+    Callback = function(Value)
+        generatorTracers = Value
+        
+        if Value or generatorNameESP or generatorChams then
+            if not generatorUpdateConnection then
+                generatorUpdateConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                    UpdateGeneratorESP()
+                end)
+            end
+            UpdateGeneratorESP()
+        else
+            if not generatorNameESP and not generatorChams then
+                if generatorUpdateConnection then
+                    generatorUpdateConnection:Disconnect()
+                    generatorUpdateConnection = nil
+                end
+            end
+            ClearGeneratorESP()
+        end
+    end
+})
+
+GeneratorESPGB:AddToggle('GeneratorChams', {
+    Text = 'Chams',
+    Default = false,
+    Tooltip = 'Show chams on generators',
+    Callback = function(Value)
+        generatorChams = Value
+        
+        if Value or generatorNameESP or generatorTracers then
+            if not generatorUpdateConnection then
+                generatorUpdateConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                    UpdateGeneratorESP()
+                end)
+            end
+            UpdateGeneratorESP()
+        else
+            if not generatorNameESP and not generatorTracers then
+                if generatorUpdateConnection then
+                    generatorUpdateConnection:Disconnect()
+                    generatorUpdateConnection = nil
+                end
+            end
+            ClearGeneratorESP()
+        end
+    end
+})
+
+GeneratorESPGB:AddToggle('GeneratorDistance', {
+    Text = 'Show Distance',
+    Default = false,
+    Tooltip = 'Show distance to generators',
+    Callback = function(Value)
+        generatorDistance = Value
+        UpdateGeneratorESP()
+    end
+})
+
+GeneratorESPGB:AddLabel('ESP Color'):AddColorPicker('GeneratorESPColor', {
+    Default = Color3.new(1, 1, 0),
+    Title = 'Generator ESP Color',
+    Transparency = 0,
+    
+    Callback = function(Value)
+        generatorChamsColor = Value
+        UpdateGeneratorESP()
+    end
+})
+
+GeneratorESPGB:AddToggle('GeneratorRainbow', {
+    Text = 'Rainbow ESP',
+    Default = false,
+    Tooltip = 'Toggle rainbow ESP colors',
+    Callback = function(Value)
+        generatorRainbow = Value
+        
+        if Value then
+            generatorRainbowConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not generatorRainbow then return end
+                UpdateGeneratorESP()
+            end)
+        else
+            if generatorRainbowConnection then
+                generatorRainbowConnection:Disconnect()
+                generatorRainbowConnection = nil
+            end
+            UpdateGeneratorESP()
+        end
+    end
+})
+
+GeneratorESPGB:AddButton({
+    Text = 'Refresh ESP',
+    Func = function()
+        ClearGeneratorESP()
+        UpdateGeneratorESP()
+    end,
+    DoubleClick = false,
+    Tooltip = 'Refresh generator ESP'
+})
+
+local TeleportTab = Window:AddTab('Teleport')
+
+local TeleportGB = TeleportTab:AddLeftGroupbox('Teleport Locations')
+
+local function tpTo(pos)
+    local LocalPlayer = game:GetService("Players").LocalPlayer
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+    end
+end
+
+TeleportGB:AddButton({
+    Text = 'TP to Generator 1',
+    Func = function()
+        tpTo(Vector3.new(49, 4, -87))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Generator 1'
+})
+
+TeleportGB:AddButton({
+    Text = 'TP to Generator 2',
+    Func = function()
+        tpTo(Vector3.new(131, 4, -88))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Generator 2'
+})
+
+TeleportGB:AddButton({
+    Text = 'TP to Generator 3',
+    Func = function()
+        tpTo(Vector3.new(127, 4, 32))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Generator 3'
+})
+
+TeleportGB:AddButton({
+    Text = 'TP to Generator 4',
+    Func = function()
+        tpTo(Vector3.new(29, 4, 60))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Generator 4'
+})
+
+TeleportGB:AddButton({
+    Text = 'TP to Generator 5',
+    Func = function()
+        tpTo(Vector3.new(154, 4, 60))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Generator 5'
+})
+
+TeleportGB:AddButton({
+    Text = 'TP to Lift',
+    Func = function()
+        tpTo(Vector3.new(28, 4, -39))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Lift'
+})
+
+
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
@@ -656,6 +1058,8 @@ MenuGroup:AddButton({
         if fullBrightConnection then fullBrightConnection:Disconnect() end
         if intruderUpdateConnection then intruderUpdateConnection:Disconnect() end
         if intruderRainbowConnection then intruderRainbowConnection:Disconnect() end
+        if generatorUpdateConnection then generatorUpdateConnection:Disconnect() end
+        if generatorRainbowConnection then generatorRainbowConnection:Disconnect() end
         ResetAmbient()
         ResetLighting()
         
@@ -673,6 +1077,8 @@ MenuGroup:AddButton({
             intruderTracer:Destroy()
             intruderTracer = nil
         end
+        
+        ClearGeneratorESP()
         
         Library:Unload() 
     end,
@@ -728,6 +1134,8 @@ Library:OnUnload(function()
     if fullBrightConnection then fullBrightConnection:Disconnect() end
     if intruderUpdateConnection then intruderUpdateConnection:Disconnect() end
     if intruderRainbowConnection then intruderRainbowConnection:Disconnect() end
+    if generatorUpdateConnection then generatorUpdateConnection:Disconnect() end
+    if generatorRainbowConnection then generatorRainbowConnection:Disconnect() end
     ResetAmbient()
     ResetLighting()
     
@@ -745,6 +1153,8 @@ Library:OnUnload(function()
         intruderTracer:Destroy()
         intruderTracer = nil
     end
+    
+    ClearGeneratorESP()
     
     Library.Unloaded = true
 end)
