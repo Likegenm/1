@@ -210,7 +210,7 @@ InteractGB:AddToggle('Interact click', {
     Tooltip = 'cd: 0',
     Callback = function(Value)
         if Value then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/InteractClickIntruderHome.lua"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/MallInteractClick.lua"))()
         end
     end
 })
