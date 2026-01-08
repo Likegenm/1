@@ -424,12 +424,75 @@ local function TeleportTo(position)
 end
 
 TeleportGB:AddButton({
-    Text = 'Closet',
+    Text = 'Locker1',
     Func = function()
         TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Closet'
+})
+
+TeleportGB:AddButton({
+    Text = 'Locker2',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
+
+TeleportGB:AddButton({
+    Text = 'Locker3',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
+
+TeleportGB:AddButton({
+    Text = 'Locker4',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
+
+TeleportGB:AddButton({
+    Text = '1',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Телепорт к кнопке тревоги'
+})
+
+TeleportGB:AddButton({
+    Text = '2',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Телепорт к кнопке тревоги'
+})
+
+TeleportGB:AddButton({
+    Text = '3',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Телепорт к кнопке тревоги'
+})
+
+TeleportGB:AddButton({
+    Text = '4',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Телепорт к кнопке тревоги'
 })
 
 TeleportGB:AddButton({
