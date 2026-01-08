@@ -540,6 +540,15 @@ TeleportGB:AddButton({
     Tooltip = 'Teleport to LightSwitcher'
 })
 
+TeleportGB:AddButton({
+    Text = 'LockerRoom',
+    Func = function()
+        TeleportTo(Vector3.new(-0.50, -50.76, -34.00))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Safe zone'
+})
+
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
