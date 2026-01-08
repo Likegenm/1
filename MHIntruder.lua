@@ -213,3 +213,82 @@ APGB:AddButton({
     DoubleClick = false,
     Tooltip = 'Destroy Doors'
 })
+
+local MusicGB = GameplayTab:AddLeftGroupbox('Music')
+
+local menuMusicEnabled = false
+local menuMusicSound = nil
+local musicVolume = 0.5
+local musicSpeed = 1.0
+
+local function PlayMenuMusic()
+    if menuMusicSound then
+        menuMusicSound:Stop()
+        menuMusicSound:Destroy()
+    end
+    
+    menuMusicSound = Instance.new("Sound")
+    menuMusicSound.SoundId = "rbxassetid://1848319100"
+    menuMusicSound.Volume = musicVolume
+    menuMusicSound.PlaybackSpeed = musicSpeed
+    menuMusicSound.Looped = true
+    menuMusicSound.Parent = workspace
+    
+    menuMusicSound:Play()
+end
+
+local function StopMenuMusic()
+    if menuMusicSound then
+        menuMusicSound:Stop()
+        menuMusicSound:Destroy()
+        menuMusicSound = nil
+    end
+end
+
+local function UpdateMusicSettings()
+    if menuMusicSound then
+        menuMusicSound.Volume = musicVolume
+        menuMusicSound.PlaybackSpeed = musicSpeed
+    end
+end
+
+MusicGB:AddToggle('Menu Music', {
+    Text = 'Menu Music',
+    Default = false,
+    Tooltip = 'Play menu music',
+    Callback = function(Value)
+        menuMusicEnabled = Value
+        
+        if Value then
+            PlayMenuMusic()
+        else
+            StopMenuMusic()
+        end
+    end
+})
+
+MusicGB:AddSlider('MusicVolume', {
+    Text = 'Music Volume',
+    Default = 0.5,
+    Min = 0.1,
+    Max = 1,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        musicVolume = Value
+        UpdateMusicSettings()
+    end
+})
+
+MusicGB:AddSlider('MusicSpeed', {
+    Text = 'Music Speed',
+    Default = 1.0,
+    Min = 0.1,
+    Max = 2.0,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        musicSpeed = Value
+        UpdateMusicSettings()
+    end
+})
