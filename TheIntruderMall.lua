@@ -435,7 +435,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'Box',
     Func = function()
-        TeleportTo(Vector3.new(16.13, 4.14, -5.49))
+        TeleportTo(Vector3.new(-8.51, 4.09, -34.18))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Box'
@@ -444,7 +444,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'Electricity',
     Func = function()
-        TeleportTo(Vector3.new(12.22, 4.14, 22.22))
+        TeleportTo(Vector3.new(-9.28, 4.09, -51.06))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Electricity'
@@ -453,7 +453,7 @@ TeleportGB:AddButton({
 TeleportGB:AddButton({
     Text = 'Phone',
     Func = function()
-        TeleportTo(Vector3.new(13.38, 4.14, 1.81))
+        TeleportTo(Vector3.new(-0.29, 4.09, -40.39))
     end,
     DoubleClick = false,
     Tooltip = 'Teleport to Phone'
