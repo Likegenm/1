@@ -293,6 +293,141 @@ MusicGB:AddSlider('MusicSpeed', {
     end
 })
 
+local VisualTab = Window:AddTab('Visual')
+
+local AmbientGB = VisualTab:AddLeftGroupbox('Ambient')
+
+local ambientEnabled = false
+local ambientColor = Color3.new(1, 0, 0)
+local ambientRainbow = false
+local ambientConnection
+local ambientRainbowConnection
+
+local function ApplyAmbient()
+    local lighting = game:GetService("Lighting")
+    lighting.OutdoorAmbient = ambientColor
+    lighting.Ambient = ambientColor
+end
+
+local function ResetAmbient()
+    local lighting = game:GetService("Lighting")
+    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+end
+
+AmbientGB:AddToggle('AmbientToggle', {
+    Text = 'Ambient',
+    Default = false,
+    Tooltip = 'Toggle ambient color',
+    Callback = function(Value)
+        ambientEnabled = Value
+        
+        if Value then
+            ambientConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if ambientEnabled then
+                    ApplyAmbient()
+                end
+            end)
+            ApplyAmbient()
+        else
+            if ambientConnection then
+                ambientConnection:Disconnect()
+                ambientConnection = nil
+            end
+            ResetAmbient()
+        end
+    end
+})
+
+AmbientGB:AddLabel('Ambient Color'):AddColorPicker('AmbientColor', {
+    Default = Color3.new(1, 0, 0),
+    Title = 'Ambient Color',
+    Transparency = 0,
+    
+    Callback = function(Value)
+        ambientColor = Value
+        if ambientEnabled then
+            ApplyAmbient()
+        end
+    end
+})
+
+AmbientGB:AddToggle('AmbientRainbow', {
+    Text = 'Rainbow Ambient',
+    Default = false,
+    Tooltip = 'Toggle rainbow ambient color',
+    Callback = function(Value)
+        ambientRainbow = Value
+        
+        if Value then
+            ambientRainbowConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not ambientRainbow then return end
+                
+                local hue = tick() % 5 / 5
+                ambientColor = Color3.fromHSV(hue, 1, 1)
+                
+                if ambientEnabled then
+                    ApplyAmbient()
+                end
+            end)
+        else
+            if ambientRainbowConnection then
+                ambientRainbowConnection:Disconnect()
+                ambientRainbowConnection = nil
+            end
+        end
+    end
+})
+
+local FullBrightGB = VisualTab:AddRightGroupbox('FullBright')
+
+local fullBrightEnabled = false
+local fullBrightConnection
+
+local function ApplyFullBright()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(1, 1, 1)
+    lighting.Brightness = 2
+    lighting.GlobalShadows = false
+    lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 0
+end
+
+local function ResetLighting()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+    lighting.Brightness = 1
+    lighting.GlobalShadows = true
+    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 100
+end
+
+FullBrightGB:AddToggle('FullBrightToggle', {
+    Text = 'FullBright',
+    Default = false,
+    Tooltip = 'Toggle FullBright',
+    Callback = function(Value)
+        fullBrightEnabled = Value
+        
+        if Value then
+            fullBrightConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if fullBrightEnabled then
+                    ApplyFullBright()
+                end
+            end)
+            ApplyFullBright()
+        else
+            if fullBrightConnection then
+                fullBrightConnection:Disconnect()
+                fullBrightConnection = nil
+            end
+            ResetLighting()
+        end
+    end
+})
+
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
