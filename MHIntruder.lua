@@ -449,6 +449,22 @@ FullBrightGB:AddToggle('FullBrightToggle', {
     end
 })
 
+local TeleportTab = Window:AddTab('Teleport')
+
+local TeleportGB = TeleportTab:AddLeftGroupbox('Teleport Locations')
+
+local function TeleportTo(position)
+    local character = Players.LocalPlayer.Character
+    if not character then return end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    humanoidRootPart.CFrame = CFrame.new(position)
+end
+
+
+
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
 
