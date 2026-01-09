@@ -293,6 +293,16 @@ MusicGB:AddSlider('MusicSpeed', {
     end
 })
 
+APGB:AddButton({
+    Text = 'Interact click',
+    Func = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/MHInteractClick.lua"))()
+    end,
+    DoubleClick = false,
+    Tooltip = 'cooldown = 0'
+})
+
+
 local VisualTab = Window:AddTab('Visual')
 
 local AmbientGB = VisualTab:AddLeftGroupbox('Ambient')
