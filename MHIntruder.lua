@@ -464,12 +464,21 @@ local function TeleportTo(position)
 end
 
 TeleportGB:AddButton({
-    Text = 'Closet',
+    Text = 'Generator',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(202.35, 3.89, -105.66))
     end,
     DoubleClick = false,
-    Tooltip = 'Teleport to Closet'
+    Tooltip = 'Teleport to Generator'
+})
+
+TeleportGB:AddButton({
+    Text = 'Wrench',
+    Func = function()
+        TeleportTo(Vector3.new(209.29, 3.89, -125.06))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Wrench'
 })
 
 TeleportGB:AddButton({
@@ -482,30 +491,21 @@ TeleportGB:AddButton({
 })
 
 TeleportGB:AddButton({
-    Text = 'Closet',
+    Text = '1',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(187.97, 4.34, -59.11))
     end,
     DoubleClick = false,
-    Tooltip = 'Teleport to Closet'
+    Tooltip = 'Teleport to 1'
 })
 
 TeleportGB:AddButton({
-    Text = 'Closet',
+    Text = '2',
     Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+        TeleportTo(Vector3.new(166.74, 4.29, -59.59))
     end,
     DoubleClick = false,
-    Tooltip = 'Teleport to Closet'
-})
-
-TeleportGB:AddButton({
-    Text = 'Closet',
-    Func = function()
-        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleport to Closet'
+    Tooltip = 'Teleport to 2'
 })
 
 local UITab = Window:AddTab('UI Settings')
