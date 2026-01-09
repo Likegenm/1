@@ -302,7 +302,7 @@ APGB:AddButton({
     Tooltip = 'cooldown = 0'
 })
 
-local IGB = GameplayTab:AddLeftGroupbox('Intruder')
+local IGB = GameplayTab:AddRightGroupbox('Intruder')
 
 IGB:AddButton({
     Text = 'Intruder Pos',
