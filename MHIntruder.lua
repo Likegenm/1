@@ -202,7 +202,7 @@ FGB:AddToggle('FlyToggle', {
 
 local GameplayTab = Window:AddTab('Gameplay')
 
-local APGB = GameplayTab:AddLeftGroupbox('AntiPuzzles')
+local APGB = GameplayTab:AddLeftGroupbox('Anti')
 
 APGB:AddButton({
     Text = 'AntiPuzzles',
@@ -300,6 +300,17 @@ APGB:AddButton({
     end,
     DoubleClick = false,
     Tooltip = 'cooldown = 0'
+})
+
+local IGB = GameplayTab:AddLeftGroupbox('Intruder')
+
+IGB:AddButton({
+    Text = 'Intruder Pos',
+    Func = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/MHintruderPos.lua"))()
+    end,
+    DoubleClick = false,
+    Tooltip = 'Position Intruders'
 })
 
 
