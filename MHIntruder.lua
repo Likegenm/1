@@ -463,7 +463,50 @@ local function TeleportTo(position)
     humanoidRootPart.CFrame = CFrame.new(position)
 end
 
+TeleportGB:AddButton({
+    Text = 'Closet',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
 
+TeleportGB:AddButton({
+    Text = 'Closet',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
+
+TeleportGB:AddButton({
+    Text = 'Closet',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
+
+TeleportGB:AddButton({
+    Text = 'Closet',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
+
+TeleportGB:AddButton({
+    Text = 'Closet',
+    Func = function()
+        TeleportTo(Vector3.new(-6.14, 4.14, 1.97))
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleport to Closet'
+})
 
 local UITab = Window:AddTab('UI Settings')
 local MenuGroup = UITab:AddLeftGroupbox('Menu')
