@@ -202,55 +202,6 @@ FGB:AddToggle('FlyToggle', {
 
 local GameplayTab = Window:AddTab('Gameplay')
 
-local VisualGB = GameplayTab:AddRightGroupbox('Visual')
-
-local fullBrightEnabled = false
-local fullBrightConnection
-
-local function ApplyFullBright()
-    local lighting = game:GetService("Lighting")
-    lighting.Ambient = Color3.new(1, 1, 1)
-    lighting.Brightness = 2
-    lighting.GlobalShadows = false
-    lighting.OutdoorAmbient = Color3.new(1, 1, 1)
-    lighting.FogEnd = 100000
-    lighting.FogStart = 0
-end
-
-local function ResetLighting()
-    local lighting = game:GetService("Lighting")
-    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
-    lighting.Brightness = 1
-    lighting.GlobalShadows = true
-    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
-    lighting.FogEnd = 100000
-    lighting.FogStart = 100
-end
-
-VisualGB:AddToggle('FullBrightToggle', {
-    Text = 'FullBright',
-    Default = false,
-    Tooltip = 'Toggle FullBright',
-    Callback = function(Value)
-        fullBrightEnabled = Value
-        
-        if Value then
-            fullBrightConnection = RunService.Heartbeat:Connect(function()
-                if fullBrightEnabled then
-                    ApplyFullBright()
-                end
-            end)
-            ApplyFullBright()
-        else
-            if fullBrightConnection then
-                fullBrightConnection:Disconnect()
-                fullBrightConnection = nil
-            end
-            ResetLighting()
-        end
-    end
-})
-
 local MusicGB = GameplayTab:AddLeftGroupbox('Music')
 
 local menuMusicEnabled = false
@@ -330,3 +281,195 @@ MusicGB:AddSlider('MusicSpeed', {
     end
 })
 
+local VisualTab = Window:AddTab('Visual')
+
+local AmbientGB = VisualTab:AddLeftGroupbox('Ambient')
+
+local ambientEnabled = false
+local ambientColor = Color3.new(1, 0, 0)
+local ambientRainbow = false
+local ambientConnection
+local ambientRainbowConnection
+
+local function ApplyAmbient()
+    local lighting = game:GetService("Lighting")
+    lighting.OutdoorAmbient = ambientColor
+    lighting.Ambient = ambientColor
+end
+
+local function ResetAmbient()
+    local lighting = game:GetService("Lighting")
+    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+end
+
+AmbientGB:AddToggle('AmbientToggle', {
+    Text = 'Ambient',
+    Default = false,
+    Tooltip = 'Toggle ambient color',
+    Callback = function(Value)
+        ambientEnabled = Value
+        
+        if Value then
+            ambientConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if ambientEnabled then
+                    ApplyAmbient()
+                end
+            end)
+            ApplyAmbient()
+        else
+            if ambientConnection then
+                ambientConnection:Disconnect()
+                ambientConnection = nil
+            end
+            ResetAmbient()
+        end
+    end
+})
+
+AmbientGB:AddLabel('Ambient Color'):AddColorPicker('AmbientColor', {
+    Default = Color3.new(1, 0, 0),
+    Title = 'Ambient Color',
+    Transparency = 0,
+    
+    Callback = function(Value)
+        ambientColor = Value
+        if ambientEnabled then
+            ApplyAmbient()
+        end
+    end
+})
+
+AmbientGB:AddToggle('AmbientRainbow', {
+    Text = 'Rainbow Ambient',
+    Default = false,
+    Tooltip = 'Toggle rainbow ambient color',
+    Callback = function(Value)
+        ambientRainbow = Value
+        
+        if Value then
+            ambientRainbowConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if not ambientRainbow then return end
+                
+                local hue = tick() % 5 / 5
+                ambientColor = Color3.fromHSV(hue, 1, 1)
+                
+                if ambientEnabled then
+                    ApplyAmbient()
+                end
+            end)
+        else
+            if ambientRainbowConnection then
+                ambientRainbowConnection:Disconnect()
+                ambientRainbowConnection = nil
+            end
+        end
+    end
+})
+
+local FullBrightGB = VisualTab:AddRightGroupbox('FullBright')
+
+local fullBrightEnabled = false
+local fullBrightConnection
+
+local function ApplyFullBright()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(1, 1, 1)
+    lighting.Brightness = 2
+    lighting.GlobalShadows = false
+    lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 0
+end
+
+local function ResetLighting()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+    lighting.Brightness = 1
+    lighting.GlobalShadows = true
+    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 100
+end
+
+FullBrightGB:AddToggle('FullBrightToggle', {
+    Text = 'FullBright',
+    Default = false,
+    Tooltip = 'Toggle FullBright',
+    Callback = function(Value)
+        fullBrightEnabled = Value
+        
+        if Value then
+            fullBrightConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if fullBrightEnabled then
+                    ApplyFullBright()
+                end
+            end)
+            ApplyFullBright()
+        else
+            if fullBrightConnection then
+                fullBrightConnection:Disconnect()
+                fullBrightConnection = nil
+            end
+            ResetLighting()
+        end
+    end
+})
+
+local UITab = Window:AddTab('UI Settings')
+local MenuGroup = UITab:AddLeftGroupbox('Menu')
+
+MenuGroup:AddButton({
+    Text = 'Unload',
+    Func = function()
+        Library:Unload() 
+    end,
+    DoubleClick = false,
+    Tooltip = 'Unload script'
+})
+
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { 
+    Default = 'RightShift', 
+    NoUI = true, 
+    Text = 'Menu keybind' 
+})
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library)
+ThemeManager:SetFolder('IntruderScript')
+
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+SaveManager:SetFolder('IntruderScript/game')
+
+SaveManager:BuildConfigSection(UITab)
+ThemeManager:ApplyToTab(UITab)
+SaveManager:LoadAutoloadConfig()
+
+Library:SetWatermarkVisibility(true)
+
+local FrameTimer = tick()
+local FrameCounter = 0
+local FPS = 60
+
+local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+    FrameCounter = FrameCounter + 1
+
+    if (tick() - FrameTimer) >= 1 then
+        FPS = FrameCounter
+        FrameTimer = tick()
+        FrameCounter = 0
+    end
+
+    Library:SetWatermark(('Intruder Script:Satan Lodge | %s fps | %s ms'):format(
+        math.floor(FPS),
+        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+    ))
+end)
+
+Library:OnUnload(function()
+    WatermarkConnection:Disconnect()
+    Library.Unloaded = true
+end)
