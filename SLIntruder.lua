@@ -199,3 +199,134 @@ FGB:AddToggle('FlyToggle', {
         end
     end
 })
+
+local GameplayTab = Window:AddTab('Gameplay')
+
+local VisualGB = GameplayTab:AddRightGroupbox('Visual')
+
+local fullBrightEnabled = false
+local fullBrightConnection
+
+local function ApplyFullBright()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(1, 1, 1)
+    lighting.Brightness = 2
+    lighting.GlobalShadows = false
+    lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 0
+end
+
+local function ResetLighting()
+    local lighting = game:GetService("Lighting")
+    lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+    lighting.Brightness = 1
+    lighting.GlobalShadows = true
+    lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    lighting.FogEnd = 100000
+    lighting.FogStart = 100
+end
+
+VisualGB:AddToggle('FullBrightToggle', {
+    Text = 'FullBright',
+    Default = false,
+    Tooltip = 'Toggle FullBright',
+    Callback = function(Value)
+        fullBrightEnabled = Value
+        
+        if Value then
+            fullBrightConnection = RunService.Heartbeat:Connect(function()
+                if fullBrightEnabled then
+                    ApplyFullBright()
+                end
+            end)
+            ApplyFullBright()
+        else
+            if fullBrightConnection then
+                fullBrightConnection:Disconnect()
+                fullBrightConnection = nil
+            end
+            ResetLighting()
+        end
+    end
+})
+
+local MusicGB = GameplayTab:AddLeftGroupbox('Music')
+
+local menuMusicEnabled = false
+local menuMusicSound = nil
+local musicVolume = 0.5
+local musicSpeed = 1.0
+
+local function PlayMenuMusic()
+    if menuMusicSound then
+        menuMusicSound:Stop()
+        menuMusicSound:Destroy()
+    end
+    
+    menuMusicSound = Instance.new("Sound")
+    menuMusicSound.SoundId = "rbxassetid://1848319100"
+    menuMusicSound.Volume = musicVolume
+    menuMusicSound.PlaybackSpeed = musicSpeed
+    menuMusicSound.Looped = true
+    menuMusicSound.Parent = workspace
+    
+    menuMusicSound:Play()
+end
+
+local function StopMenuMusic()
+    if menuMusicSound then
+        menuMusicSound:Stop()
+        menuMusicSound:Destroy()
+        menuMusicSound = nil
+    end
+end
+
+local function UpdateMusicSettings()
+    if menuMusicSound then
+        menuMusicSound.Volume = musicVolume
+        menuMusicSound.PlaybackSpeed = musicSpeed
+    end
+end
+
+MusicGB:AddToggle('Menu Music', {
+    Text = 'Menu Music',
+    Default = false,
+    Tooltip = 'Play menu music',
+    Callback = function(Value)
+        menuMusicEnabled = Value
+        
+        if Value then
+            PlayMenuMusic()
+        else
+            StopMenuMusic()
+        end
+    end
+})
+
+MusicGB:AddSlider('MusicVolume', {
+    Text = 'Music Volume',
+    Default = 0.5,
+    Min = 0.1,
+    Max = 1,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        musicVolume = Value
+        UpdateMusicSettings()
+    end
+})
+
+MusicGB:AddSlider('MusicSpeed', {
+    Text = 'Music Speed',
+    Default = 1.0,
+    Min = 0.1,
+    Max = 2.0,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        musicSpeed = Value
+        UpdateMusicSettings()
+    end
+})
+
