@@ -25,3 +25,39 @@ PT:AddLeftGroupbox('Gravity'):AddSlider('Gravity', {
       game.workspace.Gravity =  Value
     end
   })
+
+PT:AddLeftGroupbox('Speed'):AddSlider('Speed', {
+    Text = 'Speed',
+    Default = 16,
+    Min = 16,
+    Max = 200,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end
+  })
+
+
+local MenuGroup = Window:AddTab:['UI Settings']:AddLeftGroupbox('Menu')
+
+MenuGroup:AddButton('Unload', function() Library:Unload() end)
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' })
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+
+SaveManager:IgnoreThemeSettings()
+
+SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+
+ThemeManager:SetFolder('MyScriptHub')
+SaveManager:SetFolder('MyScriptHub/specific-game')
+
+SaveManager:BuildConfigSection(Tabs['UI Settings'])
+
+ThemeManager:ApplyToTab(Tabs['UI Settings'])
+
+SaveManager:LoadAutoloadConfig()
