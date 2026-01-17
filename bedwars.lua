@@ -30,7 +30,7 @@ SpeedGroup:AddToggle('SpeedToggle', {
 
 SpeedGroup:AddSlider('SpeedValue', {
     Text = 'Speed Value',
-    Default = 20,
+    Default = 19.5,
     Min = 16,
     Max = 50,
     Rounding = 1,
