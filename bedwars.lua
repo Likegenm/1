@@ -31,12 +31,34 @@ SpeedGroup:AddToggle('SpeedToggle', {
 SpeedGroup:AddSlider('SpeedValue', {
     Text = 'Speed Value',
     Default = 19.5,
-    Min = 16,
-    Max = 50,
+    Min = 19.5,
+    Max = 100,
     Rounding = 1,
     Compact = false,
     Callback = function(value)
         Options.SpeedValue.Value = value
+    end
+})
+
+local JumpGroup = PT:AddRightGroupbox('Jump')
+
+JumpGroup:AddToggle('JumpToggle', {
+    Text = 'Enable Inf Jump',
+    Default = false,
+    Callback = function(enabled)
+        Toggles.JumpToggle.Value = enabled
+    end
+})
+
+JumpGroup:AddSlider('JumpValue', {
+    Text = 'Jump Power',
+    Default = 50,
+    Min = 50,
+    Max = 500,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(value)
+        Options.JumpValue.Value = value
     end
 })
 
@@ -132,5 +154,46 @@ Options.SpeedValue:OnChanged(function()
             speedConnection:Disconnect()
         end
         updateSpeedSystem()
+    end
+end)
+
+local jumpConnection
+local jumpActive = false
+
+local function updateJumpSystem()
+    if Toggles.JumpToggle.Value and not jumpActive then
+        jumpActive = true
+        
+        jumpConnection = RunService.Heartbeat:Connect(function()
+            if not Toggles.JumpToggle.Value then
+                jumpConnection:Disconnect()
+                jumpActive = false
+                return
+            end
+            
+            if Character and HumanoidRootPart and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                HumanoidRootPart.Velocity = Vector3.new(
+                    HumanoidRootPart.Velocity.X,
+                    Options.JumpValue.Value,
+                    HumanoidRootPart.Velocity.Z
+                )
+            end
+        end)
+        
+    elseif not Toggles.JumpToggle.Value and jumpActive then
+        if jumpConnection then
+            jumpConnection:Disconnect()
+        end
+        jumpActive = false
+    end
+end
+
+Toggles.JumpToggle:OnChanged(updateJumpSystem)
+Options.JumpValue:OnChanged(function()
+    if Toggles.JumpToggle.Value then
+        if jumpConnection then
+            jumpConnection:Disconnect()
+        end
+        updateJumpSystem()
     end
 end)
