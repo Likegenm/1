@@ -13,76 +13,124 @@ local Window = Library:CreateWindow({
 })
 
 local IT = Window:AddTab('Info')
-
-IT:AddLeftGroupbox('Credits'):AddLabel('Main:Likegenm')
-
-IT:AddLeftGroupbox('Credits'):AddLabel('Scripter:Likegenm')
+IT:AddLeftGroupbox('Credits'):AddLabel('Main: Likegenm')
+IT:AddLeftGroupbox('Scripter'):AddLabel('Scripter: Likegenm')
 
 local PT = Window:AddTab('Player')
 
-local SGB = PT:AddLeftGroupbox('Speed')
+local SpeedGroup = PT:AddLeftGroupbox('Speed')
 
-SGB:AddSlider('Speed', {
-        Text = 'Speed',
-        Default = 21,
-        Min = 20,
-        Max = 23,
-        Rounding = 1,
-        Compact = true,
-        Callback = function(Value)
-
-end
+SpeedGroup:AddToggle('SpeedToggle', {
+    Text = 'Enable Speed Hack',
+    Default = false,
+    Callback = function(enabled)
+        Toggles.SpeedToggle.Value = enabled
+    end
 })
 
-Library:SetWatermarkVisibility(true)
+SpeedGroup:AddSlider('SpeedValue', {
+    Text = 'Speed Value',
+    Default = 20,
+    Min = 16,
+    Max = 50,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(value)
+        Options.SpeedValue.Value = value
+    end
+})
 
--- Example of dynamically-updating watermark with common traits (fps and ping)
-local FrameTimer = tick()
-local FrameCounter = 0;
-local FPS = 60;
-
-local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
-    FrameCounter += 1;
-
-    if (tick() - FrameTimer) >= 1 then
-        FPS = FrameCounter;
-        FrameTimer = tick();
-        FrameCounter = 0;
-    end;
-
-    Library:SetWatermark(('LinoriaLib demo | %s fps | %s ms'):format(
-        math.floor(FPS),
-        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-    ));
-end);
-
-Library.KeybindFrame.Visible = true; -- todo: add a function for this
-
-Library:OnUnload(function()
-    WatermarkConnection:Disconnect()
-
-    print('Unloaded!')
-    Library.Unloaded = true
-end)
-
-local MenuGroup = WIndow:AddTab('UI'):AddLeftGroupbox('Menu')
-
+local SettingsTab = Window:AddTab('Settings')
+local MenuGroup = SettingsTab:AddLeftGroupbox('Menu')
 MenuGroup:AddButton('Unload', function() Library:Unload() end)
-MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true, Text = 'Menu keybind' })
-
+MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'End', NoUI = true })
 Library.ToggleKeybind = Options.MenuKeybind
+
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
-
 SaveManager:IgnoreThemeSettings()
-
 SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
-
-ThemeManager:SetFolder('MyScriptHub')
-SaveManager:SetFolder('MyScriptHub/specific-game')
-
-SaveManager:BuildConfigSection(Tabs['UI Settings'])
-
-ThemeManager:ApplyToTab(Tabs['UI Settings'])
-
+ThemeManager:SetFolder('BedwarsScript')
+SaveManager:SetFolder('BedwarsScript/config')
+SaveManager:BuildConfigSection(SettingsTab)
+ThemeManager:ApplyToTab(SettingsTab)
 SaveManager:LoadAutoloadConfig()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    Character = newCharacter
+    Humanoid = Character:WaitForChild("Humanoid")
+    HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+end)
+
+local speedConnection
+local speedActive = false
+
+local function updateSpeedSystem()
+    if Toggles.SpeedToggle.Value and not speedActive then
+        speedActive = true
+        
+        speedConnection = RunService.Heartbeat:Connect(function()
+            if not Toggles.SpeedToggle.Value then
+                speedConnection:Disconnect()
+                speedActive = false
+                return
+            end
+            
+            if Character and HumanoidRootPart then
+                local cameraCFrame = Camera.CFrame
+                local lookVector = cameraCFrame.LookVector
+                local rightVector = cameraCFrame.RightVector
+                
+                local mv = Vector3.new(0, 0, 0)
+                local speed = Options.SpeedValue.Value
+
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    mv = mv + Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    mv = mv - Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                    mv = mv - Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                    mv = mv + Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+                end
+                
+                if mv.Magnitude > 0 then
+                    HumanoidRootPart.Velocity = Vector3.new(
+                        mv.X * speed,
+                        HumanoidRootPart.Velocity.Y,
+                        mv.Z * speed
+                    )
+                end
+            end
+        end)
+        
+    elseif not Toggles.SpeedToggle.Value and speedActive then
+        if speedConnection then
+            speedConnection:Disconnect()
+        end
+        speedActive = false
+    end
+end
+
+Toggles.SpeedToggle:OnChanged(updateSpeedSystem)
+Options.SpeedValue:OnChanged(function()
+    if Toggles.SpeedToggle.Value then
+        if speedConnection then
+            speedConnection:Disconnect()
+        end
+        updateSpeedSystem()
+    end
+end)
