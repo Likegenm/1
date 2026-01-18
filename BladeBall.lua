@@ -34,7 +34,6 @@ local player = Players.LocalPlayer
 local enabled = false
 local chance = 100
 
--- Обновляем значения при изменении
 autoParryToggle:OnChanged(function(value)
     enabled = value
 end)
@@ -67,5 +66,81 @@ RunService.Heartbeat:Connect(function()
                 end
             end
         end
+    end
+end)
+
+local BT = Window:AddTab("Blatant")
+
+local SpeedGroup = BT:AddLeftGroupbox('Speed')
+
+local speedActive = false
+local speedConnection
+
+SpeedGroup:AddSlider("Speedhack", {
+    Text = "Speed",
+    Default = 36,
+    Min = 36,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(value)
+        Options.Speedhack.Value = value
+    end
+})
+
+SpeedGroup:AddToggle("SpeedToggle", {
+    Text = "Enable Speed Hack",
+    Default = false,
+    Callback = function(value)
+        Toggles.SpeedToggle.Value = value
+    end
+})
+
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+
+Toggles.SpeedToggle:OnChanged(function(value)
+    speedActive = value
+    
+    if speedConnection then
+        speedConnection:Disconnect()
+        speedConnection = nil
+    end
+    
+    if value then
+        speedConnection = RunService.Heartbeat:Connect(function()
+            if not speedActive or not player.Character then return end
+            
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            
+            local cameraCFrame = Camera.CFrame
+            local lookVector = cameraCFrame.LookVector
+            local rightVector = cameraCFrame.RightVector
+            
+            local mv = Vector3.new(0, 0, 0)
+            local speed = Options.Speedhack.Value
+
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                mv = mv + Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                mv = mv - Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                mv = mv - Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                mv = mv + Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+            end
+            
+            if mv.Magnitude > 0 then
+                hrp.Velocity = Vector3.new(
+                    mv.X * speed,
+                    hrp.Velocity.Y,
+                    mv.Z * speed
+                )
+            end
+        end)
     end
 end)
