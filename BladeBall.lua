@@ -57,7 +57,7 @@ RunService.Heartbeat:Connect(function()
         if ball:IsA("BasePart") then
             local distance = (ball.Position - hrp.Position).Magnitude
             
-            if distance <= 25 then
+            if distance <= 35 then
                 local random = math.random(1, 100)
                 
                 if random <= chance then
