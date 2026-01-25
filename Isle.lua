@@ -13,7 +13,7 @@ local Window = Library:CreateWindow({
 
 Library:Notify("RightControl to open script", 5)
 
-local MenuGroup = Window:AddTab("UI Settings"):AddLeftGroupbox("Menu")
+local MenuGroup = Window:AddTab("UI Settings", "settings"):AddLeftGroupbox("Menu")
 
 MenuGroup:AddToggle("KeybindMenuOpen", {
 	Default = Library.KeybindFrame.Visible,
