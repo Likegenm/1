@@ -13,66 +13,62 @@ local Window = Library:CreateWindow({
 
 Library:Notify("RightControl to open script", 5)
 
-local MenuGroup = Window:AddTab("UI Settings", "settings"):AddLeftGroupbox("Menu")
+local LPT = WIndow:AddTab("LocalPlayer", "user")
 
-MenuGroup:AddToggle("KeybindMenuOpen", {
-	Default = Library.KeybindFrame.Visible,
-	Text = "Open Keybind Menu",
-	Callback = function(value)
-		Library.KeybindFrame.Visible = value
-	end,
-})
-MenuGroup:AddToggle("ShowCustomCursor", {
-	Text = "Custom Cursor",
-	Default = true,
-	Callback = function(Value)
-		Library.ShowCustomCursor = Value
-	end,
-})
-MenuGroup:AddDropdown("NotificationSide", {
-	Values = { "Left", "Right" },
-	Default = "Right",
+LPT:AddSlider("Speed", {
+		Default = 16,
+		Min = 16,
+		Max = 100,
+		Rounding = 1,
+    	Compact = false,
+		Callback = function(Value)
+			local speed = Value
 
-	Text = "Notification Side",
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
 
-	Callback = function(Value)
-		Library:SetNotifySide(Value)
-	end,
-})
-MenuGroup:AddDropdown("DPIDropdown", {
-	Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
-	Default = "100%",
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
-	Text = "DPI Scale",
-
-	Callback = function(Value)
-		Value = Value:gsub("%%", "")
-		local DPI = tonumber(Value)
-
-		Library:SetDPIScale(DPI)
-	end,
-})
-MenuGroup:AddDivider()
-MenuGroup:AddLabel("Menu bind")
-	:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
-
-MenuGroup:AddButton("Unload", function()
-	Library:Unload()
+LocalPlayer.CharacterAdded:Connect(function(newCharacter) 
+    Character = newCharacter
+    Humanoid = Character:WaitForChild("Humanoid")
+    HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 end)
 
-Library.ToggleKeybind = Options.MenuKeybind
+RunService.Heartbeat:Connect(function()
+    if Character and HumanoidRootPart then
+        local cameraCFrame = Camera.CFrame
+        local lookVector = cameraCFrame.LookVector
+        local rightVector = cameraCFrame.RightVector
+        
+        local mv = Vector3.new(0, 0, 0)
 
-ThemeManager:SetLibrary(Library)
-SaveManager:SetLibrary(Library)
-
-SaveManager:IgnoreThemeSettings()
-
-SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
-
-ThemeManager:SetFolder("MyScriptHub")
-SaveManager:SetFolder("MyScriptHub/specific-game")
-SaveManager:SetSubFolder("specific-place")
-
-ThemeManager:ApplyToTab(Tabs["UI Settings"])
-
-SaveManager:LoadAutoloadConfig()
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            mv = mv + Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            mv = mv - Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            mv = mv - Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            mv = mv + Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+        end
+        
+        if mv.Magnitude > 0 then
+            HumanoidRootPart.Velocity = Vector3.new(
+                mv.X * speed,
+                HumanoidRootPart.Velocity.Y,
+                mv.Z * speed
+            )
+        end
+    end
+end)
+		end
+	})
