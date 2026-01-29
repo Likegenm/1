@@ -1,8 +1,8 @@
 --[[
 ## LocalPlayer
 # Infjump
-Name = InfJumps.Velocity
-можно выбрать на CFrame и Humanoid
+Name = InfJumps
+через велосити и регулятор прыжка
 
 # Speedhack
 уведосление через StarterGui что функция не сделана тк Bypass AC не настроен на такое
