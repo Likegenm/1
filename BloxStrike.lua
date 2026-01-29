@@ -78,3 +78,12 @@ game:GetService("RunService").Stepped:Connect(function()
         end
     end
 end)
+
+## AutoGUI
+# AutoVote (выбор или K или Y)
+if game.Players.LocalPlayer.PlayerGui.VoteKick.Visible then
+game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.K, false, game)
+wait(0.01)
+game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.K, false, game)
+ну или Y
+# 
