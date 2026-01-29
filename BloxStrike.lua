@@ -65,3 +65,15 @@ spawn(function()
     end
 end)
 и регулятор
+
+# Noclip
+game:GetService("RunService").Stepped:Connect(function()
+    local char = game.Players.LocalPlayer.Character
+    if char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
