@@ -50,3 +50,18 @@ game:GetService("RunService").Heartbeat:Connect(function()
         end
     end
 end)
+
+ # Spin
+spawn(function()
+    while true do
+        game:GetService("RunService").Heartbeat:Wait()
+        local char = game.Players.LocalPlayer.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(360), 0)
+            end
+        end
+    end
+end)
+и регулятор
