@@ -67,11 +67,11 @@ RunService.Heartbeat:Connect(function()
 end)
 end
 
-LeftGroupBox:AddSlider('MySlider', {
-    Text = 'This is my slider!',
+SGB:AddSlider('Speed.Velocity', {
+    Text = 'SetSpeed',
     Default = 0,
     Min = 0,
-    Max = 5,
+    Max = 200,
     Rounding = 1,
     Compact = false,
     Callback = function(Value)
