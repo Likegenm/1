@@ -466,6 +466,16 @@ Tab9:AddButton("Teleport to Saved", {
     end
 })
 
+Tab9:AddButton("Teleport to Platform", {
+    Text = "Teleport to Platform",
+    Func = function()
+        if Character and HumanoidRootPart and safeZonePlatform then
+            local platformPos = safeZonePlatform.Position
+            HumanoidRootPart.CFrame = CFrame.new(platformPos.X, platformPos.Y + 5, platformPos.Z)
+        end
+    end
+})
+
 local function createSafeZone()
     if safeZonePlatform then
         safeZonePlatform:Destroy()
@@ -523,13 +533,20 @@ end
 saveOnTeleport()
 
 local VisualsTab = Window:AddTab("Visuals", "eye")
-local VisualsTabbox = VisualsTab:AddLeftTabbox("Player Visuals")
-local Tab10 = VisualsTabbox:AddTab("ESP")
-local Tab11 = VisualsTabbox:AddTab("Chams")
-local VisualsTabbox2 = VisualsTab:AddRightTabbox("Lighting Visuals")
-local Tab12 = VisualsTabbox2:AddTab("Ambient")
-local Tab13 = VisualsTabbox2:AddTab("Crosshair")
 
+local ESPTabbox = VisualsTab:AddLeftTabbox("ESP Functions")
+local ESPTab = ESPTabbox:AddTab("ESP")
+
+local ChamsTabbox = VisualsTab:AddRightTabbox("Chams Functions")
+local ChamsTab = ChamsTabbox:AddTab("Chams")
+
+local LightingTabbox = VisualsTab:AddLeftTabbox("Lighting Functions")
+local LightingTab = LightingTabbox:AddTab("Lighting")
+
+local CrosshairTabbox = VisualsTab:AddRightTabbox("Crosshair Functions")
+local CrosshairTab = CrosshairTabbox:AddTab("Crosshair")
+
+local espPlayers = {}
 local espEnabled = false
 local boxEsp = false
 local tracerEsp = false
@@ -538,15 +555,20 @@ local distanceEsp = false
 local espColor = Color3.new(1, 0, 0)
 local espDistance = 500
 
-Tab10:AddToggle("ESP Enabled", {
+ESPTab:AddToggle("ESP Enabled", {
     Text = "Enable ESP",
     Default = false,
     Callback = function(Value)
         espEnabled = Value
+        if Value then
+            startESP()
+        else
+            clearESP()
+        end
     end
 })
 
-Tab10:AddToggle("Box ESP", {
+ESPTab:AddToggle("Box ESP", {
     Text = "Box ESP",
     Default = false,
     Callback = function(Value)
@@ -554,7 +576,7 @@ Tab10:AddToggle("Box ESP", {
     end
 })
 
-Tab10:AddToggle("Tracer ESP", {
+ESPTab:AddToggle("Tracer ESP", {
     Text = "Tracer ESP",
     Default = false,
     Callback = function(Value)
@@ -562,7 +584,7 @@ Tab10:AddToggle("Tracer ESP", {
     end
 })
 
-Tab10:AddToggle("Name ESP", {
+ESPTab:AddToggle("Name ESP", {
     Text = "Name ESP",
     Default = false,
     Callback = function(Value)
@@ -570,7 +592,7 @@ Tab10:AddToggle("Name ESP", {
     end
 })
 
-Tab10:AddToggle("Distance ESP", {
+ESPTab:AddToggle("Distance ESP", {
     Text = "Distance ESP",
     Default = false,
     Callback = function(Value)
@@ -578,7 +600,7 @@ Tab10:AddToggle("Distance ESP", {
     end
 })
 
-Tab10:AddSlider("ESP Distance", {
+ESPTab:AddSlider("ESP Distance", {
     Text = "Max Distance:",
     Default = 500,
     Min = 100,
@@ -590,7 +612,7 @@ Tab10:AddSlider("ESP Distance", {
     end
 })
 
-Tab10:AddLabel("ESP Color"):AddColorPicker("ESPColorPicker", {
+ESPTab:AddLabel("ESP Color"):AddColorPicker("ESPColorPicker", {
     Default = Color3.new(1, 0, 0),
     Title = "ESP Color",
     Transparency = 0,
@@ -599,28 +621,178 @@ Tab10:AddLabel("ESP Color"):AddColorPicker("ESPColorPicker", {
     end
 })
 
+local function startESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            setupPlayerESP(player)
+        end
+    end
+    
+    Players.PlayerAdded:Connect(function(player)
+        if player ~= LocalPlayer then
+            setupPlayerESP(player)
+        end
+    end)
+end
+
+local function setupPlayerESP(player)
+    local esp = {}
+    
+    player.CharacterAdded:Connect(function(char)
+        if not espEnabled then return end
+        
+        wait(1)
+        
+        local hrp = char:WaitForChild("HumanoidRootPart")
+        local humanoid = char:WaitForChild("Humanoid")
+        
+        if boxEsp then
+            esp.box = createBox(char, hrp)
+        end
+        
+        if tracerEsp then
+            esp.tracer = createTracer(char, hrp)
+        end
+        
+        if nameEsp or distanceEsp then
+            esp.label = createLabel(char, hrp, humanoid, player)
+        end
+        
+        espPlayers[player] = esp
+        
+        RunService.RenderStepped:Connect(function()
+            if not espEnabled then return end
+            if not char or not hrp then return end
+            
+            local screenPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            local distance = (hrp.Position - Camera.CFrame.Position).Magnitude
+            
+            if distance > espDistance then
+                if esp.box then esp.box.Visible = false end
+                if esp.tracer then esp.tracer.Visible = false end
+                if esp.label then esp.label.Visible = false end
+                return
+            end
+            
+            if onScreen then
+                if esp.box and boxEsp then
+                    updateBox(esp.box, char, hrp, screenPos)
+                end
+                
+                if esp.tracer and tracerEsp then
+                    updateTracer(esp.tracer, screenPos)
+                end
+                
+                if esp.label and (nameEsp or distanceEsp) then
+                    updateLabel(esp.label, char, hrp, humanoid, player, screenPos, distance)
+                end
+            else
+                if esp.box then esp.box.Visible = false end
+                if esp.tracer then esp.tracer.Visible = false end
+                if esp.label then esp.label.Visible = false end
+            end
+        end)
+    end)
+end
+
+local function createBox(char, hrp)
+    local box = Drawing.new("Square")
+    box.Visible = false
+    box.Color = espColor
+    box.Thickness = 2
+    box.Filled = false
+    return box
+end
+
+local function updateBox(box, char, hrp, screenPos)
+    local size = char:GetExtentsSize()
+    box.Size = Vector2.new(2000 / screenPos.Z, 3000 / screenPos.Z)
+    box.Position = Vector2.new(screenPos.X - box.Size.X/2, screenPos.Y - box.Size.Y/2)
+    box.Visible = true
+end
+
+local function createTracer(char, hrp)
+    local tracer = Drawing.new("Line")
+    tracer.Visible = false
+    tracer.Color = espColor
+    tracer.Thickness = 1
+    return tracer
+end
+
+local function updateTracer(tracer, screenPos)
+    tracer.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+    tracer.To = Vector2.new(screenPos.X, screenPos.Y)
+    tracer.Visible = true
+end
+
+local function createLabel(char, hrp, humanoid, player)
+    local label = Drawing.new("Text")
+    label.Visible = false
+    label.Color = espColor
+    label.Size = 14
+    label.Font = 2
+    return label
+end
+
+local function updateLabel(label, char, hrp, humanoid, player, screenPos, distance)
+    local text = ""
+    if nameEsp then
+        text = player.Name
+    end
+    if distanceEsp then
+        if nameEsp then
+            text = text .. " (" .. math.floor(distance) .. ")"
+        else
+            text = math.floor(distance) .. " studs"
+        end
+    end
+    if humanoid.Health then
+        text = text .. "\nHP: " .. math.floor(humanoid.Health)
+    end
+    
+    label.Text = text
+    label.Position = Vector2.new(screenPos.X - label.TextBounds.X/2, screenPos.Y - 50)
+    label.Visible = true
+end
+
+local function clearESP()
+    for _, esp in pairs(espPlayers) do
+        if esp.box then esp.box:Remove() end
+        if esp.tracer then esp.tracer:Remove() end
+        if esp.label then esp.label:Remove() end
+    end
+    espPlayers = {}
+end
+
 local chamsEnabled = false
 local chamsColor = Color3.new(0, 1, 0)
 local chamsTransparency = 0.5
+local chamsPlayers = {}
 
-Tab11:AddToggle("Chams Enabled", {
+ChamsTab:AddToggle("Chams Enabled", {
     Text = "Enable Chams",
     Default = false,
     Callback = function(Value)
         chamsEnabled = Value
+        if Value then
+            startChams()
+        else
+            clearChams()
+        end
     end
 })
 
-Tab11:AddLabel("Chams Color"):AddColorPicker("ChamsColorPicker", {
+ChamsTab:AddLabel("Chams Color"):AddColorPicker("ChamsColorPicker", {
     Default = Color3.new(0, 1, 0),
     Title = "Chams Color",
     Transparency = 0.5,
     Callback = function(Value)
         chamsColor = Value
+        updateChamsColor()
     end
 })
 
-Tab11:AddSlider("Chams Transparency", {
+ChamsTab:AddSlider("Chams Transparency", {
     Text = "Transparency:",
     Default = 0.5,
     Min = 0,
@@ -629,8 +801,68 @@ Tab11:AddSlider("Chams Transparency", {
     Compact = false,
     Callback = function(Value)
         chamsTransparency = Value
+        updateChamsTransparency()
     end
 })
+
+local function startChams()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            setupPlayerChams(player)
+        end
+    end
+    
+    Players.PlayerAdded:Connect(function(player)
+        if player ~= LocalPlayer then
+            setupPlayerChams(player)
+        end
+    end)
+end
+
+local function setupPlayerChams(player)
+    player.CharacterAdded:Connect(function(char)
+        if not chamsEnabled then return end
+        
+        wait(1)
+        
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ChamsHighlight"
+        highlight.FillColor = chamsColor
+        highlight.FillTransparency = chamsTransparency
+        highlight.OutlineColor = chamsColor
+        highlight.OutlineTransparency = 0
+        highlight.Adornee = char
+        highlight.Parent = char
+        
+        chamsPlayers[player] = highlight
+    end)
+end
+
+local function updateChamsColor()
+    for _, highlight in pairs(chamsPlayers) do
+        if highlight then
+            highlight.FillColor = chamsColor
+            highlight.OutlineColor = chamsColor
+        end
+    end
+end
+
+local function updateChamsTransparency()
+    for _, highlight in pairs(chamsPlayers) do
+        if highlight then
+            highlight.FillTransparency = chamsTransparency
+        end
+    end
+end
+
+local function clearChams()
+    for _, highlight in pairs(chamsPlayers) do
+        if highlight then
+            highlight:Destroy()
+        end
+    end
+    chamsPlayers = {}
+end
 
 local ambientEnabled = false
 local ambientColor = Color3.new(0.5, 0.5, 0.5)
@@ -638,7 +870,7 @@ local outdoorAmbientColor = Color3.new(0.5, 0.5, 0.5)
 local rainbowAmbient = false
 local fullbrightEnabled = false
 
-Tab12:AddToggle("Ambient Enabled", {
+LightingTab:AddToggle("Ambient Enabled", {
     Text = "Enable Ambient",
     Default = false,
     Callback = function(Value)
@@ -651,7 +883,7 @@ Tab12:AddToggle("Ambient Enabled", {
     end
 })
 
-Tab12:AddLabel("Ambient Color"):AddColorPicker("AmbientColorPicker", {
+LightingTab:AddLabel("Ambient Color"):AddColorPicker("AmbientColorPicker", {
     Default = Color3.new(0.5, 0.5, 0.5),
     Title = "Ambient Color",
     Transparency = 0,
@@ -663,7 +895,7 @@ Tab12:AddLabel("Ambient Color"):AddColorPicker("AmbientColorPicker", {
     end
 })
 
-Tab12:AddLabel("Outdoor Ambient"):AddColorPicker("OutdoorAmbientColorPicker", {
+LightingTab:AddLabel("Outdoor Ambient"):AddColorPicker("OutdoorAmbientColorPicker", {
     Default = Color3.new(0.5, 0.5, 0.5),
     Title = "Outdoor Ambient",
     Transparency = 0,
@@ -675,7 +907,7 @@ Tab12:AddLabel("Outdoor Ambient"):AddColorPicker("OutdoorAmbientColorPicker", {
     end
 })
 
-Tab12:AddToggle("Rainbow Ambient", {
+LightingTab:AddToggle("Rainbow Ambient", {
     Text = "Rainbow Ambient",
     Default = false,
     Callback = function(Value)
@@ -686,7 +918,7 @@ Tab12:AddToggle("Rainbow Ambient", {
     end
 })
 
-Tab12:AddToggle("Fullbright", {
+LightingTab:AddToggle("Fullbright", {
     Text = "Fullbright",
     Default = false,
     Callback = function(Value)
@@ -739,7 +971,7 @@ local crosshairThickness = 1
 local crosshairColor = Color3.new(1, 1, 1)
 local crosshairGui = nil
 
-Tab13:AddToggle("Crosshair", {
+CrosshairTab:AddToggle("Crosshair", {
     Text = "Enable Crosshair",
     Default = false,
     Callback = function(Value)
@@ -752,7 +984,7 @@ Tab13:AddToggle("Crosshair", {
     end
 })
 
-Tab13:AddSlider("Crosshair Size", {
+CrosshairTab:AddSlider("Crosshair Size", {
     Text = "Crosshair Size:",
     Default = 10,
     Min = 5,
@@ -765,7 +997,7 @@ Tab13:AddSlider("Crosshair Size", {
     end
 })
 
-Tab13:AddSlider("Crosshair Thickness", {
+CrosshairTab:AddSlider("Crosshair Thickness", {
     Text = "Thickness:",
     Default = 1,
     Min = 1,
@@ -778,7 +1010,7 @@ Tab13:AddSlider("Crosshair Thickness", {
     end
 })
 
-Tab13:AddLabel("Crosshair Color"):AddColorPicker("CrosshairColorPicker", {
+CrosshairTab:AddLabel("Crosshair Color"):AddColorPicker("CrosshairColorPicker", {
     Default = Color3.new(1, 1, 1),
     Title = "Crosshair Color",
     Transparency = 0,
