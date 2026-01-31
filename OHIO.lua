@@ -1,13 +1,27 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-local Window = Library.CreateLib("OHIO script (by Likegenm)", "DarkTheme")
+local Window = OrionLib:MakeWindow({Name = "OHIO script(by likegenm)", HidePremium = false, SaveConfig = true, ConfigFolder = "Likegenm scripts OHIO"})
 
-local Tab1 = Window:NewTab("LocalPlayer")
+local LPTab = Window:MakeTab({
+	Name = "Localplayer",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+}))
 
-local Section1 = Tab1:NewSection("Speed")
+local SectionSpeed = Tab:AddSection({
+	Name = "Speed"
+})
 
-Section:NewSlider("Speed.Velocity", "Speed created with velocity", 500, 0, function(s)
-    local speed = s
+SectionSpeed:AddSlider({
+	Name = "Speed.Velocity",
+	Min = 16,
+	Max = 200,
+	Default = 5,
+	Color = Color3.fromHex("#FF0000"),
+	Increment = 1,
+	ValueName = "Speed:",
+	Callback = function(Value)
+		local speed = Value
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -55,4 +69,5 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-end)
+	end    
+})
