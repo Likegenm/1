@@ -1,27 +1,65 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
-local Window = OrionLib:MakeWindow({Name = "OHIO script(by likegenm)", HidePremium = false, SaveConfig = true, ConfigFolder = "Likegenm scripts OHIO"})
-
-local LPTab = Window:MakeTab({
-	Name = "Localplayer",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
-}))
-
-local SectionSpeed = Tab:AddSection({
-	Name = "Speed"
+local Window = WindUI:CreateWindow({
+    Title = "OHIO script",
+    Author = "OHIO script • Likegenm",
+    Folder = "ftgshub",
+    Icon = "solar:folder-2-bold-duotone",
+    Theme = "Mellowsi",
+    IconSize = 22*2,
+    NewElements = true,
+    Size = UDim2.fromOffset(700,700),
+    
+    HideSearchBar = false,
+    
+    OpenButton = {
+        Title = "Open UI",
+        CornerRadius = UDim.new(1,0),
+        StrokeThickness = 3, 
+        Enabled = true,
+        Draggable = true,
+        OnlyMobile = false,
+        Scale = 0.5,
+        
+        Color = ColorSequence.new(
+            Color3.fromHex("#30FF6A"), 
+            Color3.fromHex("#e7ff2f")
+        )
+    },
+    Topbar = {
+        Height = 44,
+        ButtonsType = "Mac",
+    },
 })
 
-SectionSpeed:AddSlider({
-	Name = "Speed.Velocity",
-	Min = 16,
-	Max = 200,
-	Default = 5,
-	Color = Color3.fromHex("#FF0000"),
-	Increment = 1,
-	ValueName = "Speed:",
-	Callback = function(Value)
-		local speed = Value
+local Tab1 = Window:Tab({
+        Title = "LocalPlayer",
+        Desc = "Speedhack, Jumphack...", 
+        Icon = "lock",
+        IconColor = Color3,fromHex("#FF0000"),
+        IconShape = "Square",
+        Border = true,
+    })
+
+TB1:Section({
+        Title = "Speedhack",
+        TextSize = 14,
+    })
+
+ SliderTab:Slider({
+        Title = "Speed.Velocity",
+        Desc = "Speed:",
+        IsTooltip = true,
+        IsTextbox = false,
+        Width = 200,
+        Step = 1,
+        Value = {
+            Min = 16,
+            Max = 200,
+            Default = 16,
+        },
+        Callback = function(value)
+            local speed = value
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -69,5 +107,5 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-	end    
-})
+        end
+    })
