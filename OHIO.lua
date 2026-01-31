@@ -1,65 +1,31 @@
-WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
-local Window = WindUI:CreateWindow({
-    Title = "OHIO script",
-    Author = "OHIO script • Likegenm",
-    Folder = "ftgshub",
-    Icon = "solar:folder-2-bold-duotone",
-    Theme = "Mellowsi",
-    IconSize = 22*2,
-    NewElements = true,
-    Size = UDim2.fromOffset(700,700),
-    
-    HideSearchBar = false,
-    
-    OpenButton = {
-        Title = "Open UI",
-        CornerRadius = UDim.new(1,0),
-        StrokeThickness = 3, 
-        Enabled = true,
-        Draggable = true,
-        OnlyMobile = false,
-        Scale = 0.5,
-        
-        Color = ColorSequence.new(
-            Color3.fromHex("#30FF6A"), 
-            Color3.fromHex("#e7ff2f")
-        )
-    },
-    Topbar = {
-        Height = 44,
-        ButtonsType = "Mac",
-    },
+local Window = Library:CreateWindow({
+	Title = "Likegenm scripts",
+	Footer = "OHIO script",
+	Icon = 95816097006870,
+	NotifySide = "Right",
+	ShowCustomCursor = false,
 })
 
-local Tab1 = Window:Tab({
-        Title = "LocalPlayer",
-        Desc = "Speedhack, Jumphack...", 
-        Icon = "lock",
-        IconColor = Color3,fromHex("#FF0000"),
-        IconShape = "Square",
-        Border = true,
-    })
+LPTab = Window:AddTab("LocalPlayer", "user"),
 
-TB1:Section({
-        Title = "Speedhack",
-        TextSize = 14,
-    })
+local Tabbox = LPTab:AddLeftTabbox("Humanoid functions")
+local Tab1 = Tabbox:AddTab("Speedhack")
+local Tab2 = Tabbox:AddTab("Jumphack")
 
- SliderTab:Slider({
-        Title = "Speed.Velocity",
-        Desc = "Speed:",
-        IsTooltip = true,
-        IsTextbox = false,
-        Width = 200,
-        Step = 1,
-        Value = {
-            Min = 16,
-            Max = 200,
-            Default = 16,
-        },
-        Callback = function(value)
-            local speed = value
+local SpeedHack = Groupbox:AddSlider("Speed", {
+    Text = "Speed:",
+    Default = 16,
+    Min = 16,
+    Max = 200,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        local speed = Value
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -107,5 +73,5 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-        end
-    })
+    end
+})
