@@ -1,80 +1,43 @@
-local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
+local Luna = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/master/source.lua"))()
 
-local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
-local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
-local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
-
-local Window = Library:CreateWindow({
-    Title = 'Example menu',
-    Center = true,
+local Window = Luna:CreateWindow({
+    Name = "OHIO script",
+    Subtitle = "by likegenm",
+    MainColor = Color3.fromRGB(30, 215, 96),
+    GradientColor = Color3.fromRGB(30, 30, 30),
+    GradientEnabled = true,
+    AcrylicEnabled = true,
+    AcrylicBlur = 0.8,
+    AcrylicTransparency = 0.8,
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "by Likegenm",
+    LoadingEnabled = true,
+    LoadingTime = 2,
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, 550, 0, 400),
+    AutoSize = false,
+    MinSize = UDim2.new(0, 500, 0, 350),
+    MaxSize = UDim2.new(0, 600, 0, 500),
+    Theme = "Dark",
+    Roundness = 8,
+    ShadowEnabled = true,
+    ShadowSize = 10,
+    BlurBackground = true,
+    CloseKey = Enum.KeyCode.RightAlt,
+    Resizable = true,
+    Draggable = true,
     AutoShow = true,
-    TabPadding = 8,
-    MenuFadeTime = 0.2
+    Center = true,
+    SaveConfig = true,
+    ConfigFolder = "Likegenm OHIO 0101010101010",
 })
 
-local LPT = Window:AddTab('LocalPlayer')
-
-local SGB = Tabs.Main:AddLeftGroupbox('Speed')
-
-local function Speed(Speedhacker1)
-	local speed = Speedhacker1
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
-
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-
-LocalPlayer.CharacterAdded:Connect(function(newCharacter) 
-    Character = newCharacter
-    Humanoid = Character:WaitForChild("Humanoid")
-    HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-end)
-
-RunService.Heartbeat:Connect(function()
-    if Character and HumanoidRootPart then
-        local cameraCFrame = Camera.CFrame
-        local lookVector = cameraCFrame.LookVector
-        local rightVector = cameraCFrame.RightVector
-        
-        local mv = Vector3.new(0, 0, 0)
-
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            mv = mv + Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            mv = mv - Vector3.new(lookVector.X, 0, lookVector.Z).Unit
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            mv = mv - Vector3.new(rightVector.X, 0, rightVector.Z).Unit
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            mv = mv + Vector3.new(rightVector.X, 0, rightVector.Z).Unit
-        end
-        
-        if mv.Magnitude > 0 then
-            HumanoidRootPart.Velocity = Vector3.new(
-                mv.X * speed,
-                HumanoidRootPart.Velocity.Y,
-                mv.Z * speed
-            )
-        end
-    end
-end)
-end
-
-SGB:AddSlider('Speed.Velocity', {
-    Text = 'SetSpeed',
-    Default = 0,
-    Min = 0,
-    Max = 200,
-    Rounding = 1,
-    Compact = false,
-    Callback = function(Value)
-        Speed(Value)
-    end
+local LPT = Window:CreateTab({
+    Name = "LocalPlayer",
+    Icon = "user",
+    IconSource = "Material",
+    ShowTitle = true,
+    GradientIcon = true,
+    ImageSource = "rbxassetid://123456789",
+    Priority = 1,
 })
