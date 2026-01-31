@@ -41,3 +41,13 @@ local LPT = Window:CreateTab({
     ImageSource = "rbxassetid://123456789",
     Priority = 1,
 })
+
+local Section = LPT:CreateSection({
+    Name = "Speedhack",
+    Side = "Left",
+    Collapsible = true,
+    DefaultCollapsed = false,
+    ShowDivider = true,
+    DividerColor = Color3.fromRGB(60, 60, 60),
+    Padding = UDim.new(0, 10),
+})
