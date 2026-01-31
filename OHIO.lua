@@ -332,15 +332,10 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
-Tab6:AddDivider()
-Tab6:AddLabel("Mouse Teleport Controls:")
-Tab6:AddLabel("- Enable toggle above")
-Tab6:AddLabel("- Left click to teleport")
-Tab6:AddLabel("- Or use button")
-
 local Tabbox3 = LPTab:AddLeftTabbox("Fling Functions")
 local Tab7 = Tabbox3:AddTab("Touch Fling")
 local Tab8 = Tabbox3:AddTab("Anti Fling")
+local Tab9 = Tabbox3:AddTab("Safe Zone")
 
 local touchFlingEnabled = false
 local touchFlingThread
@@ -352,8 +347,6 @@ Tab7:AddToggle("Touch Fling", {
         touchFlingEnabled = Value
         
         if Value then
-            Library:Notify("Touch Fling", "Enabled - Touch players to fling them", 3)
-            
             touchFlingThread = coroutine.create(function()
                 local hiddenfling = true
                 
@@ -374,8 +367,6 @@ Tab7:AddToggle("Touch Fling", {
             end)
             
             coroutine.resume(touchFlingThread)
-        else
-            Library:Notify("Touch Fling", "Disabled", 2)
         end
     end
 })
@@ -385,16 +376,9 @@ Tab7:AddButton("Reset Fling", {
     Func = function()
         if Character and HumanoidRootPart then
             HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-            Library:Notify("Touch Fling", "Velocity reset", 2)
         end
     end
 })
-
-Tab7:AddDivider()
-Tab7:AddLabel("Touch Fling Info:")
-Tab7:AddLabel("- Touch players to fling them")
-Tab7:AddLabel("- Use reset button if stuck")
-Tab7:AddLabel("- Turn off when not needed")
 
 local antiFlingEnabled = false
 local LastPosition = nil
@@ -404,16 +388,8 @@ Tab8:AddToggle("Anti Fling", {
     Default = false,
     Callback = function(Value)
         antiFlingEnabled = Value
-        
-        if Value then
-            Library:Notify("Anti Fling", "Enabled - Protection active", 3)
-        else
-            Library:Notify("Anti Fling", "Disabled", 2)
-        end
     end
 })
-
-Tab8:AddLabel("Protects against fling exploits")
 
 RunService.Heartbeat:Connect(function()
     if not antiFlingEnabled then return end
@@ -428,8 +404,6 @@ RunService.Heartbeat:Connect(function()
                 if LastPosition then
                     PrimaryPart.CFrame = LastPosition
                 end
-                
-                Library:Notify("Anti Fling", "Fling detected and neutralized", 2)
             elseif PrimaryPart.AssemblyLinearVelocity.Magnitude < 50 or PrimaryPart.AssemblyAngularVelocity.Magnitude < 50 then
                 LastPosition = PrimaryPart.CFrame
             end
@@ -437,67 +411,455 @@ RunService.Heartbeat:Connect(function()
     end)
 end)
 
-local otherAntiFlingEnabled = false
+local safeZoneEnabled = false
+local safeZonePlatform = nil
+local savedPosition = nil
+local platformSize = 500
+local teleportingToSaved = false
 
-Tab8:AddToggle("Anti Others Fling", {
-    Text = "Anti Other Players Fling",
+Tab9:AddToggle("Safe Zone", {
+    Text = "Enable Safe Zone",
     Default = false,
     Callback = function(Value)
-        otherAntiFlingEnabled = Value
+        safeZoneEnabled = Value
         
         if Value then
-            Library:Notify("Anti Fling", "Protecting against other players", 3)
-            
-            for i, v in ipairs(Players:GetPlayers()) do
-                if v ~= LocalPlayer then
-                    local Detected = false
-                    local OtherCharacter
-                    local OtherPrimaryPart
-                    
-                    local function CharacterAdded(NewCharacter)
-                        OtherCharacter = NewCharacter
-                        repeat
-                            wait()
-                            OtherPrimaryPart = NewCharacter:FindFirstChild("HumanoidRootPart")
-                        until OtherPrimaryPart
-                        Detected = false
-                    end
-                    
-                    CharacterAdded(v.Character or v.CharacterAdded:Wait())
-                    v.CharacterAdded:Connect(CharacterAdded)
-                    
-                    RunService.Heartbeat:Connect(function()
-                        if otherAntiFlingEnabled and OtherCharacter and OtherCharacter:IsDescendantOf(workspace) and 
-                           OtherPrimaryPart and OtherPrimaryPart:IsDescendantOf(OtherCharacter) then
-                            if OtherPrimaryPart.AssemblyAngularVelocity.Magnitude > 50 or OtherPrimaryPart.AssemblyLinearVelocity.Magnitude > 100 then
-                                if not Detected then
-                                    Library:Notify("Anti Fling", "Fling detected: " .. v.Name, 2)
-                                end
-                                Detected = true
-                                
-                                for i, part in ipairs(OtherCharacter:GetDescendants()) do
-                                    if part:IsA("BasePart") then
-                                        part.CanCollide = false
-                                        part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                                    end
-                                end
-                                
-                                OtherPrimaryPart.CanCollide = false
-                                OtherPrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-                                OtherPrimaryPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                            end
-                        end
-                    end)
-                end
-            end
+            createSafeZone()
         else
-            Library:Notify("Anti Fling", "Other players protection disabled", 2)
+            removeSafeZone()
         end
     end
 })
 
-Library:Notify("OHIO Script", "Loaded successfully!", 5)
+Tab9:AddSlider("Platform Size", {
+    Text = "Platform Size:",
+    Default = 500,
+    Min = 100,
+    Max = 1000,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        platformSize = Value
+        if safeZoneEnabled and safeZonePlatform then
+            safeZonePlatform.Size = Vector3.new(platformSize, 1, platformSize)
+        end
+    end
+})
+
+Tab9:AddButton("Save Current Position", {
+    Text = "Save Position",
+    Func = function()
+        if Character and HumanoidRootPart then
+            savedPosition = HumanoidRootPart.Position
+        end
+    end
+})
+
+Tab9:AddButton("Teleport to Saved", {
+    Text = "Teleport to Saved",
+    Func = function()
+        if Character and HumanoidRootPart and savedPosition then
+            teleportingToSaved = true
+            HumanoidRootPart.CFrame = CFrame.new(savedPosition)
+            teleportingToSaved = false
+        end
+    end
+})
+
+local function createSafeZone()
+    if safeZonePlatform then
+        safeZonePlatform:Destroy()
+    end
+    
+    safeZonePlatform = Instance.new("Part")
+    safeZonePlatform.Name = "SafeZonePlatform"
+    safeZonePlatform.Size = Vector3.new(platformSize, 1, platformSize)
+    safeZonePlatform.Anchored = true
+    safeZonePlatform.CanCollide = true
+    safeZonePlatform.Transparency = 0.7
+    safeZonePlatform.Color = Color3.new(0, 0, 0)
+    safeZonePlatform.Material = Enum.Material.Neon
+    safeZonePlatform.Parent = workspace
+    
+    RunService.Heartbeat:Connect(function()
+        if not safeZoneEnabled then return end
+        if not Character or not HumanoidRootPart then return end
+        if not safeZonePlatform then return end
+        
+        local playerPos = HumanoidRootPart.Position
+        safeZonePlatform.Position = Vector3.new(playerPos.X, -100, playerPos.Z)
+    end)
+end
+
+local function removeSafeZone()
+    if safeZonePlatform then
+        safeZonePlatform:Destroy()
+        safeZonePlatform = nil
+    end
+end
+
+local function saveOnTeleport()
+    local lastSavedPos = nil
+    
+    RunService.Heartbeat:Connect(function()
+        if not Character or not HumanoidRootPart then return end
+        if not safeZoneEnabled then return end
+        if teleportingToSaved then return end
+        
+        local currentPos = HumanoidRootPart.Position
+        
+        if lastSavedPos then
+            local distance = (currentPos - lastSavedPos).Magnitude
+            if distance > 50 then
+                savedPosition = lastSavedPos
+                lastSavedPos = currentPos
+            end
+        else
+            lastSavedPos = currentPos
+        end
+    end)
+end
+
+saveOnTeleport()
+
+local VisualsTab = Window:AddTab("Visuals", "eye")
+local VisualsTabbox = VisualsTab:AddLeftTabbox("Player Visuals")
+local Tab10 = VisualsTabbox:AddTab("ESP")
+local Tab11 = VisualsTabbox:AddTab("Chams")
+local VisualsTabbox2 = VisualsTab:AddRightTabbox("Lighting Visuals")
+local Tab12 = VisualsTabbox2:AddTab("Ambient")
+local Tab13 = VisualsTabbox2:AddTab("Crosshair")
+
+local espEnabled = false
+local boxEsp = false
+local tracerEsp = false
+local nameEsp = false
+local distanceEsp = false
+local espColor = Color3.new(1, 0, 0)
+local espDistance = 500
+
+Tab10:AddToggle("ESP Enabled", {
+    Text = "Enable ESP",
+    Default = false,
+    Callback = function(Value)
+        espEnabled = Value
+    end
+})
+
+Tab10:AddToggle("Box ESP", {
+    Text = "Box ESP",
+    Default = false,
+    Callback = function(Value)
+        boxEsp = Value
+    end
+})
+
+Tab10:AddToggle("Tracer ESP", {
+    Text = "Tracer ESP",
+    Default = false,
+    Callback = function(Value)
+        tracerEsp = Value
+    end
+})
+
+Tab10:AddToggle("Name ESP", {
+    Text = "Name ESP",
+    Default = false,
+    Callback = function(Value)
+        nameEsp = Value
+    end
+})
+
+Tab10:AddToggle("Distance ESP", {
+    Text = "Distance ESP",
+    Default = false,
+    Callback = function(Value)
+        distanceEsp = Value
+    end
+})
+
+Tab10:AddSlider("ESP Distance", {
+    Text = "Max Distance:",
+    Default = 500,
+    Min = 100,
+    Max = 2000,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        espDistance = Value
+    end
+})
+
+Tab10:AddLabel("ESP Color"):AddColorPicker("ESPColorPicker", {
+    Default = Color3.new(1, 0, 0),
+    Title = "ESP Color",
+    Transparency = 0,
+    Callback = function(Value)
+        espColor = Value
+    end
+})
+
+local chamsEnabled = false
+local chamsColor = Color3.new(0, 1, 0)
+local chamsTransparency = 0.5
+
+Tab11:AddToggle("Chams Enabled", {
+    Text = "Enable Chams",
+    Default = false,
+    Callback = function(Value)
+        chamsEnabled = Value
+    end
+})
+
+Tab11:AddLabel("Chams Color"):AddColorPicker("ChamsColorPicker", {
+    Default = Color3.new(0, 1, 0),
+    Title = "Chams Color",
+    Transparency = 0.5,
+    Callback = function(Value)
+        chamsColor = Value
+    end
+})
+
+Tab11:AddSlider("Chams Transparency", {
+    Text = "Transparency:",
+    Default = 0.5,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Compact = false,
+    Callback = function(Value)
+        chamsTransparency = Value
+    end
+})
+
+local ambientEnabled = false
+local ambientColor = Color3.new(0.5, 0.5, 0.5)
+local outdoorAmbientColor = Color3.new(0.5, 0.5, 0.5)
+local rainbowAmbient = false
+local fullbrightEnabled = false
+
+Tab12:AddToggle("Ambient Enabled", {
+    Text = "Enable Ambient",
+    Default = false,
+    Callback = function(Value)
+        ambientEnabled = Value
+        if Value then
+            updateAmbient()
+        else
+            resetAmbient()
+        end
+    end
+})
+
+Tab12:AddLabel("Ambient Color"):AddColorPicker("AmbientColorPicker", {
+    Default = Color3.new(0.5, 0.5, 0.5),
+    Title = "Ambient Color",
+    Transparency = 0,
+    Callback = function(Value)
+        ambientColor = Value
+        if ambientEnabled then
+            game.Lighting.Ambient = Value
+        end
+    end
+})
+
+Tab12:AddLabel("Outdoor Ambient"):AddColorPicker("OutdoorAmbientColorPicker", {
+    Default = Color3.new(0.5, 0.5, 0.5),
+    Title = "Outdoor Ambient",
+    Transparency = 0,
+    Callback = function(Value)
+        outdoorAmbientColor = Value
+        if ambientEnabled then
+            game.Lighting.OutdoorAmbient = Value
+        end
+    end
+})
+
+Tab12:AddToggle("Rainbow Ambient", {
+    Text = "Rainbow Ambient",
+    Default = false,
+    Callback = function(Value)
+        rainbowAmbient = Value
+        if Value then
+            startRainbowAmbient()
+        end
+    end
+})
+
+Tab12:AddToggle("Fullbright", {
+    Text = "Fullbright",
+    Default = false,
+    Callback = function(Value)
+        fullbrightEnabled = Value
+        if Value then
+            game.Lighting.Brightness = 2
+            game.Lighting.ClockTime = 14
+            game.Lighting.GlobalShadows = false
+        else
+            game.Lighting.Brightness = 1
+            game.Lighting.ClockTime = 12
+            game.Lighting.GlobalShadows = true
+        end
+    end
+})
+
+local function updateAmbient()
+    if not ambientEnabled then return end
+    
+    if rainbowAmbient then
+        startRainbowAmbient()
+    else
+        game.Lighting.Ambient = ambientColor
+        game.Lighting.OutdoorAmbient = outdoorAmbientColor
+    end
+end
+
+local function resetAmbient()
+    game.Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+    game.Lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+end
+
+local function startRainbowAmbient()
+    spawn(function()
+        while rainbowAmbient and ambientEnabled do
+            local hue = tick() % 5 / 5
+            local color = Color3.fromHSV(hue, 1, 1)
+            
+            game.Lighting.Ambient = color
+            game.Lighting.OutdoorAmbient = color
+            
+            wait(0.1)
+        end
+    end)
+end
+
+local crosshairEnabled = false
+local crosshairSize = 10
+local crosshairThickness = 1
+local crosshairColor = Color3.new(1, 1, 1)
+local crosshairGui = nil
+
+Tab13:AddToggle("Crosshair", {
+    Text = "Enable Crosshair",
+    Default = false,
+    Callback = function(Value)
+        crosshairEnabled = Value
+        if Value then
+            createCrosshair()
+        else
+            removeCrosshair()
+        end
+    end
+})
+
+Tab13:AddSlider("Crosshair Size", {
+    Text = "Crosshair Size:",
+    Default = 10,
+    Min = 5,
+    Max = 30,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        crosshairSize = Value
+        updateCrosshair()
+    end
+})
+
+Tab13:AddSlider("Crosshair Thickness", {
+    Text = "Thickness:",
+    Default = 1,
+    Min = 1,
+    Max = 5,
+    Rounding = 1,
+    Compact = false,
+    Callback = function(Value)
+        crosshairThickness = Value
+        updateCrosshair()
+    end
+})
+
+Tab13:AddLabel("Crosshair Color"):AddColorPicker("CrosshairColorPicker", {
+    Default = Color3.new(1, 1, 1),
+    Title = "Crosshair Color",
+    Transparency = 0,
+    Callback = function(Value)
+        crosshairColor = Value
+        updateCrosshair()
+    end
+})
+
+local function createCrosshair()
+    if crosshairGui then
+        crosshairGui:Destroy()
+    end
+    
+    crosshairGui = Instance.new("ScreenGui")
+    crosshairGui.Name = "CrosshairGUI"
+    crosshairGui.Parent = game.CoreGui
+    
+    local centerFrame = Instance.new("Frame")
+    centerFrame.Name = "CenterDot"
+    centerFrame.Size = UDim2.new(0, 4, 0, 4)
+    centerFrame.Position = UDim2.new(0.5, -2, 0.5, -2)
+    centerFrame.BackgroundColor3 = crosshairColor
+    centerFrame.BorderSizePixel = 0
+    centerFrame.Parent = crosshairGui
+    
+    local horizontalLine = Instance.new("Frame")
+    horizontalLine.Name = "HorizontalLine"
+    horizontalLine.Size = UDim2.new(0, crosshairSize * 2, 0, crosshairThickness)
+    horizontalLine.Position = UDim2.new(0.5, -crosshairSize, 0.5, -crosshairThickness/2)
+    horizontalLine.BackgroundColor3 = crosshairColor
+    horizontalLine.BorderSizePixel = 0
+    horizontalLine.Parent = crosshairGui
+    
+    local verticalLine = Instance.new("Frame")
+    verticalLine.Name = "VerticalLine"
+    verticalLine.Size = UDim2.new(0, crosshairThickness, 0, crosshairSize * 2)
+    verticalLine.Position = UDim2.new(0.5, -crosshairThickness/2, 0.5, -crosshairSize)
+    verticalLine.BackgroundColor3 = crosshairColor
+    verticalLine.BorderSizePixel = 0
+    verticalLine.Parent = crosshairGui
+end
+
+local function updateCrosshair()
+    if not crosshairEnabled or not crosshairGui then return end
+    
+    local centerDot = crosshairGui:FindFirstChild("CenterDot")
+    local horizontalLine = crosshairGui:FindFirstChild("HorizontalLine")
+    local verticalLine = crosshairGui:FindFirstChild("VerticalLine")
+    
+    if centerDot then
+        centerDot.BackgroundColor3 = crosshairColor
+        centerDot.Size = UDim2.new(0, 4, 0, 4)
+        centerDot.Position = UDim2.new(0.5, -2, 0.5, -2)
+    end
+    
+    if horizontalLine then
+        horizontalLine.BackgroundColor3 = crosshairColor
+        horizontalLine.Size = UDim2.new(0, crosshairSize * 2, 0, crosshairThickness)
+        horizontalLine.Position = UDim2.new(0.5, -crosshairSize, 0.5, -crosshairThickness/2)
+    end
+    
+    if verticalLine then
+        verticalLine.BackgroundColor3 = crosshairColor
+        verticalLine.Size = UDim2.new(0, crosshairThickness, 0, crosshairSize * 2)
+        verticalLine.Position = UDim2.new(0.5, -crosshairThickness/2, 0.5, -crosshairSize)
+    end
+end
+
+local function removeCrosshair()
+    if crosshairGui then
+        crosshairGui:Destroy()
+        crosshairGui = nil
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightAlt then
+        Library:ToggleUI()
+    end
+end)
 
 Library:SelectTab(LPTab)
 
