@@ -3,11 +3,11 @@ local Luna = loadstring(game:HttpGet("https://raw.nebulasoftworks.xyz/luna", tru
 BlurModule = function() end
 
 local Window = Luna:CreateWindow({
-    Name = "Isle script", 
+    Name = "Isle Script", 
     Subtitle = nil,
     LogoID = "82795327169782",
     LoadingEnabled = false,
-    LoadingTitle = "Likegenm script",
+    LoadingTitle = "Likegenm Script",
     LoadingSubtitle = "by Likegenm",
     ConfigSettings = {
         RootFolder = nil,
@@ -65,16 +65,19 @@ local infJumpEnabled = false
 local flyEnabled = false
 local flySpeed = 50
 local flyBodyGyro
+local noclipEnabled = false
+local spinEnabled = false
+local spinSpeed = 30
 
-local LPT = Window:CreateTab({
-    Name = "LocalPlayer",
+local MainTab = Window:CreateTab({
+    Name = "Main",
     Icon = "person",
     ImageSource = "Material",
     ShowTitle = true
 })
 
-LPT:CreateSection("Speedhack"):CreateToggle({
-    Name = "Enable Speed",
+MainTab:CreateSection("Speed"):CreateToggle({
+    Name = "Speed Hack",
     CurrentValue = false,
     Flag = "SpeedToggle",
     Callback = function(state)
@@ -82,7 +85,7 @@ LPT:CreateSection("Speedhack"):CreateToggle({
     end
 })
 
-LPT:CreateSection("Speedhack"):CreateSlider({
+MainTab:CreateSection("Speed"):CreateSlider({
     Name = "Speed Value",
     Range = {0, 200},
     Increment = 0.1,
@@ -93,8 +96,8 @@ LPT:CreateSection("Speedhack"):CreateSlider({
     end
 })
 
-LPT:CreateSection("Jumphack"):CreateToggle({
-    Name = "Inf Jumps",
+MainTab:CreateSection("Movement"):CreateToggle({
+    Name = "Infinite Jump",
     CurrentValue = false,
     Flag = "InfJumpToggle",
     Callback = function(state)
@@ -102,7 +105,7 @@ LPT:CreateSection("Jumphack"):CreateToggle({
     end
 })
 
-LPT:CreateSection("Movement"):CreateToggle({
+MainTab:CreateSection("Movement"):CreateToggle({
     Name = "Fly",
     CurrentValue = false,
     Flag = "FlyToggle",
@@ -129,7 +132,7 @@ LPT:CreateSection("Movement"):CreateToggle({
     end
 })
 
-LPT:CreateSection("Fly"):CreateSlider({
+MainTab:CreateSection("Movement"):CreateSlider({
     Name = "Fly Speed",
     Range = {0, 200},
     Increment = 0.1,
@@ -139,6 +142,64 @@ LPT:CreateSection("Fly"):CreateSlider({
         flySpeed = value
     end
 })
+
+MainTab:CreateSection("Movement"):CreateToggle({
+    Name = "Noclip",
+    CurrentValue = false,
+    Flag = "NoclipToggle",
+    Callback = function(state)
+        noclipEnabled = state
+    end
+})
+
+MainTab:CreateSection("Movement"):CreateToggle({
+    Name = "Spin",
+    CurrentValue = false,
+    Flag = "SpinToggle",
+    Callback = function(state)
+        spinEnabled = state
+    end
+})
+
+MainTab:CreateSection("Movement"):CreateSlider({
+    Name = "Spin Speed",
+    Range = {1, 100},
+    Increment = 1,
+    CurrentValue = 30,
+    Flag = "SpinSpeedSlider",
+    Callback = function(value)
+        spinSpeed = value
+    end
+})
+
+MainTab:CreateSection("Teleport"):CreateButton({
+    Name = "Mouse Teleport (T)",
+    Callback = function()
+        if Character and HumanoidRootPart then
+            local mouse = LocalPlayer:GetMouse()
+            local target = mouse.Hit.Position
+            HumanoidRootPart.CFrame = CFrame.new(target + Vector3.new(0, 3, 0))
+        end
+    end
+})
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.T and Character and HumanoidRootPart then
+        local mouse = LocalPlayer:GetMouse()
+        local target = mouse.Hit.Position
+        HumanoidRootPart.CFrame = CFrame.new(target + Vector3.new(0, 3, 0))
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if noclipEnabled and Character then
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
 
 RunService.Heartbeat:Connect(function()
     if speedEnabled and Character and HumanoidRootPart then
@@ -205,23 +266,27 @@ RunService.Heartbeat:Connect(function()
         HumanoidRootPart.Velocity = flyVelocity
         flyBodyGyro.CFrame = Camera.CFrame
     end
+    
+    if spinEnabled and Character and HumanoidRootPart then
+        HumanoidRootPart.CFrame = HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+    end
 end)
 
-local VT = Window:CreateTab({
+local VisualTab = Window:CreateTab({
     Name = "Visual",
     Icon = "visibility",
     ImageSource = "Material",
     ShowTitle = true
 })
 
-local TT = Window:CreateTab({
+local TeleportTab = Window:CreateTab({
     Name = "Teleport",
     Icon = "location_on",
     ImageSource = "Material",
     ShowTitle = true
 })
 
-local ST = Window:CreateTab({
+local SettingsTab = Window:CreateTab({
     Name = "Settings",
     Icon = "settings",
     ImageSource = "Material",
@@ -231,8 +296,8 @@ local ST = Window:CreateTab({
 local uiKeybind = "K"
 local uiEnabled = true
 
-ST:CreateSection("UI Settings"):CreateKeybind({
-    Name = "Toggle UI Key",
+SettingsTab:CreateSection("UI"):CreateKeybind({
+    Name = "UI Toggle Key",
     CurrentKeybind = "K",
     HoldToInteract = false,
     Flag = "UIKeybind",
@@ -241,7 +306,7 @@ ST:CreateSection("UI Settings"):CreateKeybind({
     end
 })
 
-ST:CreateSection("UI Settings"):CreateToggle({
+SettingsTab:CreateSection("UI"):CreateToggle({
     Name = "Enable UI Toggle",
     CurrentValue = true,
     Flag = "UIToggle",
@@ -250,14 +315,14 @@ ST:CreateSection("UI Settings"):CreateToggle({
     end
 })
 
-ST:CreateSection("UI Settings"):CreateButton({
+SettingsTab:CreateSection("UI"):CreateButton({
     Name = "Hide UI",
     Callback = function()
         Window:Hide()
     end
 })
 
-ST:CreateSection("UI Settings"):CreateButton({
+SettingsTab:CreateSection("UI"):CreateButton({
     Name = "Show UI",
     Callback = function()
         Window:Show()
@@ -270,17 +335,17 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
-local CT = Window:CreateTab({
+local CreditsTab = Window:CreateTab({
     Name = "Credits",
     Icon = "info",
     ImageSource = "Material",
     ShowTitle = true
 })
 
-CT:CreateSection("Credits"):CreateLabel({
+CreditsTab:CreateSection("Info"):CreateLabel({
     Name = "Script by Likegenm"
 })
 
-CT:CreateSection("Credits"):CreateLabel({
+CreditsTab:CreateSection("Info"):CreateLabel({
     Name = "UI: Luna Library"
 })
