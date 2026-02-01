@@ -1,5 +1,7 @@
 local Luna = loadstring(game:HttpGet("https://raw.nebulasoftworks.xyz/luna", true))()
 
+BlurModule = function() end
+
 local Window = Luna:CreateWindow({
     Name = "Isle script", 
     Subtitle = nil,
@@ -11,21 +13,35 @@ local Window = Luna:CreateWindow({
         RootFolder = nil,
         ConfigFolder = "Isle Hub"
     },
-    KeySystem = false,
-    KeySettings = {
-        Title = "Key System",
-        Subtitle = "Enter...",
-        Note = "Key: 123",
-        SaveInRoot = false,
-        SaveKey = true,
-        Key = {"123"},
-        SecondAction = {
-            Enabled = true, 
-            Type = "Link", 
-            Parameter = ""
-        }
-    }
+    KeySystem = false
 })
+
+local Lighting = game:GetService("Lighting")
+for _, effect in pairs(Lighting:GetChildren()) do
+    if effect:IsA("DepthOfFieldEffect") or effect:IsA("BlurEffect") then
+        effect:Destroy()
+    end
+end
+
+for _, script in pairs(game:GetDescendants()) do
+    if script:IsA("LocalScript") or script:IsA("Script") then
+        if script.Name == "BlurModule" or (script.Source and script.Source:find("DepthOfField")) then
+            script:Destroy()
+        end
+    end
+end
+
+for _, folder in pairs(workspace.CurrentCamera:GetDescendants()) do
+    if folder:IsA("Folder") and (folder.Name == "LunaBlur" or folder.Name:find("Blur")) then
+        folder:Destroy()
+    end
+end
+
+for _, part in pairs(workspace:GetDescendants()) do
+    if part:IsA("Part") and part.Material == Enum.Material.Glass then
+        part:Destroy()
+    end
+end
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -45,6 +61,10 @@ end)
 
 local speedEnabled = false
 local speedValue = 50
+local infJumpEnabled = false
+local flyEnabled = false
+local flySpeed = 50
+local flyBodyGyro
 
 local LPT = Window:CreateTab({
     Name = "LocalPlayer",
@@ -70,6 +90,53 @@ LPT:CreateSection("Speedhack"):CreateSlider({
     Flag = "SpeedSlider",
     Callback = function(value)
         speedValue = value
+    end
+})
+
+LPT:CreateSection("Jumphack"):CreateToggle({
+    Name = "Inf Jumps",
+    CurrentValue = false,
+    Flag = "InfJumpToggle",
+    Callback = function(state)
+        infJumpEnabled = state
+    end
+})
+
+LPT:CreateSection("Movement"):CreateToggle({
+    Name = "Fly",
+    CurrentValue = false,
+    Flag = "FlyToggle",
+    Callback = function(state)
+        flyEnabled = state
+        if flyEnabled then
+            if Character and HumanoidRootPart then
+                flyBodyGyro = Instance.new("BodyGyro")
+                flyBodyGyro.P = 10000
+                flyBodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                flyBodyGyro.CFrame = HumanoidRootPart.CFrame
+                flyBodyGyro.Parent = HumanoidRootPart
+                Humanoid.PlatformStand = true
+            end
+        else
+            if flyBodyGyro then
+                flyBodyGyro:Destroy()
+                flyBodyGyro = nil
+            end
+            if Character and Humanoid then
+                Humanoid.PlatformStand = false
+            end
+        end
+    end
+})
+
+LPT:CreateSection("Fly"):CreateSlider({
+    Name = "Fly Speed",
+    Range = {0, 200},
+    Increment = 0.1,
+    CurrentValue = 50,
+    Flag = "FlySpeedSlider",
+    Callback = function(value)
+        flySpeed = value
     end
 })
 
@@ -101,6 +168,42 @@ RunService.Heartbeat:Connect(function()
                 mv.Z * speedValue
             )
         end
+    end
+    
+    if infJumpEnabled and Character and HumanoidRootPart and Humanoid then
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            HumanoidRootPart.Velocity = Vector3.new(
+                HumanoidRootPart.Velocity.X,
+                50,
+                HumanoidRootPart.Velocity.Z
+            )
+        end
+    end
+    
+    if flyEnabled and Character and HumanoidRootPart and flyBodyGyro then
+        local flyVelocity = Vector3.new(0, 0, 0)
+        
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            flyVelocity = flyVelocity + (Camera.CFrame.LookVector * flySpeed)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            flyVelocity = flyVelocity - (Camera.CFrame.LookVector * flySpeed)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            flyVelocity = flyVelocity - (Camera.CFrame.RightVector * flySpeed)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            flyVelocity = flyVelocity + (Camera.CFrame.RightVector * flySpeed)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            flyVelocity = flyVelocity + Vector3.new(0, flySpeed, 0)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+            flyVelocity = flyVelocity - Vector3.new(0, flySpeed, 0)
+        end
+        
+        HumanoidRootPart.Velocity = flyVelocity
+        flyBodyGyro.CFrame = Camera.CFrame
     end
 end)
 
