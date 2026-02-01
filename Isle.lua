@@ -64,5 +64,11 @@ local CT = Window:CreateTab({
     ShowTitle = true
 })
 
-Tab:CreateSection("Speedhack")
+Tab:CreateSection("Speedhack"):CreateSlider({
+        Name = "Speed",
+        Range = {0, 200},
+        Increment = 0.1,
+        CurrentValue = 100,
+        Flag = "Slider",
+    })
 
