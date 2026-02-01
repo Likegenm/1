@@ -68,6 +68,8 @@ local flyBodyGyro
 local noclipEnabled = false
 local spinEnabled = false
 local spinSpeed = 30
+local touchFlingEnabled = false
+local antiFlingEnabled = false
 
 local MainTab = Window:CreateTab({
     Name = "Main",
@@ -172,6 +174,43 @@ MainTab:CreateSection("Spiner speed"):CreateSlider({
     end
 })
 
+MainTab:CreateSection("Fling"):CreateToggle({
+    Name = "Touch Fling",
+    CurrentValue = false,
+    Flag = "TouchFlingToggle",
+    Callback = function(state)
+        touchFlingEnabled = state
+        if touchFlingEnabled then
+            createTouchFlingUI()
+        else
+            removeTouchFlingUI()
+        end
+    end
+})
+
+MainTab:CreateSection("Protection"):CreateToggle({
+    Name = "Anti-Fling",
+    CurrentValue = false,
+    Flag = "AntiFlingToggle",
+    Callback = function(state)
+        antiFlingEnabled = state
+        if antiFlingEnabled then
+            startAntiFling()
+        end
+    end
+})
+
+MainTab:CreateSection("Protection"):CreateToggle({
+    Name = "Anti-AFK",
+    CurrentValue = false,
+    Flag = "AntiAFKToggle",
+    Callback = function(state)
+        if state then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/ArgetnarYT/scripts/main/AntiAfk2.lua"))()
+        end
+    end
+})
+
 MainTab:CreateSection("Teleport"):CreateButton({
     Name = "Mouse Teleport (T)",
     Callback = function()
@@ -190,6 +229,177 @@ UserInputService.InputBegan:Connect(function(input)
         HumanoidRootPart.CFrame = CFrame.new(target + Vector3.new(0, 3, 0))
     end
 end)
+
+local touchFlingUI = nil
+local hiddenfling = false
+local flingThread = nil
+
+function createTouchFlingUI()
+    if touchFlingUI then return end
+    
+    touchFlingUI = Instance.new("ScreenGui")
+    local Frame = Instance.new("Frame")
+    local Frame_2 = Instance.new("Frame")
+    local TextLabel = Instance.new("TextLabel")
+    local TextButton = Instance.new("TextButton")
+    
+    touchFlingUI.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    touchFlingUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    touchFlingUI.ResetOnSpawn = false
+    
+    Frame.Parent = touchFlingUI
+    Frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+    Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Frame.BorderSizePixel = 0
+    Frame.Position = UDim2.new(0.388, 0, 0.427, 0)
+    Frame.Size = UDim2.new(0, 158, 0, 110)
+    
+    Frame_2.Parent = Frame
+    Frame_2.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Frame_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    Frame_2.BorderSizePixel = 0
+    Frame_2.Size = UDim2.new(0, 158, 0, 25)
+    
+    TextLabel.Parent = Frame_2
+    TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TextLabel.BackgroundTransparency = 1.000
+    TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    TextLabel.BorderSizePixel = 0
+    TextLabel.Position = UDim2.new(0.112, 0, -0.015, 0)
+    TextLabel.Size = UDim2.new(0, 121, 0, 26)
+    TextLabel.Font = Enum.Font.Sarpanch
+    TextLabel.Text = "Touch Fling"
+    TextLabel.TextColor3 = Color3.fromRGB(0, 0, 255)
+    TextLabel.TextSize = 25.000
+    
+    TextButton.Parent = Frame
+    TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    TextButton.BorderSizePixel = 0
+    TextButton.Position = UDim2.new(0.113, 0, 0.418, 0)
+    TextButton.Size = UDim2.new(0, 121, 0, 37)
+    TextButton.Font = Enum.Font.SourceSansItalic
+    TextButton.Text = "OFF"
+    TextButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    TextButton.TextSize = 20.000
+    
+    local function flingFunction()
+        while hiddenfling do
+            RunService.Heartbeat:Wait()
+            local c = LocalPlayer.Character
+            local hrp = c and c:FindFirstChild("HumanoidRootPart")
+            
+            if hrp then
+                local vel = hrp.Velocity
+                hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                RunService.RenderStepped:Wait()
+                hrp.Velocity = vel
+                RunService.Stepped:Wait()
+                hrp.Velocity = vel + Vector3.new(0, 0.1, 0)
+            end
+        end
+    end
+    
+    TextButton.MouseButton1Click:Connect(function()
+        hiddenfling = not hiddenfling
+        TextButton.Text = hiddenfling and "ON" or "OFF"
+        
+        if hiddenfling then
+            flingThread = coroutine.create(flingFunction)
+            coroutine.resume(flingThread)
+        else
+            hiddenfling = false
+        end
+    end)
+    
+    Frame.Active = true
+    Frame.Draggable = true
+end
+
+function removeTouchFlingUI()
+    if touchFlingUI then
+        touchFlingUI:Destroy()
+        touchFlingUI = nil
+    end
+    hiddenfling = false
+end
+
+function startAntiFling()
+    local Services = {
+        Players = game:GetService("Players"),
+        RunService = game:GetService("RunService")
+    }
+    
+    local LocalPlayer = Services.Players.LocalPlayer
+    local LastPosition = nil
+    
+    local function PlayerAdded(Player)
+        if Player == LocalPlayer then return end
+        
+        local Detected = false
+        local Character
+        local PrimaryPart
+        
+        local function CharacterAdded(NewCharacter)
+            Character = NewCharacter
+            repeat
+                task.wait()
+                PrimaryPart = NewCharacter:FindFirstChild("HumanoidRootPart")
+            until PrimaryPart
+            Detected = false
+        end
+        
+        CharacterAdded(Player.Character or Player.CharacterAdded:Wait())
+        Player.CharacterAdded:Connect(CharacterAdded)
+        
+        Services.RunService.Heartbeat:Connect(function()
+            if antiFlingEnabled and Character and Character:IsDescendantOf(workspace) and PrimaryPart and PrimaryPart:IsDescendantOf(Character) then
+                if PrimaryPart.AssemblyAngularVelocity.Magnitude > 50 or PrimaryPart.AssemblyLinearVelocity.Magnitude > 100 then
+                    if not Detected then
+                        print("[Anti-Fling] Fling Exploit detected, Player: " .. tostring(Player))
+                    end
+                    Detected = true
+                    for _, v in ipairs(Character:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            v.CanCollide = false
+                            v.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                            v.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                            v.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0)
+                        end
+                    end
+                    PrimaryPart.CanCollide = false
+                    PrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    PrimaryPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    PrimaryPart.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0)
+                end
+            end
+        end)
+    end
+    
+    for _, v in ipairs(Services.Players:GetPlayers()) do
+        if v ~= LocalPlayer then
+            PlayerAdded(v)
+        end
+    end
+    
+    Services.Players.PlayerAdded:Connect(PlayerAdded)
+    
+    Services.RunService.Heartbeat:Connect(function()
+        if antiFlingEnabled and Character and Character.PrimaryPart then
+            local PrimaryPart = Character.PrimaryPart
+            if PrimaryPart.AssemblyLinearVelocity.Magnitude > 250 or PrimaryPart.AssemblyAngularVelocity.Magnitude > 250 then
+                PrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                PrimaryPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                if LastPosition then
+                    PrimaryPart.CFrame = LastPosition
+                end
+                print("[Anti-Fling] You were flung. Neutralizing velocity.")
+            elseif PrimaryPart.AssemblyLinearVelocity.Magnitude < 50 and PrimaryPart.AssemblyAngularVelocity.Magnitude < 50 then
+                LastPosition = PrimaryPart.CFrame
+            end
+        end
+    end)
+end
 
 RunService.Stepped:Connect(function()
     if noclipEnabled and Character then
@@ -349,3 +559,5 @@ CreditsTab:CreateSection("Info"):CreateLabel({
 CreditsTab:CreateSection("Info"):CreateLabel({
     Name = "UI: Luna Library"
 })
+
+print("OHIO Script loaded successfully!")
