@@ -36,8 +36,29 @@ Luna:Notification({
     Content = "K to Open/Close UI"
 })
 
-local Tab = Window:CreateTab({
+local LPT = Window:CreateTab({
     Name = "LocalPlayer",
+    Icon = "view_in_ar",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+local VT = Window:CreateTab({
+    Name = "Visual",
+    Icon = "view_in_ar",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+local TT = Window:CreateTab({
+    Name = "Teleport",
+    Icon = "view_in_ar",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+local CT = Window:CreateTab({
+    Name = "Credits",
     Icon = "view_in_ar",
     ImageSource = "Material",
     ShowTitle = true
