@@ -279,6 +279,27 @@ local VisualTab = Window:CreateTab({
     ShowTitle = true
 })
 
+VisualTab:CreateSection("Remove Effects")
+
+VisualTab:CreateButton({
+    Name = "Remove Blur/Water Effects",
+    Callback = function()
+        while task.wait(0.1) do
+            if Camera then
+                Camera.Blur.Enabled = false
+                Camera.DepthOfField.Enabled = false
+            end
+            
+            if workspace.Terrain then
+                workspace.Terrain.WaterWaveSize = 0
+                workspace.Terrain.WaterWaveSpeed = 0
+                workspace.Terrain.WaterReflectance = 0
+                workspace.Terrain.WaterTransparency = 1
+            end
+        end
+    end
+})
+
 local TeleportTab = Window:CreateTab({
     Name = "Teleport",
     Icon = "location_on",
