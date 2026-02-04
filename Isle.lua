@@ -68,6 +68,7 @@ local flyBodyGyro
 local noclipEnabled = false
 local spinEnabled = false
 local spinSpeed = 30
+local fullbrightEnabled = false
 
 local MainTab = Window:CreateTab({
     Name = "Main",
@@ -279,24 +280,51 @@ local VisualTab = Window:CreateTab({
     ShowTitle = true
 })
 
+VisualTab:CreateSection("Lighting")
+
+VisualTab:CreateToggle({
+    Name = "Fullbright",
+    CurrentValue = false,
+    Flag = "FullbrightToggle",
+    Callback = function(state)
+        fullbrightEnabled = state
+        if state then
+            task.spawn(function()
+                while fullbrightEnabled do
+                    Lighting.GlobalShadows = false
+                    Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+                    Lighting.Brightness = 2
+                    task.wait(0.1)
+                end
+            end)
+        else
+            Lighting.GlobalShadows = true
+            Lighting.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
+            Lighting.Brightness = 1
+        end
+    end
+})
+
 VisualTab:CreateSection("Remove Effects")
 
 VisualTab:CreateButton({
-    Name = "Remove Blur/Water Effects",
+    Name = "Remove Blur/Water",
     Callback = function()
-        while task.wait(0.1) do
-            if Camera then
-                Camera.Blur.Enabled = false
-                Camera.DepthOfField.Enabled = false
+        task.spawn(function()
+            while task.wait(0.1) do
+                if Camera then
+                    Camera.Blur.Enabled = false
+                    Camera.DepthOfField.Enabled = false
+                end
+                
+                if workspace.Terrain then
+                    workspace.Terrain.WaterWaveSize = 0
+                    workspace.Terrain.WaterWaveSpeed = 0
+                    workspace.Terrain.WaterReflectance = 0
+                    workspace.Terrain.WaterTransparency = 1
+                end
             end
-            
-            if workspace.Terrain then
-                workspace.Terrain.WaterWaveSize = 0
-                workspace.Terrain.WaterWaveSpeed = 0
-                workspace.Terrain.WaterReflectance = 0
-                workspace.Terrain.WaterTransparency = 1
-            end
-        end
+        end)
     end
 })
 
