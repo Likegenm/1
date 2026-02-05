@@ -55,8 +55,8 @@ local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
 LocalPlayer.CharacterAdded:Connect(function(newCharacter) 
     Character = newCharacter
-    Humanoid = Character:WaitForChild("Humanoid")
-    HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    Humanoid = newCharacter:WaitForChild("Humanoid")
+    HumanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
 end)
 
 local speedEnabled = false
@@ -340,4 +340,140 @@ local TeleportTab = Window:CreateTab({
     Icon = "location_on",
     ImageSource = "Material",
     ShowTitle = true
+})
+
+TeleportTab:CreateButton({
+    Name = "Save Pos",
+    Callback = function()
+        _G.pos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Teleport to SavePos",
+    Callback = function()
+        if _G.pos then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.pos)
+        end
+    end
+})
+
+TeleportTab:CreateSection("Locations")
+
+local function teleportTo(position)
+    if Character and HumanoidRootPart then
+        HumanoidRootPart.CFrame = CFrame.new(position)
+    end
+end
+
+TeleportTab:CreateButton({
+    Name = "Lair: -1677.50, -16.46, -517.84",
+    Callback = function()
+        teleportTo(Vector3.new(-1677.50, -16.46, -517.84))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "LightHouse: -1545.85, 226.78, -198.82",
+    Callback = function()
+        teleportTo(Vector3.new(-1545.85, 226.78, -198.82))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Facility: -1617.14, -41.38, -1534.31",
+    Callback = function()
+        teleportTo(Vector3.new(-1617.14, -41.38, -1534.31))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Facility v2: -1786.97, -193.03, -1368.30",
+    Callback = function()
+        teleportTo(Vector3.new(-1786.97, -193.03, -1368.30))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Ship: -340.64, 12.05, 894.64",
+    Callback = function()
+        teleportTo(Vector3.new(-340.64, 12.05, 894.64))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Ship v2: -344.97, 28.78, 844.50",
+    Callback = function()
+        teleportTo(Vector3.new(-344.97, 28.78, 844.50))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Generators: 548.08, -3.36, -543.73",
+    Callback = function()
+        teleportTo(Vector3.new(548.08, -3.36, -543.73))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Observatory: 467.98, 150.34, -1216.91",
+    Callback = function()
+        teleportTo(Vector3.new(467.98, 150.34, -1216.91))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Dome: -812.90, 303.50, -1373.33",
+    Callback = function()
+        teleportTo(Vector3.new(-812.90, 303.50, -1373.33))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Hangar: -1618.50, 22.02, -2373.56",
+    Callback = function()
+        teleportTo(Vector3.new(-1618.50, 22.02, -2373.56))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Military Camp: -1069.08, 265.76, -1820.14",
+    Callback = function()
+        teleportTo(Vector3.new(-1069.08, 265.76, -1820.14))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Docks: -2003.32, 6.12, -1554.91",
+    Callback = function()
+        teleportTo(Vector3.new(-2003.32, 6.12, -1554.91))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Drone: -95.67, 233.37, -2790.43",
+    Callback = function()
+        teleportTo(Vector3.new(-95.67, 233.37, -2790.43))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Ballistic Vest: -714.69, -5.38, 869.87",
+    Callback = function()
+        teleportTo(Vector3.new(-714.69, -5.38, 869.87))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Artifact A: -1347.18, -456.25, -1568.46",
+    Callback = function()
+        teleportTo(Vector3.new(-1347.18, -456.25, -1568.46))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Artifact B: 1405.43, -249.38, -1851.34",
+    Callback = function()
+        teleportTo(Vector3.new(1405.43, -249.38, -1851.34))
+    end
 })
