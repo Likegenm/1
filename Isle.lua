@@ -477,3 +477,17 @@ TeleportTab:CreateButton({
         teleportTo(Vector3.new(1405.43, -249.38, -1851.34))
     end
 })
+
+local MicsTab = Window:CreateTab({
+    Name = "Mics",
+    Icon = "code",
+    ImageSource = "Material",
+    ShowTitle = true
+})
+
+MicsTab:CreateButton({
+    Name = "Dex",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
+    end
+})
