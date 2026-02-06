@@ -488,6 +488,6 @@ local MicsTab = Window:CreateTab({
 MicsTab:CreateButton({
     Name = "Dex",
     Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/RobloxianRoblox3200/Scripts_Roblox/refs/heads/main/Dex_Explorer_V4.lua'))()
     end
 })
