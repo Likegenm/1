@@ -63,6 +63,52 @@ local noclipEnabled = false
 local spinEnabled = false
 local spinSpeed = 30
 local fullbrightEnabled = false
+local platformEnabled = false
+
+local platformConnection
+
+local function createPlatform()
+    if not workspace:FindFirstChild("FollowPlatform") then
+        local p = Instance.new("Part")
+        p.Name = "FollowPlatform"
+        p.Size = Vector3.new(10,1,10)
+        p.Anchored = true
+        p.CanCollide = true
+        p.Transparency = 0.3
+        p.Color = Color3.fromRGB(100, 100, 255)
+        p.Parent = workspace
+    end
+end
+
+local function updatePlatform()
+    if workspace:FindFirstChild("FollowPlatform") and Character and HumanoidRootPart then
+        workspace.FollowPlatform.Position = Vector3.new(
+            HumanoidRootPart.Position.X,
+            -400,
+            HumanoidRootPart.Position.Z
+        )
+    end
+end
+
+local function startPlatform()
+    platformEnabled = true
+    createPlatform()
+    if platformConnection then
+        platformConnection:Disconnect()
+    end
+    platformConnection = RunService.Heartbeat:Connect(updatePlatform)
+end
+
+local function stopPlatform()
+    platformEnabled = false
+    if platformConnection then
+        platformConnection:Disconnect()
+        platformConnection = nil
+    end
+    if workspace:FindFirstChild("FollowPlatform") then
+        workspace.FollowPlatform:Destroy()
+    end
+end
 
 local MainTab = Window:AddTab("Main", "zap")
 
@@ -279,6 +325,10 @@ RunService.Heartbeat:Connect(function()
     if spinEnabled and Character and HumanoidRootPart then
         HumanoidRootPart.CFrame = HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
     end
+    
+    if platformEnabled then
+        updatePlatform()
+    end
 end)
 
 local TeleportTab = Window:AddTab("Teleport", "map-pin")
@@ -476,6 +526,52 @@ ScriptsBox:AddButton({
     Func = function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/RobloxianRoblox3200/Scripts_Roblox/refs/heads/main/Dex_Explorer_V4.lua'))()
         Library:Notify("Dex Explorer loaded!", 3)
+    end
+})
+
+local ETab = Window:AddTab("Exploits", "zap")
+
+local PlatformBox = ETab:AddLeftGroupbox("Platform")
+
+PlatformBox:AddButton({
+    Text = "Create Platform",
+    Func = function()
+        startPlatform()
+        Library:Notify("Platform created!", 3)
+    end
+})
+
+PlatformBox:AddButton({
+    Text = "Remove Platform",
+    Func = function()
+        stopPlatform()
+        Library:Notify("Platform removed!", 3)
+    end
+})
+
+local PlatformToggle = PlatformBox:AddToggle("PlatformToggle", {
+    Text = "Auto Platform",
+    Default = false,
+    Callback = function(state)
+        if state then
+            startPlatform()
+        else
+            stopPlatform()
+        end
+    end
+})
+
+PlatformBox:AddButton({
+    Text = "Teleport to Platform",
+    Func = function()
+        if Character and HumanoidRootPart then
+            HumanoidRootPart.CFrame = CFrame.new(
+                HumanoidRootPart.Position.X,
+                -380,
+                HumanoidRootPart.Position.Z
+            )
+            Library:Notify("Teleported to platform!", 3)
+        end
     end
 })
 
