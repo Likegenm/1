@@ -74,7 +74,7 @@ local function createPlatform()
         p.Size = Vector3.new(10,1,10)
         p.Anchored = true
         p.CanCollide = true
-        p.Transparency = 0.3
+        p.Transparency = 1
         p.Color = Color3.fromRGB(100, 100, 255)
         p.Parent = workspace
     end
