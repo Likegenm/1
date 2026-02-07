@@ -1,5 +1,7 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
+Library.ShowCustomCursor = false
+
 local Window = Library:CreateWindow({
     Title = "Isle Script",
     Footer = "by Likegenm",
