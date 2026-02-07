@@ -1,19 +1,11 @@
-local Luna = loadstring(game:HttpGet("https://raw.nebulasoftworks.xyz/luna", true))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
-BlurModule = function() end
-
-local Window = Luna:CreateWindow({
-    Name = "Isle Script", 
-    Subtitle = nil,
-    LogoID = "82795327169782",
-    LoadingEnabled = false,
-    LoadingTitle = "Likegenm Script",
-    LoadingSubtitle = "by Likegenm",
-    ConfigSettings = {
-        RootFolder = nil,
-        ConfigFolder = "Isle Hub"
-    },
-    KeySystem = false
+local Window = Library:CreateWindow({
+    Title = "Isle Script",
+    Footer = "by Likegenm",
+    ToggleKeybind = Enum.KeyCode.RightControl,
+    Center = true,
+    AutoShow = true
 })
 
 local Lighting = game:GetService("Lighting")
@@ -70,46 +62,40 @@ local spinEnabled = false
 local spinSpeed = 30
 local fullbrightEnabled = false
 
-local MainTab = Window:CreateTab({
-    Name = "Main",
-    Icon = "person",
-    ImageSource = "Material",
-    ShowTitle = true
-})
+local MainTab = Window:AddTab("Main", "zap")
 
-MainTab:CreateSection("Speed"):CreateToggle({
-    Name = "Speed Hack",
-    CurrentValue = false,
-    Flag = "SpeedToggle",
+local MovementBox = MainTab:AddLeftGroupbox("Movement")
+
+local SpeedToggle = MovementBox:AddToggle("SpeedToggle", {
+    Text = "Speed Hack",
+    Default = false,
     Callback = function(state)
         speedEnabled = state
     end
 })
 
-MainTab:CreateSection("Speed"):CreateSlider({
-    Name = "Speed Value",
-    Range = {0, 200},
-    Increment = 0.1,
-    CurrentValue = 50,
-    Flag = "SpeedSlider",
+MovementBox:AddSlider("SpeedSlider", {
+    Text = "Speed Value",
+    Default = 50,
+    Min = 0,
+    Max = 200,
+    Rounding = 1,
     Callback = function(value)
         speedValue = value
     end
 })
 
-MainTab:CreateSection("Movement"):CreateToggle({
-    Name = "Infinite Jump",
-    CurrentValue = false,
-    Flag = "InfJumpToggle",
+MovementBox:AddToggle("InfJumpToggle", {
+    Text = "Infinite Jump",
+    Default = false,
     Callback = function(state)
         infJumpEnabled = state
     end
 })
 
-MainTab:CreateSection("Movement"):CreateToggle({
-    Name = "Fly",
-    CurrentValue = false,
-    Flag = "FlyToggle",
+local FlyToggle = MovementBox:AddToggle("FlyToggle", {
+    Text = "Fly",
+    Default = false,
     Callback = function(state)
         flyEnabled = state
         if flyEnabled then
@@ -133,53 +119,72 @@ MainTab:CreateSection("Movement"):CreateToggle({
     end
 })
 
-MainTab:CreateSection("Movement"):CreateSlider({
-    Name = "Fly Speed",
-    Range = {0, 200},
-    Increment = 0.1,
-    CurrentValue = 50,
-    Flag = "FlySpeedSlider",
+MovementBox:AddSlider("FlySpeedSlider", {
+    Text = "Fly Speed",
+    Default = 50,
+    Min = 0,
+    Max = 200,
+    Rounding = 1,
     Callback = function(value)
         flySpeed = value
     end
 })
 
-MainTab:CreateSection("Movement"):CreateToggle({
-    Name = "Noclip",
-    CurrentValue = false,
-    Flag = "NoclipToggle",
+MovementBox:AddToggle("NoclipToggle", {
+    Text = "Noclip",
+    Default = false,
     Callback = function(state)
         noclipEnabled = state
     end
 })
 
-MainTab:CreateSection("Movement"):CreateToggle({
-    Name = "Spin",
-    CurrentValue = false,
-    Flag = "SpinToggle",
+MovementBox:AddToggle("SpinToggle", {
+    Text = "Spin",
+    Default = false,
     Callback = function(state)
         spinEnabled = state
     end
 })
 
-MainTab:CreateSection("Movement"):CreateSlider({
-    Name = "Spin Speed",
-    Range = {1, 100},
-    Increment = 1,
-    CurrentValue = 30,
-    Flag = "SpinSpeedSlider",
+MovementBox:AddSlider("SpinSpeedSlider", {
+    Text = "Spin Speed",
+    Default = 30,
+    Min = 1,
+    Max = 100,
+    Rounding = 1,
     Callback = function(value)
         spinSpeed = value
     end
 })
 
-MainTab:CreateSection("Teleport"):CreateButton({
-    Name = "Mouse Teleport (T)",
-    Callback = function()
+local TeleportBox = MainTab:AddRightGroupbox("Teleport")
+
+TeleportBox:AddButton({
+    Text = "Mouse Teleport (T)",
+    Func = function()
         if Character and HumanoidRootPart then
             local mouse = LocalPlayer:GetMouse()
             local target = mouse.Hit.Position
             HumanoidRootPart.CFrame = CFrame.new(target + Vector3.new(0, 3, 0))
+            Library:Notify("Mouse teleport!", 2)
+        end
+    end
+})
+
+TeleportBox:AddButton({
+    Text = "Save Pos",
+    Func = function()
+        _G.pos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+        Library:Notify("Position saved!", 3)
+    end
+})
+
+TeleportBox:AddButton({
+    Text = "Teleport to SavePos",
+    Func = function()
+        if _G.pos and Character and HumanoidRootPart then
+            HumanoidRootPart.CFrame = CFrame.new(_G.pos)
+            Library:Notify("Teleported to saved position!", 3)
         end
     end
 })
@@ -189,6 +194,7 @@ UserInputService.InputBegan:Connect(function(input)
         local mouse = LocalPlayer:GetMouse()
         local target = mouse.Hit.Position
         HumanoidRootPart.CFrame = CFrame.new(target + Vector3.new(0, 3, 0))
+        Library:Notify("Mouse teleport!", 2)
     end
 end)
 
@@ -273,19 +279,106 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-local VisualTab = Window:CreateTab({
-    Name = "Visual",
-    Icon = "visibility",
-    ImageSource = "Material",
-    ShowTitle = true
-})
+local TeleportTab = Window:AddTab("Teleport", "map-pin")
 
-VisualTab:CreateSection("Lighting")
+local ImportantBox = TeleportTab:AddLeftGroupbox("Important Locations")
 
-VisualTab:CreateToggle({
-    Name = "Fullbright",
-    CurrentValue = false,
-    Flag = "FullbrightToggle",
+local importantTeleports = {
+    {"Lair", Vector3.new(-1677.50, -16.46, -517.84)},
+    {"LightHouse", Vector3.new(-1545.85, 226.78, -198.82)},
+    {"Facility", Vector3.new(-1617.14, -41.38, -1534.31)},
+    {"Facility v2", Vector3.new(-1786.97, -193.03, -1368.30)},
+    {"Ship", Vector3.new(-340.64, 12.05, 894.64)},
+    {"Ship v2", Vector3.new(-344.97, 28.78, 844.50)},
+    {"Observatory", Vector3.new(467.98, 150.34, -1216.91)},
+    {"Dome", Vector3.new(-812.90, 303.50, -1373.33)},
+    {"Hangar", Vector3.new(-1618.50, 22.02, -2373.56)}
+}
+
+for _, btn in pairs(importantTeleports) do
+    ImportantBox:AddButton({
+        Text = btn[1],
+        Func = function()
+            if Character and HumanoidRootPart then
+                HumanoidRootPart.CFrame = CFrame.new(btn[2])
+                Library:Notify("Teleported to " .. btn[1], 3)
+            end
+        end
+    })
+end
+
+local ArtifactsBox = TeleportTab:AddRightGroupbox("Artifacts")
+
+local artifactTeleports = {
+    {"Artifact A", Vector3.new(-1347.18, -456.25, -1568.46)},
+    {"Artifact B", Vector3.new(1405.43, -249.38, -1851.34)},
+    {"Artifact C", Vector3.new(-753.34, 126.10, -3172.48)},
+    {"Artifact D", Vector3.new(-1767.44, -190.47, -1296.23)}
+}
+
+for _, btn in pairs(artifactTeleports) do
+    ArtifactsBox:AddButton({
+        Text = btn[1],
+        Func = function()
+            if Character and HumanoidRootPart then
+                HumanoidRootPart.CFrame = CFrame.new(btn[2])
+                Library:Notify("Teleported to " .. btn[1], 3)
+            end
+        end
+    })
+end
+
+local BuildingsBox = TeleportTab:AddLeftGroupbox("Buildings")
+
+local buildingTeleports = {
+    {"Military Camp", Vector3.new(-1069.08, 265.76, -1820.14)},
+    {"Docks", Vector3.new(-2003.32, 6.12, -1554.91)},
+    {"Generators", Vector3.new(548.08, -3.36, -543.73)},
+    {"Radio Station", Vector3.new(-1061.86, 499.19, -1391.46)},
+    {"GreenHouse", Vector3.new(-1365.93, 305.96, -1217.68)},
+    {"Hunting House", Vector3.new(-664.69, 139.33, -296.46)},
+    {"WareHouse", Vector3.new(-826.02, 62.19, -562.24)}
+}
+
+for _, btn in pairs(buildingTeleports) do
+    BuildingsBox:AddButton({
+        Text = btn[1],
+        Func = function()
+            if Character and HumanoidRootPart then
+                HumanoidRootPart.CFrame = CFrame.new(btn[2])
+                Library:Notify("Teleported to " .. btn[1], 3)
+            end
+        end
+    })
+end
+
+local ItemsBox = TeleportTab:AddRightGroupbox("Items & Misc")
+
+local itemTeleports = {
+    {"Drone", Vector3.new(-95.67, 233.37, -2790.43)},
+    {"Ballistic Vest", Vector3.new(-714.69, -5.38, 869.87)},
+    {"Gatling Room", Vector3.new(-1375.45, 179.03, -1501.44)}
+}
+
+for _, btn in pairs(itemTeleports) do
+    ItemsBox:AddButton({
+        Text = btn[1],
+        Func = function()
+            if Character and HumanoidRootPart then
+                HumanoidRootPart.CFrame = CFrame.new(btn[2])
+                Library:Notify("Teleported to " .. btn[1], 3)
+            end
+        end
+    })
+end
+
+local VisualTab = Window:AddTab("Visual", "eye")
+
+local LightingBox = VisualTab:AddLeftGroupbox("Lighting")
+
+LightingBox:AddToggle("FullbrightToggle", {
+    Text = "Fullbright",
+    Default = false,
     Callback = function(state)
         fullbrightEnabled = state
         if state then
@@ -305,11 +398,11 @@ VisualTab:CreateToggle({
     end
 })
 
-VisualTab:CreateSection("FPS Boost")
+local FPSBox = VisualTab:AddRightGroupbox("FPS Boost")
 
-VisualTab:CreateButton({
-    Name = "Remove Textures",
-    Callback = function()
+FPSBox:AddButton({
+    Text = "Remove Textures",
+    Func = function()
         for _, part in pairs(workspace:GetDescendants()) do
             if part:IsA("BasePart") then
                 if part:FindFirstChildWhichIsA("Decal") then
@@ -326,23 +419,25 @@ VisualTab:CreateButton({
                 part.Color = Color3.fromRGB(150, 150, 150)
             end
         end
+        Library:Notify("Textures removed!", 3)
     end
 })
 
-VisualTab:CreateButton({
-    Name = "Low Graphics",
-    Callback = function()
+FPSBox:AddButton({
+    Text = "Low Graphics",
+    Func = function()
         settings().Rendering.QualityLevel = 1
         game:GetService("Lighting").GlobalShadows = false
         game:GetService("Lighting").Technology = Enum.Technology.Legacy
+        Library:Notify("Low graphics enabled!", 3)
     end
 })
 
-VisualTab:CreateSection("Remove Effects")
+local EffectsBox = VisualTab:AddLeftGroupbox("Remove Effects")
 
-VisualTab:CreateButton({
-    Name = "Remove Blur/Water",
-    Callback = function()
+EffectsBox:AddButton({
+    Text = "Remove Blur/Water",
+    Func = function()
         task.spawn(function()
             while task.wait(0.1) do
                 if Camera then
@@ -358,218 +453,28 @@ VisualTab:CreateButton({
                 end
             end
         end)
+        Library:Notify("Blur/Water effects removed!", 3)
     end
 })
 
-VisualTab:CreateButton({
-    Name = "ESP Players",
-    Callback = function()
+EffectsBox:AddButton({
+    Text = "ESP Players",
+    Func = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/Yahahahau/Ultimate-Esp-v1/refs/heads/main/Ultimate%20esp%20v1.lua"))()
+        Library:Notify("ESP loaded!", 3)
     end
 })
 
-local TeleportTab = Window:CreateTab({
-    Name = "Teleport",
-    Icon = "location_on",
-    ImageSource = "Material",
-    ShowTitle = true
-})
+local MiscTab = Window:AddTab("Misc", "code")
 
-TeleportTab:CreateButton({
-    Name = "Save Pos",
-    Callback = function()
-        _G.pos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-    end
-})
+local ScriptsBox = MiscTab:AddLeftGroupbox("Scripts")
 
-TeleportTab:CreateButton({
-    Name = "Teleport to SavePos",
-    Callback = function()
-        if _G.pos then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.pos)
-        end
-    end
-})
-
-TeleportTab:CreateSection("Locations")
-
-local function teleportTo(position)
-    if Character and HumanoidRootPart then
-        HumanoidRootPart.CFrame = CFrame.new(position)
-    end
-end
-
-TeleportTab:CreateButton({
-    Name = "Lair: -1677.50, -16.46, -517.84",
-    Callback = function()
-        teleportTo(Vector3.new(-1677.50, -16.46, -517.84))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "LightHouse: -1545.85, 226.78, -198.82",
-    Callback = function()
-        teleportTo(Vector3.new(-1545.85, 226.78, -198.82))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Facility: -1617.14, -41.38, -1534.31",
-    Callback = function()
-        teleportTo(Vector3.new(-1617.14, -41.38, -1534.31))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Facility v2: -1786.97, -193.03, -1368.30",
-    Callback = function()
-        teleportTo(Vector3.new(-1786.97, -193.03, -1368.30))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Ship: -340.64, 12.05, 894.64",
-    Callback = function()
-        teleportTo(Vector3.new(-340.64, 12.05, 894.64))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Ship v2: -344.97, 28.78, 844.50",
-    Callback = function()
-        teleportTo(Vector3.new(-344.97, 28.78, 844.50))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Generators: 548.08, -3.36, -543.73",
-    Callback = function()
-        teleportTo(Vector3.new(548.08, -3.36, -543.73))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Observatory: 467.98, 150.34, -1216.91",
-    Callback = function()
-        teleportTo(Vector3.new(467.98, 150.34, -1216.91))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Dome: -812.90, 303.50, -1373.33",
-    Callback = function()
-        teleportTo(Vector3.new(-812.90, 303.50, -1373.33))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Hangar: -1618.50, 22.02, -2373.56",
-    Callback = function()
-        teleportTo(Vector3.new(-1618.50, 22.02, -2373.56))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Military Camp: -1069.08, 265.76, -1820.14",
-    Callback = function()
-        teleportTo(Vector3.new(-1069.08, 265.76, -1820.14))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Docks: -2003.32, 6.12, -1554.91",
-    Callback = function()
-        teleportTo(Vector3.new(-2003.32, 6.12, -1554.91))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Drone: -95.67, 233.37, -2790.43",
-    Callback = function()
-        teleportTo(Vector3.new(-95.67, 233.37, -2790.43))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Ballistic Vest: -714.69, -5.38, 869.87",
-    Callback = function()
-        teleportTo(Vector3.new(-714.69, -5.38, 869.87))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Artifact A: -1347.18, -456.25, -1568.46",
-    Callback = function()
-        teleportTo(Vector3.new(-1347.18, -456.25, -1568.46))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Artifact B: 1405.43, -249.38, -1851.34",
-    Callback = function()
-        teleportTo(Vector3.new(1405.43, -249.38, -1851.34))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Artifact C: -753.34, 126.10, -3172.48",
-    Callback = function()
-        teleportTo(Vector3.new(-753.34, 126.10, -3172.48))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Artifact D: -1767.44, -190.47, -1296.23",
-    Callback = function()
-        teleportTo(Vector3.new(-1767.44, -190.47, -1296.23))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Gatling Room: -1375.45, 179.03, -1501.44",
-    Callback = function()
-        teleportTo(Vector3.new(-1375.45, 179.03, -1501.44))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Hunting House: -664.69, 139.33, -296.46",
-    Callback = function()
-        teleportTo(Vector3.new(-664.69, 139.33, -296.46))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "WareHouse: -826.02, 62.19, -562.24",
-    Callback = function()
-        teleportTo(Vector3.new(-826.02, 62.19, -562.24))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "Radio Station: -1061.86, 499.19, -1391.46",
-    Callback = function()
-        teleportTo(Vector3.new(-1061.86, 499.19, -1391.46))
-    end
-})
-
-TeleportTab:CreateButton({
-    Name = "GreenHouse: -1365.93, 305.96, -1217.68",
-    Callback = function()
-        teleportTo(Vector3.new(-1365.93, 305.96, -1217.68))
-    end
-})
-
-local MicsTab = Window:CreateTab({
-    Name = "Mics",
-    Icon = "code",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-MicsTab:CreateButton({
-    Name = "Dex",
-    Callback = function()
+ScriptsBox:AddButton({
+    Text = "Dex Explorer",
+    Func = function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/RobloxianRoblox3200/Scripts_Roblox/refs/heads/main/Dex_Explorer_V4.lua'))()
+        Library:Notify("Dex Explorer loaded!", 3)
     end
 })
+
+Library:Notify("Isle script (by Likegenm) Press RightCTRL to open UI", 5)
