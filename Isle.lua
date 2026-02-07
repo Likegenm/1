@@ -1,3 +1,4 @@
+
 local Luna = loadstring(game:HttpGet("https://raw.nebulasoftworks.xyz/luna", true))()
 
 BlurModule = function() end
@@ -478,6 +479,55 @@ TeleportTab:CreateButton({
     end
 })
 
+TeleportTab:CreateButton({
+    Name = "Artifact C: -753.34, 126.10, -3172.48",
+    Callback = function()
+        teleportTo(Vector3.new(-753.34, 126.10, -3172.48))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Artifact D: -1767.44, -190.47, -1296.23",
+    Callback = function()
+        teleportTo(Vector3.new(-1767.44, -190.47, -1296.23))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Gatling Room: -1375.45, 179.03, -1501.44",
+    Callback = function()
+        teleportTo(Vector3.new(-1375.45, 179.03, -1501.44))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Hunting House: -664.69, 139.33, -296.46",
+    Callback = function()
+        teleportTo(Vector3.new(-664.69, 139.33, -296.46))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "WareHouse: -826.02, 62.19, -562.24",
+    Callback = function()
+        teleportTo(Vector3.new(-826.02, 62.19, -562.24))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "Radio Station: -1061.86, 499.19, -1391.46",
+    Callback = function()
+        teleportTo(Vector3.new(-1061.86, 499.19, -1391.46))
+    end
+})
+
+TeleportTab:CreateButton({
+    Name = "GreenHouse: -1365.93, 305.96, -1217.68",
+    Callback = function()
+        teleportTo(Vector3.new(-1365.93, 305.96, -1217.68))
+    end
+})
+
 local MicsTab = Window:CreateTab({
     Name = "Mics",
     Icon = "code",
@@ -489,5 +539,12 @@ MicsTab:CreateButton({
     Name = "Dex",
     Callback = function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/RobloxianRoblox3200/Scripts_Roblox/refs/heads/main/Dex_Explorer_V4.lua'))()
+    end
+})
+
+MicsTab:CreateButton({
+    Name = "Inf Yield",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
     end
 })
