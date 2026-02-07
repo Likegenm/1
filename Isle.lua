@@ -1,4 +1,3 @@
-
 local Luna = loadstring(game:HttpGet("https://raw.nebulasoftworks.xyz/luna", true))()
 
 BlurModule = function() end
@@ -306,6 +305,39 @@ VisualTab:CreateToggle({
     end
 })
 
+VisualTab:CreateSection("FPS Boost")
+
+VisualTab:CreateButton({
+    Name = "Remove Textures",
+    Callback = function()
+        for _, part in pairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") then
+                if part:FindFirstChildWhichIsA("Decal") then
+                    for _, decal in pairs(part:GetChildren()) do
+                        if decal:IsA("Decal") then
+                            decal:Destroy()
+                        end
+                    end
+                end
+                if part:FindFirstChildOfClass("Texture") then
+                    part.Texture = ""
+                end
+                part.Material = Enum.Material.Plastic
+                part.Color = Color3.fromRGB(150, 150, 150)
+            end
+        end
+    end
+})
+
+VisualTab:CreateButton({
+    Name = "Low Graphics",
+    Callback = function()
+        settings().Rendering.QualityLevel = 1
+        game:GetService("Lighting").GlobalShadows = false
+        game:GetService("Lighting").Technology = Enum.Technology.Legacy
+    end
+})
+
 VisualTab:CreateSection("Remove Effects")
 
 VisualTab:CreateButton({
@@ -539,12 +571,5 @@ MicsTab:CreateButton({
     Name = "Dex",
     Callback = function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/RobloxianRoblox3200/Scripts_Roblox/refs/heads/main/Dex_Explorer_V4.lua'))()
-    end
-})
-
-MicsTab:CreateButton({
-    Name = "Inf Yield",
-    Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
     end
 })
