@@ -509,11 +509,22 @@ EffectsBox:AddButton({
     end
 })
 
+
 EffectsBox:AddButton({
-    Text = "ESP Players",
+    Text = "ESP ALL(AutoFarm C Artifact)",
     Func = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Yahahahau/Ultimate-Esp-v1/refs/heads/main/Ultimate%20esp%20v1.lua"))()
-        Library:Notify("ESP loaded!", 3)
+        _G.CP = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-753.34, 126.10, -3172.48) + Vector3.new(0, 5, 0)
+        wait(0.5)
+
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+        wait(0.1)
+        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+        
+        if _G.CP then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.CP)
+        end
+        Library:Notify("Artifact C farmed!", 3)
     end
 })
 
