@@ -514,18 +514,14 @@ EffectsBox:AddButton({
     Text = "ESP ALL(AutoFarm C Artifact)",
     Func = function()
         _G.CP = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-753.34, 126.10, -3172.48) + Vector3.new(0, 5, 0)
-        wait(0.5)
-
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
-        wait(0.1)
-        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
-        
-        if _G.CP then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.CP)
-        end
-        Library:Notify("Artifact C farmed!", 3)
-    end
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-753.34, 126.10, -3172.48)
+		wait(0.3)
+		game:GetService("VirtualInputManager"):SendKeyEvent(true,"E",false,game)
+		wait(0.1)
+		game:GetService("VirtualInputManager"):SendKeyEvent(false,"E",false,game)
+		wait(0.1)
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.CP)
+	end
 })
 
 local MiscTab = Window:AddTab("Misc", "code")
