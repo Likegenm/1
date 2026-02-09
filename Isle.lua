@@ -515,12 +515,24 @@ EffectsBox:AddButton({
     Func = function()
         _G.CP = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-753.34, 126.10, -3172.48)
-		wait(0.3)
+		wait(0.5)
 		game:GetService("VirtualInputManager"):SendKeyEvent(true,"E",false,game)
 		wait(0.1)
 		game:GetService("VirtualInputManager"):SendKeyEvent(false,"E",false,game)
 		wait(0.1)
 		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.CP)
+wait(0.5)
+local VIM = game:GetService("VirtualInputManager")
+for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+    if item.Name:find("Artifact C") then
+        item.Parent = game.Players.LocalPlayer.Character
+        wait(0.2)
+        VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+        wait(0.1)
+        VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+        break
+    end
+end
 	end
 })
 
