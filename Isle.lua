@@ -331,6 +331,26 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
+local SpamBoardBox = MainTab:AddLeftGroupbox("Spammer Keycode")
+
+local eSpammerRunning = false
+
+SpamBoardBox:AddToggle("ESpammerToggle", {
+    Text = "E Spammer",
+    Default = false,
+    Callback = function(state)
+        eSpammerRunning = state
+        if state then
+            spawn(function()
+                while eSpammerRunning do
+                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+                    wait(0.01)
+                end
+            end)
+        end
+    end
+})
 local TeleportTab = Window:AddTab("Teleport", "map-pin")
 
 local ImportantBox = TeleportTab:AddLeftGroupbox("Important Locations")
