@@ -381,6 +381,32 @@ end
     end
 })
 
+AutoFarmBox:AddButton({
+    Text = "AutoFarm Owl Observer",
+    Func = function()
+		_G.AOO = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1382.51, 178.06, -1487.28) + Vector3.new(0, 5, 0)
+		wait(0.5)
+		game:GetService("VirtualInputManager"):SendKeyEvent(true,"E",false,game)
+		wait(0.1)
+		game:GetService("VirtualInputManager"):SendKeyEvent(false,"E",false,game)
+		wait(0.1)
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.AOO)
+		wait(0.1)
+		local VIM = game:GetService("VirtualInputManager")
+for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+    if item.Name:find("Owl Observer") then
+        item.Parent = game.Players.LocalPlayer.Character
+        wait(0.2)
+        VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+        wait(0.1)
+        VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+        break
+    end
+end
+	end
+})
+
 
 
 local TeleportTab = Window:AddTab("Teleport", "map-pin")
