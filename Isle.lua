@@ -1,4 +1,3 @@
-
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
@@ -12,36 +11,11 @@ local Window = Library:CreateWindow({
 Library.ShowCustomCursor = false
 
 local Lighting = game:GetService("Lighting")
-for _, effect in pairs(Lighting:GetChildren()) do
-    if effect:IsA("DepthOfFieldEffect") or effect:IsA("BlurEffect") then
-        effect:Destroy()
-    end
-end
-
-for _, script in pairs(game:GetDescendants()) do
-    if script:IsA("LocalScript") or script:IsA("Script") then
-        if script.Name == "BlurModule" or (script.Source and script.Source:find("DepthOfField")) then
-            script:Destroy()
-        end
-    end
-end
-
-for _, folder in pairs(workspace.CurrentCamera:GetDescendants()) do
-    if folder:IsA("Folder") and (folder.Name == "LunaBlur" or folder.Name:find("Blur")) then
-        folder:Destroy()
-    end
-end
-
-for _, part in pairs(workspace:GetDescendants()) do
-    if part:IsA("Part") and part.Material == Enum.Material.Glass then
-        part:Destroy()
-    end
-end
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -65,6 +39,7 @@ local spinEnabled = false
 local spinSpeed = 30
 local fullbrightEnabled = false
 local platformEnabled = false
+local fovValue = 70
 
 local platformConnection
 
@@ -206,6 +181,20 @@ MovementBox:AddSlider("SpinSpeedSlider", {
     end
 })
 
+MovementBox:AddSlider("FOVSlider", {
+    Text = "FOV Changer",
+    Default = 70,
+    Min = 0,
+    Max = 120,
+    Rounding = 1,
+    Callback = function(value)
+        fovValue = value
+        if workspace.CurrentCamera then
+            workspace.CurrentCamera.FieldOfView = value
+        end
+    end
+})
+
 local TeleportBox = MainTab:AddRightGroupbox("Teleport")
 
 TeleportBox:AddButton({
@@ -330,6 +319,10 @@ RunService.Heartbeat:Connect(function()
     if platformEnabled then
         updatePlatform()
     end
+    
+    if workspace.CurrentCamera then
+        workspace.CurrentCamera.FieldOfView = fovValue
+    end
 end)
 
 local SpamBoardBox = MainTab:AddLeftGroupbox("Spammer Keycode")
@@ -361,23 +354,23 @@ AutoFarmBox:AddButton({
 		_G.AD = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-95.67, 233.37, -2790.43) + Vector3.new(0, 5, 0)
 		wait(0.5)
-		game:GetService("VirtualInputManager"):SendKeyEvent(true,"E",false,game)
+		game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
 		wait(0.1)
-		game:GetService("VirtualInputManager"):SendKeyEvent(false,"E",false,game)
+		game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
 		wait(0.1)
 		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.AD)
 		wait(0.1)
 		local VIM = game:GetService("VirtualInputManager")
-for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-    if item.Name:find("Assistant Drone") then
-        item.Parent = game.Players.LocalPlayer.Character
-        wait(0.2)
-        VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
-        wait(0.1)
-        VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
-        break
-    end
-end
+        for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            if item.Name:find("Assistant Drone") then
+                item.Parent = game.Players.LocalPlayer.Character
+                wait(0.2)
+                VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+                wait(0.1)
+                VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+                break
+            end
+        end
     end
 })
 
@@ -387,27 +380,25 @@ AutoFarmBox:AddButton({
 		_G.AOO = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1382.51, 178.06, -1487.28) + Vector3.new(0, 5, 0)
 		wait(0.5)
-		game:GetService("VirtualInputManager"):SendKeyEvent(true,"E",false,game)
+		game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
 		wait(0.1)
-		game:GetService("VirtualInputManager"):SendKeyEvent(false,"E",false,game)
+		game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
 		wait(0.1)
 		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.AOO)
 		wait(0.1)
 		local VIM = game:GetService("VirtualInputManager")
-for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-    if item.Name:find("Owl Observer") then
-        item.Parent = game.Players.LocalPlayer.Character
-        wait(0.2)
-        VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
-        wait(0.1)
-        VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
-        break
-    end
-end
+        for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            if item.Name:find("Owl Observer") then
+                item.Parent = game.Players.LocalPlayer.Character
+                wait(0.2)
+                VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+                wait(0.1)
+                VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+                break
+            end
+        end
 	end
 })
-
-
 
 local TeleportTab = Window:AddTab("Teleport", "map-pin")
 
@@ -515,15 +506,23 @@ LightingBox:AddToggle("FullbrightToggle", {
             task.spawn(function()
                 while fullbrightEnabled do
                     Lighting.GlobalShadows = false
-                    Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+                    Lighting.FogEnd = 100000
                     Lighting.Brightness = 2
+                    Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+                    Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+                    Lighting.ColorShift_Bottom = Color3.fromRGB(255, 255, 255)
+                    Lighting.ColorShift_Top = Color3.fromRGB(255, 255, 255)
                     task.wait(0.1)
                 end
             end)
         else
             Lighting.GlobalShadows = true
-            Lighting.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
+            Lighting.FogEnd = 50000
             Lighting.Brightness = 1
+            Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+            Lighting.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
+            Lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+            Lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
         end
     end
 })
@@ -550,6 +549,188 @@ FPSBox:AddButton({
             end
         end
         Library:Notify("Textures removed!", 3)
+    end
+})
+
+local XRayBox = VisualTab:AddLeftGroupbox("X-Ray")
+
+local xrayEnabled = false
+local originalMaterials = {}
+
+XRayBox:AddToggle("XRayToggle", {
+    Text = "X-Ray",
+    Default = false,
+    Callback = function(state)
+        xrayEnabled = state
+        if state then
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("BasePart") and not v:IsDescendantOf(Players.LocalPlayer.Character) then
+                    if not originalMaterials[v] then
+                        originalMaterials[v] = v.Material
+                    end
+                    if v.Transparency < 0.5 then
+                        v.Transparency = 0.5
+                    end
+                    v.Material = Enum.Material.ForceField
+                end
+            end
+        else
+            for v, material in pairs(originalMaterials) do
+                if v and v.Parent then
+                    v.Material = material
+                    if v.Transparency == 0.5 then
+                        v.Transparency = 0
+                    end
+                end
+            end
+            originalMaterials = {}
+        end
+    end
+})
+
+XRayBox:AddButton({
+    Text = "Refresh X-Ray",
+    Func = function()
+        if xrayEnabled then
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("BasePart") and not v:IsDescendantOf(Players.LocalPlayer.Character) then
+                    if not originalMaterials[v] then
+                        originalMaterials[v] = v.Material
+                    end
+                    if v.Transparency < 0.5 then
+                        v.Transparency = 0.5
+                    end
+                    v.Material = Enum.Material.ForceField
+                end
+            end
+            Library:Notify("X-Ray refreshed!", 3)
+        end
+    end
+})
+
+local AmbientBox = VisualTab:AddLeftGroupbox("Ambient")
+
+local ambientEnabled = false
+
+AmbientBox:AddToggle("AmbientToggle", {
+    Text = "Custom Ambient",
+    Default = false,
+    Callback = function(state)
+        ambientEnabled = state
+        if state then
+            Lighting.Ambient = Color3.fromRGB(255, 200, 200)
+            Lighting.OutdoorAmbient = Color3.fromRGB(255, 200, 200)
+            Lighting.ColorShift_Top = Color3.fromRGB(255, 200, 200)
+            Lighting.ColorShift_Bottom = Color3.fromRGB(255, 200, 200)
+            Lighting.Brightness = 2.5
+        else
+            Lighting.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
+            Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+            Lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+            Lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+            Lighting.Brightness = 1
+        end
+    end
+})
+
+AmbientBox:AddSlider("RedSlider", {
+    Text = "Red",
+    Default = 255,
+    Min = 0,
+    Max = 255,
+    Rounding = 0,
+    Callback = function(value)
+        if ambientEnabled then
+            local current = Lighting.Ambient
+            Lighting.Ambient = Color3.fromRGB(value, current.G * 255, current.B * 255)
+            Lighting.OutdoorAmbient = Color3.fromRGB(value, current.G * 255, current.B * 255)
+            Lighting.ColorShift_Top = Color3.fromRGB(value, current.G * 255, current.B * 255)
+            Lighting.ColorShift_Bottom = Color3.fromRGB(value, current.G * 255, current.B * 255)
+        end
+    end
+})
+
+AmbientBox:AddSlider("GreenSlider", {
+    Text = "Green",
+    Default = 200,
+    Min = 0,
+    Max = 255,
+    Rounding = 0,
+    Callback = function(value)
+        if ambientEnabled then
+            local current = Lighting.Ambient
+            Lighting.Ambient = Color3.fromRGB(current.R * 255, value, current.B * 255)
+            Lighting.OutdoorAmbient = Color3.fromRGB(current.R * 255, value, current.B * 255)
+            Lighting.ColorShift_Top = Color3.fromRGB(current.R * 255, value, current.B * 255)
+            Lighting.ColorShift_Bottom = Color3.fromRGB(current.R * 255, value, current.B * 255)
+        end
+    end
+})
+
+AmbientBox:AddSlider("BlueSlider", {
+    Text = "Blue",
+    Default = 200,
+    Min = 0,
+    Max = 255,
+    Rounding = 0,
+    Callback = function(value)
+        if ambientEnabled then
+            local current = Lighting.Ambient
+            Lighting.Ambient = Color3.fromRGB(current.R * 255, current.G * 255, value)
+            Lighting.OutdoorAmbient = Color3.fromRGB(current.R * 255, current.G * 255, value)
+            Lighting.ColorShift_Top = Color3.fromRGB(current.R * 255, current.G * 255, value)
+            Lighting.ColorShift_Bottom = Color3.fromRGB(current.R * 255, current.G * 255, value)
+        end
+    end
+})
+
+AmbientBox:AddButton({
+    Text = "Reset Ambient",
+    Func = function()
+        Lighting.Ambient = Color3.fromRGB(255, 200, 200)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 200, 200)
+        Lighting.ColorShift_Top = Color3.fromRGB(255, 200, 200)
+        Lighting.ColorShift_Bottom = Color3.fromRGB(255, 200, 200)
+        Library:Notify("Ambient reset!", 3)
+    end
+})
+
+local rainbowAmbientEnabled = false
+local rainbowConnection
+
+AmbientBox:AddToggle("RainbowAmbientToggle", {
+    Text = "Rainbow Ambient",
+    Default = false,
+    Callback = function(state)
+        rainbowAmbientEnabled = state
+        if state then
+            if ambientEnabled then
+                ambientEnabled = false
+            end
+            local hue = 0
+            if rainbowConnection then
+                rainbowConnection:Disconnect()
+            end
+            rainbowConnection = RunService.Heartbeat:Connect(function()
+                hue = (hue + 0.001) % 1
+                local color = Color3.fromHSV(hue, 1, 1)
+                Lighting.Ambient = color
+                Lighting.OutdoorAmbient = color
+                Lighting.ColorShift_Top = color
+                Lighting.ColorShift_Bottom = color
+                Lighting.Brightness = 2
+            end)
+        else
+            if rainbowConnection then
+                rainbowConnection:Disconnect()
+                rainbowConnection = nil
+            end
+            Lighting.Ambient = Color3.fromRGB(0.5, 0.5, 0.5)
+            Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+            Lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
+            Lighting.ColorShift_Bottom = Color3.fromRGB(0, 0, 0)
+            Lighting.Brightness = 1
+        end
     end
 })
 
@@ -583,34 +764,60 @@ EffectsBox:AddButton({
                 end
             end
         end)
+
+		local Lighting = game:GetService("Lighting")
+        for _, effect in pairs(Lighting:GetChildren()) do
+            if effect:IsA("DepthOfFieldEffect") or effect:IsA("BlurEffect") then
+                effect:Destroy()
+            end
+        end
+
+        for _, script in pairs(game:GetDescendants()) do
+            if script:IsA("LocalScript") or script:IsA("Script") then
+                if script.Name == "BlurModule" or (script.Source and script.Source:find("DepthOfField")) then
+                    script:Destroy()
+                end
+            end
+        end
+
+        for _, folder in pairs(workspace.CurrentCamera:GetDescendants()) do
+            if folder:IsA("Folder") and (folder.Name == "LunaBlur" or folder.Name:find("Blur")) then
+                folder:Destroy()
+            end
+        end
+
+        for _, part in pairs(workspace:GetDescendants()) do
+            if part:IsA("Part") and part.Material == Enum.Material.Glass then
+                part:Destroy()
+            end
+        end
         Library:Notify("Blur/Water effects removed!", 3)
     end
 })
-
 
 EffectsBox:AddButton({
     Text = "ESP ALL(AutoFarm C Artifact)",
     Func = function()
         _G.CP = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-753.34, 126.10, -3172.48)
+		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-753.34, 126.10, -3172.48) + Vector3.new(0, 5, 0)
 		wait(0.5)
-		game:GetService("VirtualInputManager"):SendKeyEvent(true,"E",false,game)
+		game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
 		wait(0.1)
-		game:GetService("VirtualInputManager"):SendKeyEvent(false,"E",false,game)
+		game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
 		wait(0.1)
 		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.CP)
-wait(0.5)
-local VIM = game:GetService("VirtualInputManager")
-for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-    if item.Name:find("Artifact C") then
-        item.Parent = game.Players.LocalPlayer.Character
-        wait(0.2)
-        VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
-        wait(0.1)
-        VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
-        break
-    end
-end
+        wait(0.5)
+        local VIM = game:GetService("VirtualInputManager")
+        for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            if item.Name:find("Artifact C") then
+                item.Parent = game.Players.LocalPlayer.Character
+                wait(0.2)
+                VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+                wait(0.1)
+                VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+                break
+            end
+        end
 	end
 })
 
