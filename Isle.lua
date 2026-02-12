@@ -1,4 +1,3 @@
-
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
@@ -635,6 +634,17 @@ XRayBox:AddButton({
     end
 })
 
+local CameraBox = VisualTab:AddLeftGroupbox("Camera")
+
+CameraBox:AddButton({
+    Text = "Inf Zoom",
+    Func = function()
+        LocalPlayer.CameraMaxZoomDistance = 10000000000
+        LocalPlayer.CameraMinZoomDistance = 0
+        Library:Notify("Inf Zoom enabled!", 3)
+    end
+})
+
 local AmbientBox = VisualTab:AddLeftGroupbox("Ambient")
 
 local ambientEnabled = false
@@ -907,5 +917,4 @@ PlatformBox:AddButton({
 })
 
 Library:Notify("Isle script (by Likegenm) Press RightCTRL to open UI", 5)
-
 
