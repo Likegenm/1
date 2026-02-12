@@ -1,3 +1,4 @@
+
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
@@ -398,6 +399,32 @@ AutoFarmBox:AddButton({
             end
         end
 	end
+})
+
+AutoFarmBox:AddButton({
+    Text = "AutoFarm Katana/Steel Sword",
+    Func = function()
+        _G.KP = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1832.76, -188.49, -1277.78) + Vector3.new(0, 5, 0)
+        wait(0.5)
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+        wait(0.1)
+        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+        wait(0.1)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.KP)
+        wait(0.5)
+        local VIM = game:GetService("VirtualInputManager")
+        for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            if item.Name:find("Katana") or item.Name:find("Steel Sword") then
+                item.Parent = game.Players.LocalPlayer.Character
+                wait(0.2)
+                VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+                wait(0.1)
+                VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+                break
+            end
+        end
+    end
 })
 
 local TeleportTab = Window:AddTab("Teleport", "map-pin")
@@ -880,3 +907,5 @@ PlatformBox:AddButton({
 })
 
 Library:Notify("Isle script (by Likegenm) Press RightCTRL to open UI", 5)
+
+
