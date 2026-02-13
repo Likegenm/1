@@ -1,90 +1,22 @@
---[[
-БИБЛИОТЕКА: Kavo
-## LocalPlayer
-# Infjump
-Name = InfJumps
-через велосити и регулятор прыжка
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
-# Speedhack
-уведосление через StarterGui что функция не сделана тк Bypass AC не настроен на такое
+local Window = Library:CreateWindow({
+    Title = "Likegenm",
+    Footer = "BloxStike",
+    ToggleKeybind = Enum.KeyCode.RightControl,
+    Center = true,
+    AutoShow = true
+})
 
-# Fly
-как и со спидхаком
+local LPTab = Window:AddTab("LocalPlayer", "user")
 
-# AntiFall
-local antiFallEnabled = true
-local RAY_DISTANCE = 50
+local VisualTab = Window:AddTab("Visual", "eye")
 
-game:GetService("RunService").Heartbeat:Connect(function()
-    if not antiFallEnabled then return end
-    
-    local char = game.Players.LocalPlayer.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local velocityY = hrp.Velocity.Y
-            
-            if velocityY < -20 then
-                local rayOrigin = hrp.Position
-                local rayDirection = Vector3.new(0, -RAY_DISTANCE, 0)
-                local raycastParams = RaycastParams.new()
-                raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-                raycastParams.FilterDescendantsInstances = {char}
-                
-                local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-                
-                if raycastResult then
-                    local distanceToGround = (rayOrigin - raycastResult.Position).Y
-                    
-                    if distanceToGround > 0 and distanceToGround <= 5 then
-                        antiFallEnabled = false
-                        
-                        hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
-                        hrp.Position = Vector3.new(hrp.Position.X, raycastResult.Position.Y + 5, hrp.Position.Z)
-                        
-                        task.wait(0.01)
-                        
-                        hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
-                        antiFallEnabled = true
-                    end
-                end
-            end
-        end
-    end
-end)
+local ExploitsTab = Window:AddTab("Exploits", "zap")
 
- # Spin
-spawn(function()
-    while true do
-        game:GetService("RunService").Heartbeat:Wait()
-        local char = game.Players.LocalPlayer.Character
-        if char then
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(360), 0)
-            end
-        end
-    end
-end)
-и регулятор
+local Tabbox1 = LPTab:AddLeftTabbox("Speed + JumpPower")
 
-# Noclip
-game:GetService("RunService").Stepped:Connect(function()
-    local char = game.Players.LocalPlayer.Character
-    if char then
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
-end)
+local Tab1 = Tabbox1:AddTab("Speed")
 
-## AutoGUI
-# AutoVote (выбор или K или Y)
-if game.Players.LocalPlayer.PlayerGui.VoteKick.Visible then
-game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.K, false, game)
-wait(0.01)
-game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.K, false, game)
-ну или Y
-# 
+local Tab2 = Tabbox1:AddTab("Jump")
+
