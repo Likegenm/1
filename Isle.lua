@@ -1,3 +1,4 @@
+
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
@@ -916,5 +917,21 @@ PlatformBox:AddButton({
     end
 })
 
-Library:Notify("Isle script (by Likegenm) Press RightCTRL to open UI", 5)
+local AntiAimBox = ETab:AddLeftGroupbox("AntiAim")
 
+AntiAimBox:AddButton({
+	Text = "AntiAim(Players)",
+	Func = function()
+		local player = game.Players.LocalPlayer
+
+		if player.Character then
+			Instance.new("ForceField", player.Character)
+		end
+
+		player.CharacterAdded:Connect(function(char)
+			Instance.new("ForceField", char)
+		end)
+	end
+})
+
+Library:Notify("Isle script (by Likegenm) Press RightCTRL to open UI", 5)
