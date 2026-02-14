@@ -1,4 +1,3 @@
-
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
@@ -87,12 +86,48 @@ local function stopPlatform()
     end
 end
 
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.V then
+        speedEnabled = not speedEnabled
+        Library:Notify("Speed: " .. (speedEnabled and "ON" or "OFF"), 2)
+    elseif input.KeyCode == Enum.KeyCode.J then
+        infJumpEnabled = not infJumpEnabled
+        Library:Notify("Infinite Jump: " .. (infJumpEnabled and "ON" or "OFF"), 2)
+    elseif input.KeyCode == Enum.KeyCode.N then
+        noclipEnabled = not noclipEnabled
+        Library:Notify("Noclip: " .. (noclipEnabled and "ON" or "OFF"), 2)
+    elseif input.KeyCode == Enum.KeyCode.Y then
+        flyEnabled = not flyEnabled
+        if flyEnabled then
+            if Character and HumanoidRootPart then
+                flyBodyGyro = Instance.new("BodyGyro")
+                flyBodyGyro.P = 10000
+                flyBodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                flyBodyGyro.CFrame = HumanoidRootPart.CFrame
+                flyBodyGyro.Parent = HumanoidRootPart
+                Humanoid.PlatformStand = true
+            end
+        else
+            if flyBodyGyro then
+                flyBodyGyro:Destroy()
+                flyBodyGyro = nil
+            end
+            if Character and Humanoid then
+                Humanoid.PlatformStand = false
+            end
+        end
+        Library:Notify("Fly: " .. (flyEnabled and "ON" or "OFF"), 2)
+    end
+end)
+
 local MainTab = Window:AddTab("Main", "zap")
 
 local MovementBox = MainTab:AddLeftGroupbox("Movement")
 
 local SpeedToggle = MovementBox:AddToggle("SpeedToggle", {
-    Text = "Speed Hack",
+    Text = "Speed Hack [V]",
     Default = false,
     Callback = function(state)
         speedEnabled = state
@@ -111,7 +146,7 @@ MovementBox:AddSlider("SpeedSlider", {
 })
 
 MovementBox:AddToggle("InfJumpToggle", {
-    Text = "Infinite Jump",
+    Text = "Infinite Jump [J]",
     Default = false,
     Callback = function(state)
         infJumpEnabled = state
@@ -119,7 +154,7 @@ MovementBox:AddToggle("InfJumpToggle", {
 })
 
 local FlyToggle = MovementBox:AddToggle("FlyToggle", {
-    Text = "Fly",
+    Text = "Fly [Y]",
     Default = false,
     Callback = function(state)
         flyEnabled = state
@@ -156,7 +191,7 @@ MovementBox:AddSlider("FlySpeedSlider", {
 })
 
 MovementBox:AddToggle("NoclipToggle", {
-    Text = "Noclip",
+    Text = "Noclip [N]",
     Default = false,
     Callback = function(state)
         noclipEnabled = state
