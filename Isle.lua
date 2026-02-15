@@ -122,6 +122,89 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+local InfoTab = Window:AddTab("Info", "info")
+
+local LeftBox = InfoTab:AddLeftGroupbox("Player Info")
+
+local playerId = LocalPlayer.UserId
+local playerName = LocalPlayer.Name
+local playerDisplayName = LocalPlayer.DisplayName
+local accountAge = LocalPlayer.AccountAge
+
+-- Картинка игрока большая
+local imageHolder = LeftBox:AddLabel("")
+imageHolder.TextLabel.Size = UDim2.new(1, 0, 0, 200)
+imageHolder.TextLabel.Text = ""
+
+local image = Instance.new("ImageLabel")
+image.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. playerId .. "&width=720&height=720&format=png"
+image.Size = UDim2.new(0, 200, 0, 200)
+image.Position = UDim2.new(0.5, -100, 0, 0)
+image.BackgroundTransparency = 1
+image.Parent = imageHolder.TextLabel
+
+LeftBox:AddDivider()
+
+local idLabel = LeftBox:AddLabel("Player ID: " .. playerId)
+idLabel.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+local nameLabel = LeftBox:AddLabel("Username: " .. playerName)
+nameLabel.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+local displayNameLabel = LeftBox:AddLabel("Display Name: " .. playerDisplayName)
+displayNameLabel.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+local ageLabel = LeftBox:AddLabel("Account Age: " .. accountAge .. " days")
+ageLabel.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+LeftBox:AddDivider()
+
+local ping = 0
+local fps = 0
+local lastIteration, frameCount = tick(), 0
+
+local pingLabel = LeftBox:AddLabel("Ping: " .. ping .. " ms")
+pingLabel.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+local fpsLabel = LeftBox:AddLabel("FPS: " .. fps)
+fpsLabel.TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    frameCount = frameCount + 1
+    
+    if tick() - lastIteration >= 1 then
+        fps = frameCount
+        frameCount = 0
+        lastIteration = tick()
+        
+        ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+        
+        pingLabel.TextLabel.Text = "Ping: " .. ping .. " ms"
+        fpsLabel.TextLabel.Text = "FPS: " .. fps
+    end
+end)
+
+LeftBox:AddDivider()
+
+local RightBox = InfoTab:AddRightGroupbox("Credits")
+
+local creditsLabel = RightBox:AddLabel("Credits:")
+creditsLabel.TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+local allLabel = RightBox:AddLabel("All: Likegenm")
+allLabel.TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+local discordLabel = RightBox:AddLabel("Discord: https://discord.gg/K3nnT6yt")
+discordLabel.TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+RightBox:AddButton({
+    Text = "Copy Discord Link",
+    Func = function()
+        setclipboard("https://discord.gg/K3nnT6yt")
+        Library:Notify("Discord link copied!", 2)
+    end
+})
+
 local MainTab = Window:AddTab("Main", "zap")
 
 local MovementBox = MainTab:AddLeftGroupbox("Movement")
@@ -868,30 +951,303 @@ EffectsBox:AddButton({
     end
 })
 
-EffectsBox:AddButton({
-    Text = "ESP ALL(AutoFarm C Artifact)",
-    Func = function()
-        _G.CP = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-753.34, 126.10, -3172.48) + Vector3.new(0, 5, 0)
-		wait(0.5)
-		game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, nil)
-		wait(0.1)
-		game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, nil)
-		wait(0.1)
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(_G.CP)
-        wait(0.5)
-        local VIM = game:GetService("VirtualInputManager")
-        for _, item in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-            if item.Name:find("Artifact C") then
-                item.Parent = game.Players.LocalPlayer.Character
-                wait(0.2)
-                VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
-                wait(0.1)
-                VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
-                break
+local itemEspEnabled = false
+local espObjects = {}
+local espConnections = {}
+
+local function createItemESP(item)
+    if espObjects[item] then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ItemESP"
+    highlight.FillColor = Color3.fromRGB(255, 255, 0)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineColor = Color3.fromRGB(255, 200, 0)
+    highlight.OutlineTransparency = 0
+    highlight.Parent = item
+    highlight.Enabled = true
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ItemNameGUI"
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Parent = item
+    
+    local text = Instance.new("TextLabel")
+    text.Name = "ItemName"
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.fromRGB(255, 255, 255)
+    text.TextStrokeTransparency = 0
+    text.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    text.Font = Enum.Font.GothamBold
+    text.TextSize = 16
+    text.Text = item.Name
+    text.Parent = billboard
+    
+    espObjects[item] = {
+        highlight = highlight,
+        billboard = billboard
+    }
+end
+
+local function removeItemESP(item)
+    if espObjects[item] then
+        if espObjects[item].highlight then
+            espObjects[item].highlight:Destroy()
+        end
+        if espObjects[item].billboard then
+            espObjects[item].billboard:Destroy()
+        end
+        espObjects[item] = nil
+    end
+end
+
+local function clearAllESP()
+    for item, _ in pairs(espObjects) do
+        removeItemESP(item)
+    end
+    espObjects = {}
+end
+
+local function refreshItemESP()
+    if not itemEspEnabled then return end
+    
+    clearAllESP()
+    
+    local toolsFolder = workspace:FindFirstChild("Map")
+    if toolsFolder then
+        toolsFolder = toolsFolder:FindFirstChild("Ignore")
+        if toolsFolder then
+            toolsFolder = toolsFolder:FindFirstChild("Tools")
+            if toolsFolder then
+                for _, item in pairs(toolsFolder:GetChildren()) do
+                    if item:IsA("Tool") or item:IsA("Part") or item:IsA("Model") then
+                        createItemESP(item)
+                    end
+                end
             end
         end
-	end
+    end
+end
+
+local function onItemAdded(item)
+    if itemEspEnabled then
+        if item.Parent and item.Parent.Name == "Tools" then
+            createItemESP(item)
+        end
+    end
+end
+
+local function onItemRemoved(item)
+    if espObjects[item] then
+        removeItemESP(item)
+    end
+end
+
+EffectsBox:AddToggle("ItemESPToggle", {
+    Text = "Items ESP (Yellow)",
+    Default = false,
+    Callback = function(state)
+        itemEspEnabled = state
+        
+        if state then
+            refreshItemESP()
+            
+            for _, conn in pairs(espConnections) do
+                conn:Disconnect()
+            end
+            espConnections = {}
+            
+            local toolsFolder = workspace:FindFirstChild("Map")
+            if toolsFolder then
+                toolsFolder = toolsFolder:FindFirstChild("Ignore")
+                if toolsFolder then
+                    toolsFolder = toolsFolder:FindFirstChild("Tools")
+                    if toolsFolder then
+                        espConnections[#espConnections+1] = toolsFolder.ChildAdded:Connect(onItemAdded)
+                        espConnections[#espConnections+1] = toolsFolder.ChildRemoved:Connect(onItemRemoved)
+                    end
+                end
+            end
+            
+            Library:Notify("Items ESP enabled!", 3)
+        else
+            clearAllESP()
+            for _, conn in pairs(espConnections) do
+                conn:Disconnect()
+            end
+            espConnections = {}
+            Library:Notify("Items ESP disabled!", 3)
+        end
+    end
+})
+
+EffectsBox:AddButton({
+    Text = "Refresh Items ESP",
+    Func = function()
+        if itemEspEnabled then
+            refreshItemESP()
+            Library:Notify("Items ESP refreshed!", 2)
+        else
+            Library:Notify("Enable Items ESP first!", 2)
+        end
+    end
+})
+
+local enemyEspEnabled = false
+local enemyEspObjects = {}
+local enemyEspConnections = {}
+
+local function createEnemyESP(enemy)
+    if enemyEspObjects[enemy] then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "EnemyESP"
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    highlight.FillTransparency = 0.3
+    highlight.OutlineColor = Color3.fromRGB(200, 0, 0)
+    highlight.OutlineTransparency = 0
+    highlight.Parent = enemy
+    highlight.Enabled = true
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "EnemyNameGUI"
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Parent = enemy
+    
+    local text = Instance.new("TextLabel")
+    text.Name = "EnemyName"
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.fromRGB(255, 255, 255)
+    text.TextStrokeTransparency = 0
+    text.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    text.Font = Enum.Font.GothamBold
+    text.TextSize = 16
+    text.Text = "⚠️ " .. enemy.Name .. " ⚠️"
+    text.Parent = billboard
+    
+    enemyEspObjects[enemy] = {
+        highlight = highlight,
+        billboard = billboard
+    }
+end
+
+local function removeEnemyESP(enemy)
+    if enemyEspObjects[enemy] then
+        if enemyEspObjects[enemy].highlight then
+            enemyEspObjects[enemy].highlight:Destroy()
+        end
+        if enemyEspObjects[enemy].billboard then
+            enemyEspObjects[enemy].billboard:Destroy()
+        end
+        enemyEspObjects[enemy] = nil
+    end
+end
+
+local function clearAllEnemyESP()
+    for enemy, _ in pairs(enemyEspObjects) do
+        removeEnemyESP(enemy)
+    end
+    enemyEspObjects = {}
+end
+
+local function refreshEnemyESP()
+    if not enemyEspEnabled then return end
+    
+    clearAllEnemyESP()
+    
+    local aiHunter = workspace:FindFirstChild("AIHunter")
+    if aiHunter then
+        for _, enemy in pairs(aiHunter:GetChildren()) do
+            if enemy:IsA("Model") then
+                createEnemyESP(enemy)
+            end
+        end
+    end
+    
+    local monsterA = workspace:FindFirstChild("Monster")
+    if monsterA then
+        monsterA = monsterA:FindFirstChild("A")
+        if monsterA then
+            for _, enemy in pairs(monsterA:GetChildren()) do
+                if enemy:IsA("Model") then
+                    createEnemyESP(enemy)
+                end
+            end
+        end
+    end
+end
+
+local function onEnemyAdded(enemy)
+    if enemyEspEnabled then
+        if enemy:IsA("Model") then
+            createEnemyESP(enemy)
+        end
+    end
+end
+
+local function onEnemyRemoved(enemy)
+    if enemyEspObjects[enemy] then
+        removeEnemyESP(enemy)
+    end
+end
+
+EffectsBox:AddToggle("EnemyESPToggle", {
+    Text = "Enemies ESP (Red)",
+    Default = false,
+    Callback = function(state)
+        enemyEspEnabled = state
+        
+        if state then
+            refreshEnemyESP()
+            
+            for _, conn in pairs(enemyEspConnections) do
+                conn:Disconnect()
+            end
+            enemyEspConnections = {}
+            
+            local aiHunter = workspace:FindFirstChild("AIHunter")
+            if aiHunter then
+                enemyEspConnections[#enemyEspConnections+1] = aiHunter.ChildAdded:Connect(onEnemyAdded)
+                enemyEspConnections[#enemyEspConnections+1] = aiHunter.ChildRemoved:Connect(onEnemyRemoved)
+            end
+            
+            local monsterA = workspace:FindFirstChild("Monster")
+            if monsterA then
+                monsterA = monsterA:FindFirstChild("A")
+                if monsterA then
+                    enemyEspConnections[#enemyEspConnections+1] = monsterA.ChildAdded:Connect(onEnemyAdded)
+                    enemyEspConnections[#enemyEspConnections+1] = monsterA.ChildRemoved:Connect(onEnemyRemoved)
+                end
+            end
+            
+            Library:Notify("Enemies ESP enabled!", 3)
+        else
+            clearAllEnemyESP()
+            for _, conn in pairs(enemyEspConnections) do
+                conn:Disconnect()
+            end
+            enemyEspConnections = {}
+            Library:Notify("Enemies ESP disabled!", 3)
+        end
+    end
+})
+
+EffectsBox:AddButton({
+    Text = "Refresh Enemies ESP",
+    Func = function()
+        if enemyEspEnabled then
+            refreshEnemyESP()
+            Library:Notify("Enemies ESP refreshed!", 2)
+        else
+            Library:Notify("Enable Enemies ESP first!", 2)
+        end
+    end
 })
 
 local MiscTab = Window:AddTab("Misc", "code")
@@ -901,7 +1257,7 @@ local ScriptsBox = MiscTab:AddLeftGroupbox("Scripts")
 ScriptsBox:AddButton({
     Text = "Dex Explorer",
     Func = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/RobloxianRoblox3200/Scripts_Roblox/refs/heads/main/Dex_Explorer_V4.lua'))()
+		loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()
         Library:Notify("Dex Explorer loaded!", 3)
     end
 })
