@@ -549,6 +549,176 @@ AutoFarmBox:AddButton({
     end
 })
 
+AutoFarmBox:AddButton({
+    Text = "AutoGenerators",
+    Func = function()
+        local TweenService = game:GetService("TweenService")
+        local VIM = game:GetService("VirtualInputManager")
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        local humanoidRootPart = character.HumanoidRootPart
+        
+        local oldNoclip = noclipEnabled
+        noclipEnabled = true
+        
+        local function equipAllFuses()
+            for _, item in pairs(player.Backpack:GetChildren()) do
+                if item.Name:find("Fuse") then
+                    item.Parent = character
+                    wait(0.2)
+                    VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+                    wait(0.1)
+                    VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+                    wait(0.2)
+                end
+            end
+        end
+        
+        local function clearNonFuseItems()
+            for _, item in pairs(player.Backpack:GetChildren()) do
+                if not item.Name:find("Fuse") then
+                    item.Parent = character
+                    wait(0.2)
+                    VIM:SendMouseButtonEvent(500, 500, 0, true, game, 1)
+                    wait(0.1)
+                    VIM:SendMouseButtonEvent(500, 500, 0, false, game, 1)
+                    wait(0.2)
+                    item:Destroy()
+                end
+            end
+        end
+        
+        local savedPos = humanoidRootPart.Position
+        
+        if #player.Backpack:GetChildren() == 0 then
+            local storagePos = Vector3.new(-826.4652709960938, 70.46780395507812, -599.8519287109375)
+            humanoidRootPart.CFrame = CFrame.new(storagePos)
+            wait(0.5)
+            
+            local tweenDown = TweenService:Create(
+                humanoidRootPart,
+                TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                {CFrame = CFrame.new(storagePos - Vector3.new(0, 5, 0))}
+            )
+            tweenDown:Play()
+            tweenDown.Completed:Wait()
+            wait(0.5)
+            
+            VIM:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+            wait(0.1)
+            VIM:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+            wait(0.5)
+            
+            local tweenUp = TweenService:Create(
+                humanoidRootPart,
+                TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                {CFrame = CFrame.new(storagePos)}
+            )
+            tweenUp:Play()
+            tweenUp.Completed:Wait()
+        end
+        
+        clearNonFuseItems()
+        
+        local generators = {}
+        for i = 1, 1000 do
+            local fuse = workspace:FindFirstChild("Map"):FindFirstChild("Ignore"):FindFirstChild("Tools"):FindFirstChild("Fuse#" .. i)
+            if fuse then
+                table.insert(generators, fuse)
+            end
+        end
+        
+        for i = 1, 6 do
+            if generators[i] then
+                humanoidRootPart.CFrame = generators[i].CFrame + Vector3.new(0, 5, 0)
+                wait(0.5)
+                VIM:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+                wait(0.1)
+                VIM:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+                wait(0.5)
+                
+                equipAllFuses()
+                wait(0.5)
+            end
+        end
+        
+        local pos1 = Vector3.new(525.6123657226562, -3.598816394805908, -510.3340148925781)
+        
+        for repeatCount = 1, 3 do
+            humanoidRootPart.CFrame = CFrame.new(pos1)
+            wait(0.5)
+            
+            local tween1 = TweenService:Create(
+                humanoidRootPart,
+                TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                {CFrame = CFrame.new(pos1 + Vector3.new(0, 5, 0))}
+            )
+            tween1:Play()
+            tween1.Completed:Wait()
+            
+            wait(0.2)
+            
+            VIM:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+            wait(0.1)
+            VIM:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+            wait(0.5)
+            
+            equipAllFuses()
+            wait(0.5)
+            
+            local tween2 = TweenService:Create(
+                humanoidRootPart,
+                TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                {CFrame = CFrame.new(pos1)}
+            )
+            tween2:Play()
+            tween2.Completed:Wait()
+            
+            wait(0.5)
+        end
+        
+        local pos2 = Vector3.new(524.2295532226562, -3.8193211555480957, -508.0196228027344)
+        
+        for repeatCount = 1, 3 do
+            humanoidRootPart.CFrame = CFrame.new(pos2)
+            wait(0.5)
+            
+            local tween3 = TweenService:Create(
+                humanoidRootPart,
+                TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                {CFrame = CFrame.new(pos2 + Vector3.new(0, 5, 0))}
+            )
+            tween3:Play()
+            tween3.Completed:Wait()
+            
+            wait(0.2)
+            
+            VIM:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+            wait(0.1)
+            VIM:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+            wait(0.5)
+            
+            equipAllFuses()
+            wait(0.5)
+            
+            local tween4 = TweenService:Create(
+                humanoidRootPart,
+                TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                {CFrame = CFrame.new(pos2)}
+            )
+            tween4:Play()
+            tween4.Completed:Wait()
+            
+            wait(0.5)
+        end
+        
+        noclipEnabled = oldNoclip
+        
+        humanoidRootPart.CFrame = CFrame.new(savedPos)
+        Library:Notify("AutoGenerators completed!", 3)
+    end
+})
+
 local TeleportTab = Window:AddTab("Teleport", "map-pin")
 
 local ImportantBox = TeleportTab:AddLeftGroupbox("Important Locations")
