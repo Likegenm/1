@@ -1,22 +1,19 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/Library.lua"))()
 
 local Window = Library:CreateWindow({
-    Title = "Likegenm",
-    Footer = "BloxStike",
+    Title = "BloxStrike",
+    Footer = "by Likegenm",
     ToggleKeybind = Enum.KeyCode.RightControl,
     Center = true,
     AutoShow = true
 })
 
-local LPTab = Window:AddTab("LocalPlayer", "user")
+local LPTab = Window:AddTab("LocalPlayer", "trophy")
 
-local VisualTab = Window:AddTab("Visual", "eye")
+local CombatTab = Window:AddTab("Combat", "sword")
 
-local ExploitsTab = Window:AddTab("Exploits", "zap")
+local ETab = Window:AddTab("Exploits", "skull")
 
-local Tabbox1 = LPTab:AddLeftTabbox("Speed + JumpPower")
+local WTab = Window:AddTab("Workspace", "moon")
 
-local Tab1 = Tabbox1:AddTab("Speed")
-
-local Tab2 = Tabbox1:AddTab("Jump")
-
+local MicsTab = Window:AddTab("Mics", "crown")
