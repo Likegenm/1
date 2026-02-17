@@ -214,7 +214,4 @@ FlyBox:AddSlider("TorquePowerSlider", {
     end
 })
 
-FlyBox:AddLabel("WASD - движение")
-FlyBox:AddLabel("LeftShift - падение вниз")
-
 Library:Notify("BloxStrike script (by Likegenm) Press RightCTRL to open UI", 5)
