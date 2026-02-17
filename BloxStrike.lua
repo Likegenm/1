@@ -8,8 +8,12 @@ local Window = Library:CreateWindow({
     AutoShow = true
 })
 
+Library.ShowCustomCursor = false
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 local InfoTab = Window:AddTab("Info", "info")
@@ -96,13 +100,121 @@ RightBox:AddButton({
 })
 
 local LPTab = Window:AddTab("Combat", "sword")
-
 local VTab = Window:AddTab("Blatant", "zap")
-
 local CTab = Window:AddTab("Render", "eye")
-
 local WTab = Window:AddTab("World", "moon")
-
 local MTab = Window:AddTab("Mics", "box")
+
+-- Blatant Fly
+local flyEnabled = false
+local flyConnection = nil
+local keys = {W=false, S=false, A=false, D=false}
+local shiftDown = false
+local torquePower = 50000
+local torque = nil
+local hrp = nil
+
+local function setupFly()
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    hrp = char:WaitForChild("HumanoidRootPart")
+    
+    if torque then
+        torque:Destroy()
+    end
+    
+    torque = Instance.new("Torque")
+    torque.Parent = hrp
+end
+
+local function startFly()
+    if flyEnabled then
+        setupFly()
+        
+        if flyConnection then
+            flyConnection:Disconnect()
+        end
+        
+        flyConnection = RunService.Heartbeat:Connect(function()
+            if not flyEnabled or not hrp or not hrp.Parent then
+                return
+            end
+            
+            local moveDir = Vector3.new(0, 0, 0)
+            local camCF = Camera.CFrame
+            
+            if keys.W then moveDir = moveDir + camCF.LookVector end
+            if keys.S then moveDir = moveDir - camCF.LookVector end
+            if keys.A then moveDir = moveDir - camCF.RightVector end
+            if keys.D then moveDir = moveDir + camCF.RightVector end
+            
+            if shiftDown then
+                torque.Torque = Vector3.new(0, 0, torquePower)
+                hrp.Velocity = Vector3.new(0, -50, 0)
+            elseif moveDir.Magnitude > 0 then
+                moveDir = moveDir.Unit
+                torque.Torque = Vector3.new(0, torquePower, 0)
+                hrp.Velocity = moveDir * 50
+            else
+                torque.Torque = Vector3.new(0, 0, 0)
+                hrp.Velocity = Vector3.new(0, 0, 0)
+            end
+        end)
+    else
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+        if torque then
+            torque:Destroy()
+            torque = nil
+        end
+        if hrp then
+            hrp.Velocity = Vector3.new(0, 0, 0)
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.W then keys.W = true end
+    if input.KeyCode == Enum.KeyCode.S then keys.S = true end
+    if input.KeyCode == Enum.KeyCode.A then keys.A = true end
+    if input.KeyCode == Enum.KeyCode.D then keys.D = true end
+    if input.KeyCode == Enum.KeyCode.LeftShift then shiftDown = true end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.W then keys.W = false end
+    if input.KeyCode == Enum.KeyCode.S then keys.S = false end
+    if input.KeyCode == Enum.KeyCode.A then keys.A = false end
+    if input.KeyCode == Enum.KeyCode.D then keys.D = false end
+    if input.KeyCode == Enum.KeyCode.LeftShift then shiftDown = false end
+end)
+
+local FlyBox = VTab:AddLeftGroupbox("Fly")
+
+FlyBox:AddToggle("FlyToggle", {
+    Text = "Fly",
+    Default = false,
+    Callback = function(state)
+        flyEnabled = state
+        startFly()
+        Library:Notify("Fly: " .. (state and "ON" or "OFF"), 2)
+    end
+})
+
+FlyBox:AddSlider("TorquePowerSlider", {
+    Text = "Torque Power",
+    Default = 50000,
+    Min = 10000,
+    Max = 100000,
+    Rounding = 1,
+    Callback = function(value)
+        torquePower = value
+    end
+})
+
+FlyBox:AddLabel("WASD - движение")
+FlyBox:AddLabel("LeftShift - падение вниз")
 
 Library:Notify("BloxStrike script (by Likegenm) Press RightCTRL to open UI", 5)
