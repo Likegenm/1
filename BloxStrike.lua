@@ -15,6 +15,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
 
 local InfoTab = Window:AddTab("Info", "info")
 
@@ -214,6 +215,7 @@ FlyBox:AddSlider("TorquePowerSlider", {
 })
 
 local infJumpEnabled = false
+local jumpPower = 50
 local infJumpConnection = nil
 
 local function startInfJump()
@@ -227,7 +229,7 @@ local function startInfJump()
                 local character = LocalPlayer.Character
                 if character and character:FindFirstChild("HumanoidRootPart") then
                     local hrp = character.HumanoidRootPart
-                    hrp.Velocity = Vector3.new(hrp.Velocity.X, 30, hrp.Velocity.Z)
+                    hrp.Velocity = Vector3.new(hrp.Velocity.X, jumpPower, hrp.Velocity.Z)
                 end
             end
         end)
@@ -250,5 +252,243 @@ JumpBox:AddToggle("JumpToggle", {
         Library:Notify("InfJump: " .. (state and "ON" or "OFF"), 2)
     end
 })
+
+JumpBox:AddSlider("JumpPowerSlider", {
+    Text = "Jump Power",
+    Default = 50,
+    Min = 30,
+    Max = 200,
+    Rounding = 1,
+    Callback = function(value)
+        jumpPower = value
+    end
+})
+
+local antiFallEnabled = false
+local antiFallConnection = nil
+
+local function startAntiFall()
+    if antiFallEnabled then
+        if antiFallConnection then
+            antiFallConnection:Disconnect()
+        end
+        
+        antiFallConnection = RunService.Heartbeat:Connect(function()
+            if not antiFallEnabled then return end
+            
+            local player = game.Players.LocalPlayer
+            local char = player.Character
+            if not char then return end
+            
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char:FindFirstChild("Humanoid")
+            
+            if not hrp or not humanoid then return end
+            
+            if hrp.Position.Y < -50 then
+                hrp.Velocity = Vector3.new(hrp.Velocity.X, 50, hrp.Velocity.Z)
+            end
+        end)
+    else
+        if antiFallConnection then
+            antiFallConnection:Disconnect()
+            antiFallConnection = nil
+        end
+    end
+end
+
+local AntiFallBox = VTab:AddLeftGroupbox("AntiFall")
+
+AntiFallBox:AddToggle("AntiFallToggle", {
+    Text = "Anti Fall",
+    Default = false,
+    Callback = function(state)
+        antiFallEnabled = state
+        startAntiFall()
+        Library:Notify("Anti Fall: " .. (state and "ON" or "OFF"), 2)
+    end
+})
+
+-- Render Tab - Box ESP with wall detection
+local boxEspEnabled = false
+local espObjects = {}
+local espConnections = {}
+local wallCheckEnabled = true
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+
+local function isPlayerVisible(player)
+    if not wallCheckEnabled then return true end
+    
+    local character = player.Character
+    if not character then return false end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return false end
+    
+    local cameraPos = Camera.CFrame.Position
+    local direction = (rootPart.Position - cameraPos).Unit * (rootPart.Position - cameraPos).Magnitude
+    
+    local result = Workspace:Raycast(cameraPos, direction, raycastParams)
+    
+    return not result or result.Instance:IsDescendantOf(character)
+end
+
+local function createBoxESP(player)
+    if espObjects[player] or player == LocalPlayer then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "BoxESP"
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = player.Character or player.CharacterAdded:Wait()
+    highlight.Enabled = true
+    
+    espObjects[player] = {
+        highlight = highlight,
+        lastVisible = false
+    }
+end
+
+local function removeBoxESP(player)
+    if espObjects[player] then
+        if espObjects[player].highlight then
+            espObjects[player].highlight:Destroy()
+        end
+        espObjects[player] = nil
+    end
+end
+
+local function clearAllBoxESP()
+    for player, _ in pairs(espObjects) do
+        removeBoxESP(player)
+    end
+    espObjects = {}
+end
+
+local function refreshBoxESP()
+    if not boxEspEnabled then return end
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            createBoxESP(player)
+        end
+    end
+end
+
+local function updateBoxESP()
+    if not boxEspEnabled then return end
+    
+    -- Обновляем фильтр для рейкаста
+    if LocalPlayer.Character then
+        raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+    end
+    
+    for player, data in pairs(espObjects) do
+        if player and player.Character and data.highlight then
+            local visible = isPlayerVisible(player)
+            
+            if visible then
+                -- Видимый - зеленый
+                data.highlight.FillColor = Color3.fromRGB(0, 255, 0)
+                data.highlight.OutlineColor = Color3.fromRGB(0, 200, 0)
+            else
+                -- За стеной - красный
+                data.highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                data.highlight.OutlineColor = Color3.fromRGB(200, 0, 0)
+            end
+            
+            data.lastVisible = visible
+        else
+            removeBoxESP(player)
+        end
+    end
+end
+
+local function onPlayerAdded(player)
+    if boxEspEnabled and player ~= LocalPlayer then
+        player.CharacterAdded:Connect(function()
+            if boxEspEnabled then
+                createBoxESP(player)
+            end
+        end)
+    end
+end
+
+local function onPlayerRemoved(player)
+    if espObjects[player] then
+        removeBoxESP(player)
+    end
+end
+
+local RenderBox = CTab:AddLeftGroupbox("Box ESP")
+
+RenderBox:AddToggle("BoxESPToggle", {
+    Text = "Box ESP",
+    Default = false,
+    Callback = function(state)
+        boxEspEnabled = state
+        
+        if state then
+            refreshBoxESP()
+            
+            for _, conn in pairs(espConnections) do
+                conn:Disconnect()
+            end
+            espConnections = {}
+            
+            espConnections[#espConnections+1] = Players.PlayerAdded:Connect(onPlayerAdded)
+            espConnections[#espConnections+1] = Players.PlayerRemoving:Connect(onPlayerRemoved)
+            
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    player.CharacterAdded:Connect(function()
+                        if boxEspEnabled then
+                            createBoxESP(player)
+                        end
+                    end)
+                end
+            end
+            
+            Library:Notify("Box ESP enabled!", 3)
+        else
+            clearAllBoxESP()
+            for _, conn in pairs(espConnections) do
+                conn:Disconnect()
+            end
+            espConnections = {}
+            Library:Notify("Box ESP disabled!", 3)
+        end
+    end
+})
+
+RenderBox:AddToggle("WallCheckToggle", {
+    Text = "Wall Detection",
+    Default = true,
+    Callback = function(state)
+        wallCheckEnabled = state
+    end
+})
+
+RenderBox:AddButton({
+    Text = "Refresh Box ESP",
+    Func = function()
+        if boxEspEnabled then
+            clearAllBoxESP()
+            refreshBoxESP()
+            Library:Notify("Box ESP refreshed!", 2)
+        else
+            Library:Notify("Enable Box ESP first!", 2)
+        end
+    end
+})
+
+RunService.RenderStepped:Connect(function()
+    if boxEspEnabled then
+        updateBoxESP()
+    end
+end)
 
 Library:Notify("BloxStrike script (by Likegenm) Press RightCTRL to open UI", 5)
