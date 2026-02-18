@@ -105,7 +105,6 @@ local CTab = Window:AddTab("Render", "eye")
 local WTab = Window:AddTab("World", "moon")
 local MTab = Window:AddTab("Mics", "box")
 
--- Blatant Fly
 local flyEnabled = false
 local flyConnection = nil
 local keys = {W=false, S=false, A=false, D=false}
@@ -211,6 +210,44 @@ FlyBox:AddSlider("TorquePowerSlider", {
     Rounding = 1,
     Callback = function(value)
         torquePower = value
+    end
+})
+
+local infJumpEnabled = false
+local infJumpConnection = nil
+
+local function startInfJump()
+    if infJumpEnabled then
+        if infJumpConnection then
+            infJumpConnection:Disconnect()
+        end
+        
+        infJumpConnection = UserInputService.InputBegan:Connect(function(input)
+            if infJumpEnabled and input.KeyCode == Enum.KeyCode.Space then
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = character.HumanoidRootPart
+                    hrp.Velocity = Vector3.new(hrp.Velocity.X, 30, hrp.Velocity.Z)
+                end
+            end
+        end)
+    else
+        if infJumpConnection then
+            infJumpConnection:Disconnect()
+            infJumpConnection = nil
+        end
+    end
+end
+
+local JumpBox = VTab:AddRightGroupbox("InfJump")
+
+JumpBox:AddToggle("JumpToggle", {
+    Text = "InfJumps",
+    Default = false,
+    Callback = function(state)
+        infJumpEnabled = state
+        startInfJump()
+        Library:Notify("InfJump: " .. (state and "ON" or "OFF"), 2)
     end
 })
 
