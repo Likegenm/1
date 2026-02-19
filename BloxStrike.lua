@@ -256,7 +256,7 @@ JumpBox:AddToggle("JumpToggle", {
 JumpBox:AddSlider("JumpPowerSlider", {
     Text = "Jump Power",
     Default = 50,
-    Min = 30,
+    Min = 20,
     Max = 200,
     Rounding = 1,
     Callback = function(value)
