@@ -1,3 +1,4 @@
+
 --[[
 
 ██╗     ██╗██╗██╗  ██╗███████╗ ██████╗ ███████╗███╗   ██╗███╗   ███╗
@@ -41,7 +42,8 @@ local Window = WindUI:CreateWindow({
     }
 })
 
-game:GetService("UserInputService").InputBegan:Connect(function(input)
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.E then
         Window:Toggle()
     end
@@ -54,123 +56,130 @@ local PlayerTab = Window:Tab({
     IconColor = Color3.fromHex("#FF0000"),
 })
 
-local VelocitySpeedSection = PlayerTab:Section({
-    Title = "Velocity Speed"
+local CFrameSpeedSection = PlayerTab:Section({
+    Title = "CFrame Speed"
 })
 
-local velocitySpeedEnabled = false
-local velocitySpeedThread = nil
-local velocitySpeedValue = 30
-local velocitySpeedMax = 1000
-local velocitySavedWalkSpeed = 16
+local cframeSpeedEnabled = false
+local cframeSpeedThread = nil
+local cframeSpeedValue = 1
+local cframeSpeedMax = 10
+local cframeSavedWalkSpeed = 16
 
-local function updateVelocitySpeed()
-    if velocitySpeedThread then
-        velocitySpeedThread = nil
+local function updateCFrameSpeed()
+    if cframeSpeedThread then
+        cframeSpeedThread = nil
     end
     
-    if velocitySpeedEnabled then
+    if cframeSpeedEnabled then
         local player = game.Players.LocalPlayer
         local UserInputService = game:GetService("UserInputService")
         local RunService = game:GetService("RunService")
+        local camera = workspace.CurrentCamera
         
-        -- Сохраняем оригинальную скорость ходьбы
         local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
-            velocitySavedWalkSpeed = character.Humanoid.WalkSpeed
-            character.Humanoid.WalkSpeed = 0 -- Отключаем стандартное движение
+            cframeSavedWalkSpeed = character.Humanoid.WalkSpeed
+            character.Humanoid.WalkSpeed = 0
         end
         
-        velocitySpeedThread = task.spawn(function()
-            while velocitySpeedEnabled do
+        cframeSpeedThread = task.spawn(function()
+            while cframeSpeedEnabled do
                 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                     local mv = Vector3.new(0, 0, 0)
                     local hrp = player.Character.HumanoidRootPart
                     
-                    -- Проверяем нажатые клавиши
+                    local cameraCFrame = camera.CFrame
+                    local lookVector = cameraCFrame.LookVector
+                    local rightVector = cameraCFrame.RightVector
+                    
+                    lookVector = Vector3.new(lookVector.X, 0, lookVector.Z).Unit
+                    rightVector = Vector3.new(rightVector.X, 0, rightVector.Z).Unit
+                    
                     if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                        mv = mv + hrp.CFrame.LookVector
+                        mv = mv + lookVector
                     end
                     if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                        mv = mv - hrp.CFrame.LookVector
+                        mv = mv - lookVector
                     end
                     if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                        mv = mv - hrp.CFrame.RightVector
+                        mv = mv - rightVector
                     end
                     if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                        mv = mv + hrp.CFrame.RightVector
+                        mv = mv + rightVector
                     end
                     
                     if mv.Magnitude > 0 then
-                        -- Применяем скорость через Velocity
-                        hrp.Velocity = Vector3.new(
-                            mv.Unit.X * velocitySpeedValue,
-                            hrp.Velocity.Y, -- Сохраняем вертикальную скорость
-                            mv.Unit.Z * velocitySpeedValue
-                        )
+                        hrp.CFrame = hrp.CFrame + (mv.Unit * cframeSpeedValue)
                     end
                 end
                 RunService.Heartbeat:Wait()
             end
             
-            -- Возвращаем стандартную скорость ходьбы
             local character = player.Character
             if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid.WalkSpeed = velocitySavedWalkSpeed
+                character.Humanoid.WalkSpeed = cframeSavedWalkSpeed
             end
         end)
         
         WindUI:Notify({
-            Title = "Velocity Speed",
-            Content = "Velocity speed enabled! Speed: " .. velocitySpeedValue,
+            Title = "CFrame Speed",
+            Content = "CFrame speed enabled! Speed: " .. cframeSpeedValue,
             Icon = "zap"
         })
     else
-        -- Возвращаем стандартную скорость ходьбы
         local player = game.Players.LocalPlayer
         local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.WalkSpeed = velocitySavedWalkSpeed
+            character.Humanoid.WalkSpeed = cframeSavedWalkSpeed
         end
         
         WindUI:Notify({
-            Title = "Velocity Speed",
-            Content = "Velocity speed disabled!",
+            Title = "CFrame Speed",
+            Content = "CFrame speed disabled!",
             Icon = "x"
         })
     end
 end
 
-VelocitySpeedSection:Toggle({
-    Title = "Velocity Speed",
-    Desc = "Control movement through Velocity instead of WalkSpeed",
+CFrameSpeedSection:Toggle({
+    Title = "CFrame Speed",
+    Desc = "Press V to toggle (Camera-based movement)",
     Icon = "zap",
     Callback = function(state)
-        velocitySpeedEnabled = state
-        updateVelocitySpeed()
+        cframeSpeedEnabled = state
+        updateCFrameSpeed()
     end
 })
 
-VelocitySpeedSection:Slider({
-    Title = "Velocity Speed Value",
-    Desc = "Speed value (1-1000)",
-    Step = 1,
+CFrameSpeedSection:Slider({
+    Title = "CFrame Speed Value",
+    Desc = "Speed value (0.1-10)",
+    Step = 0.1,
     Value = {
-        Min = 1,
-        Max = velocitySpeedMax,
-        Default = 30,
+        Min = 0.1,
+        Max = cframeSpeedMax,
+        Default = 1,
     },
     Callback = function(value)
-        velocitySpeedValue = value
-        if velocitySpeedEnabled then
+        cframeSpeedValue = value
+        if cframeSpeedEnabled then
             WindUI:Notify({
-                Title = "Velocity Speed",
-                Content = "Velocity speed updated to: " .. velocitySpeedValue,
+                Title = "CFrame Speed",
+                Content = "Speed updated to: " .. cframeSpeedValue,
                 Icon = "settings"
             })
         end
     end
 })
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.V then
+        cframeSpeedEnabled = not cframeSpeedEnabled
+        updateCFrameSpeed()
+    end
+end)
 
 local FlySection = PlayerTab:Section({
     Title = "Fly Hack"
@@ -4121,5 +4130,51 @@ TSBsection:Code({
             Content = "Paste in google",
             Duration = 2
         })
+    end
+})
+
+local antiNoRotateEnabled = false
+local antiNoRotateThread
+
+ExploitsSection:Toggle({
+    Title = "Anti-NoRotate",
+    Icon = "rotate-ccw",
+    Callback = function(state)
+        antiNoRotateEnabled = state
+        if antiNoRotateThread then
+            antiNoRotateThread = nil
+        end
+        if state then
+            antiNoRotateThread = task.spawn(function()
+                local player = game.Players.LocalPlayer
+                while antiNoRotateEnabled and task.wait(0.01) do
+                    local character = player.Character
+                    if character then
+                        local noRotate = character:FindFirstChild("NoRotate")
+                        if noRotate then noRotate:Destroy() end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+ExploitsSection:Toggle({
+    Title = "Anti-Ragdoll",
+    Icon = "skull",
+    Callback = function(state)
+        if state then
+            task.spawn(function()
+                while wait(0.1) do
+                    if game.Players.LocalPlayer.Character then
+                        local ragdoll = game.Players.LocalPlayer.Character:FindFirstChild("Ragdoll")
+                        if ragdoll then ragdoll:Destroy() end
+                        
+                        local ragdollSlim = game.Players.LocalPlayer.Character:FindFirstChild("RagdollSlim")
+                        if ragdollSlim then ragdollSlim:Destroy() end
+                    end
+                end
+            end)
+        end
     end
 })
