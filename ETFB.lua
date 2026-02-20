@@ -21,7 +21,7 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
-local BVTab = Window:AddTab("BodyVelocity", "zap")
+local BVTab = Window:AddTab("Main", "zap")
 
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
@@ -168,20 +168,20 @@ UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.LeftShift then shiftDown = false end
 end)
 
-local BVBox = BVTab:AddLeftGroupbox("BodyVelocity Control")
+local BVBox = BVTab:AddLeftGroupbox("VectorForce Control")
 
 BVBox:AddToggle("BVToggle", {
-    Text = "Enable BodyVelocity",
+    Text = "Enable VectorForce",
     Default = false,
     Callback = function(state)
         bodyVelocityEnabled = state
         toggleBodyVelocity()
-        Library:Notify("BodyVelocity: " .. (state and "ON" or "OFF"), 2)
+        Library:Notify("VectroForce: " .. (state and "ON" or "OFF"), 2)
     end
 })
 
 BVBox:AddSlider("VelocityX", {
-    Text = "Velocity X",
+    Text = "X",
     Default = 0,
     Min = -100,
     Max = 100,
@@ -195,7 +195,7 @@ BVBox:AddSlider("VelocityX", {
 })
 
 BVBox:AddSlider("VelocityY", {
-    Text = "Velocity Y",
+    Text = "Y",
     Default = 0,
     Min = -100,
     Max = 100,
@@ -209,7 +209,7 @@ BVBox:AddSlider("VelocityY", {
 })
 
 BVBox:AddInput("MaxForce", {
-    Text = "Max Force",
+    Text = "Force",
     Default = "100000",
     Numeric = true,
     Placeholder = "Enter max force (0-100000)",
