@@ -183,8 +183,8 @@ BVBox:AddToggle("BVToggle", {
 BVBox:AddSlider("VelocityX", {
     Text = "X",
     Default = 0,
-    Min = -100,
-    Max = 100,
+    Min = -60,
+    Max = 60,
     Rounding = 1,
     Callback = function(value)
         velocityX = value
@@ -197,7 +197,7 @@ BVBox:AddSlider("VelocityX", {
 BVBox:AddSlider("VelocityY", {
     Text = "Y",
     Default = 0,
-    Min = -100,
+    Min = 0,
     Max = 100,
     Rounding = 1,
     Callback = function(value)
