@@ -37,7 +37,6 @@ local bodyVelocityEnabled = false
 local bodyVelocityInstance = nil
 local velocityX = 0
 local velocityY = 0
-local velocityZ = 0
 local maxForce = 100000
 
 local noclipEnabled = false
@@ -51,12 +50,20 @@ local spaceDown = false
 local shiftDown = false
 local flyBodyVelocity = nil
 
+local safeZoneEnabled = false
+local safeZoneConnection = nil
+local safeZoneHeight = 228
+local safeZoneVelocity = 200
+
+local antiVoidEnabled = false
+local antiVoidPart = nil
+
 local function toggleBodyVelocity()
     if bodyVelocityEnabled then
         if Character and HumanoidRootPart then
             bodyVelocityInstance = Instance.new("BodyVelocity")
             bodyVelocityInstance.Parent = HumanoidRootPart
-            bodyVelocityInstance.Velocity = Vector3.new(velocityX, velocityY, velocityZ)
+            bodyVelocityInstance.Velocity = Vector3.new(velocityX, velocityY, 0)
             bodyVelocityInstance.MaxForce = Vector3.new(maxForce, maxForce, maxForce)
         end
     else
@@ -150,9 +157,95 @@ local function startFly()
     end
 end
 
+local function startSafeZone()
+    if safeZoneEnabled and Character and HumanoidRootPart then
+        if safeZoneConnection then
+            safeZoneConnection:Disconnect()
+        end
+        
+        for _, part in ipairs(Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+        
+        local jumpBV = Instance.new("BodyVelocity")
+        jumpBV.MaxForce = Vector3.new(0, math.huge, 0)
+        jumpBV.Velocity = Vector3.new(0, safeZoneVelocity, 0)
+        jumpBV.Parent = HumanoidRootPart
+        
+        local startY = HumanoidRootPart.Position.Y
+        local targetY = startY + safeZoneHeight
+        local reached = false
+        
+        safeZoneConnection = RunService.Heartbeat:Connect(function()
+            if not safeZoneEnabled or not Character or not HumanoidRootPart then
+                if jumpBV and jumpBV.Parent then
+                    jumpBV:Destroy()
+                end
+                return
+            end
+            
+            local currentY = HumanoidRootPart.Position.Y
+            
+            if currentY >= targetY and not reached then
+                reached = true
+                safeZoneConnection:Disconnect()
+                
+                jumpBV.Velocity = Vector3.new(0, 0, 0)
+                task.wait(0.1)
+                jumpBV:Destroy()
+                
+                if not noclipEnabled then
+                    task.wait(0.5)
+                    for _, part in ipairs(Character:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                end
+            end
+        end)
+    elseif safeZoneConnection then
+        safeZoneConnection:Disconnect()
+        safeZoneConnection = nil
+    end
+end
+
+local function toggleAntiVoid()
+    if antiVoidEnabled then
+        if antiVoidPart then
+            antiVoidPart:Destroy()
+        end
+        
+        local fallenHeight = workspace.FallenPartsDestroyHeight
+        local platformY = fallenHeight + 10
+        
+        antiVoidPart = Instance.new("Part")
+        antiVoidPart.Name = "AntiVoidPlatform"
+        antiVoidPart.Size = Vector3.new(2048, 5, 2048)
+        antiVoidPart.Position = Vector3.new(0, platformY, 0)
+        antiVoidPart.Anchored = true
+        antiVoidPart.CanCollide = true
+        antiVoidPart.BrickColor = BrickColor.new("Bright blue")
+        antiVoidPart.Material = Enum.Material.SmoothPlastic
+        antiVoidPart.Transparency = 0.35
+        antiVoidPart.Parent = workspace
+        
+        local mesh = Instance.new("SpecialMesh")
+        mesh.MeshType = Enum.MeshType.Brick
+        mesh.Parent = antiVoidPart
+    else
+        if antiVoidPart then
+            antiVoidPart:Destroy()
+            antiVoidPart = nil
+        end
+    end
+end
+
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.W then keys.W = true end
-    if input.KeyCode == Enum.KeyCode.S then keys.S = true end
+    if input.KeyCode == Enum.KeyCode.S then keys.S = false end
     if input.KeyCode == Enum.KeyCode.A then keys.A = true end
     if input.KeyCode == Enum.KeyCode.D then keys.D = true end
     if input.KeyCode == Enum.KeyCode.Space then spaceDown = true end
@@ -181,29 +274,29 @@ BVBox:AddToggle("BVToggle", {
 })
 
 BVBox:AddSlider("VelocityX", {
-    Text = "X",
+    Text = "VectorForce X",
     Default = 0,
-    Min = -60,
-    Max = 60,
+    Min = -200,
+    Max = 200,
     Rounding = 1,
     Callback = function(value)
         velocityX = value
         if bodyVelocityInstance then
-            bodyVelocityInstance.Velocity = Vector3.new(velocityX, velocityY, velocityZ)
+            bodyVelocityInstance.Velocity = Vector3.new(velocityX, velocityY, 0)
         end
     end
 })
 
 BVBox:AddSlider("VelocityY", {
-    Text = "Y",
+    Text = "VectorForce Y",
     Default = 0,
     Min = 0,
-    Max = 100,
+    Max = 200,
     Rounding = 1,
     Callback = function(value)
         velocityY = value
         if bodyVelocityInstance then
-            bodyVelocityInstance.Velocity = Vector3.new(velocityX, velocityY, velocityZ)
+            bodyVelocityInstance.Velocity = Vector3.new(velocityX, velocityY, 0)
         end
     end
 })
@@ -248,16 +341,110 @@ FlyBox:AddToggle("FlyToggle", {
     end
 })
 
-FlyBox:AddInput("FlySpeedInput", {
+FlyBox:AddSlider("FlySpeedSlider", {
     Text = "Fly Speed",
-    Default = "50",
-    Numeric = true,
-    Placeholder = "Enter speed (10-100)",
+    Default = 50,
+    Min = 10,
+    Max = 200,
+    Rounding = 1,
     Callback = function(value)
-        local num = tonumber(value)
-        if num then
-            flySpeed = math.clamp(num, 10, 100)
+        flySpeed = value
+    end
+})
+
+local SafeZoneBox = BVTab:AddRightGroupbox("Safe Zone")
+
+SafeZoneBox:AddToggle("SafeZoneToggle", {
+    Text = "Safe Zone",
+    Default = false,
+    Callback = function(state)
+        safeZoneEnabled = state
+        if state then
+            startSafeZone()
+            Library:Notify("Safe Zone: ON (228)", 2)
+        elseif safeZoneConnection then
+            safeZoneConnection:Disconnect()
+            safeZoneConnection = nil
         end
+    end
+})
+
+SafeZoneBox:AddSlider("SafeZoneVelocity", {
+    Text = "VectorForce Y",
+    Default = 200,
+    Min = 50,
+    Max = 200,
+    Rounding = 1,
+    Callback = function(value)
+        safeZoneVelocity = value
+    end
+})
+
+SafeZoneBox:AddButton("Activate Safe Zone", {
+    Text = "Activate Safe Zone",
+    Callback = function()
+        if Character and HumanoidRootPart then
+            local tempConnection
+            
+            for _, part in ipairs(Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+            
+            local tempBV = Instance.new("BodyVelocity")
+            tempBV.MaxForce = Vector3.new(0, math.huge, 0)
+            tempBV.Velocity = Vector3.new(0, safeZoneVelocity, 0)
+            tempBV.Parent = HumanoidRootPart
+            
+            local startY = HumanoidRootPart.Position.Y
+            local targetY = startY + 228
+            
+            tempConnection = RunService.Heartbeat:Connect(function()
+                if not Character or not HumanoidRootPart then
+                    if tempBV and tempBV.Parent then
+                        tempBV:Destroy()
+                    end
+                    if tempConnection then
+                        tempConnection:Disconnect()
+                    end
+                    return
+                end
+                
+                local currentY = HumanoidRootPart.Position.Y
+                
+                if currentY >= targetY then
+                    tempConnection:Disconnect()
+                    
+                    tempBV.Velocity = Vector3.new(0, 0, 0)
+                    task.wait(0.1)
+                    tempBV:Destroy()
+                    
+                    if not noclipEnabled then
+                        task.wait(0.5)
+                        for _, part in ipairs(Character:GetChildren()) do
+                            if part:IsA("BasePart") then
+                                part.CanCollide = true
+                            end
+                        end
+                    end
+                    
+                    Library:Notify("Safe Zone: Reached 228", 2)
+                end
+            end)
+        end
+    end
+})
+
+local AntiVoidBox = BVTab:AddLeftGroupbox("Anti Void")
+
+AntiVoidBox:AddToggle("AntiVoidToggle", {
+    Text = "Anti Void",
+    Default = false,
+    Callback = function(state)
+        antiVoidEnabled = state
+        toggleAntiVoid()
+        Library:Notify("Anti Void: " .. (state and "ON" or "OFF"), 2)
     end
 })
 
