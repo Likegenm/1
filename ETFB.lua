@@ -276,8 +276,8 @@ BVBox:AddToggle("BVToggle", {
 BVBox:AddSlider("VelocityX", {
     Text = "VectorForce X",
     Default = 0,
-    Min = -200,
-    Max = 200,
+    Min = -100,
+    Max = 100,
     Rounding = 1,
     Callback = function(value)
         velocityX = value
