@@ -1,7 +1,7 @@
 local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
 
 local Window = Library:CreateWindow{
-    Title = "Bedwars",
+    Title = "The Intruder: location: OAK Deer INN",
     SubTitle = "by Likegenm",
     TabWidth = 160,
     Size = UDim2.fromOffset(830, 525),
@@ -9,7 +9,7 @@ local Window = Library:CreateWindow{
     MinSize = Vector2.new(470, 380),
     Acrylic = false,
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.RightShift
+    MinimizeKey = Enum.KeyCode.LeftAlt
 }
 
 local LPTab = Window:CreateTab{
