@@ -34,6 +34,8 @@ local originalJumpPower = humanoid.JumpPower
 local originalHipHeight = humanoid.HipHeight
 local antiBunnyEnabled = false
 local lastJumpTime = 0
+local speedLoop = nil
+local currentSpeedValue = 16
 
 local fullbrightEnabled = false
 local originalBrightness = game.Lighting.Brightness
@@ -48,6 +50,139 @@ local freeCamPart = nil
 local originalCameraSubject = nil
 local freeCamConnection = nil
 local freeCamSpeed = 3
+local originalWalkSpeed = nil
+
+local invisEnabled = false
+local invisChair = nil
+
+local floatEnabled = false
+local floatBodyVelocity = nil
+local floatConnection = nil
+local floatMoveConnection = nil
+
+local function setCharacterTransparency(transparency)
+    pcall(function()
+        local char = player.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") or part:IsA("Decal") then
+                    part.Transparency = transparency
+                end
+            end
+        end
+    end)
+end
+
+local function toggleInvisibility()
+    invisEnabled = not invisEnabled
+    
+    if invisEnabled then
+        local savedPos = rootPart.CFrame
+        local invisPos = Vector3.new(-25.95, 84, 3537.55)
+        
+        character:MoveTo(invisPos)
+        task.wait(0.15)
+        
+        invisChair = Instance.new("Seat")
+        invisChair.Name = "invischair"
+        invisChair.Anchored = false
+        invisChair.CanCollide = false
+        invisChair.Transparency = 1
+        invisChair.Position = invisPos
+        invisChair.Parent = workspace
+        
+        local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+        if torso then
+            local weld = Instance.new("Weld", invisChair)
+            weld.Part0 = invisChair
+            weld.Part1 = torso
+        end
+        
+        task.wait()
+        invisChair.CFrame = savedPos
+        setCharacterTransparency(0.5)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Invisibility",
+            Duration = 2,
+            Text = "Invisibility ON"
+        })
+    else
+        if invisChair then
+            invisChair:Destroy()
+            invisChair = nil
+        end
+        setCharacterTransparency(0)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Invisibility",
+            Duration = 2,
+            Text = "Invisibility OFF"
+        })
+    end
+end
+
+local function toggleFloat()
+    floatEnabled = not floatEnabled
+    
+    if floatEnabled then
+        floatBodyVelocity = Instance.new("BodyVelocity")
+        floatBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        floatBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        floatBodyVelocity.Parent = rootPart
+        
+        local UIS = game:GetService("UserInputService")
+        
+        floatConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            if floatEnabled and floatBodyVelocity and rootPart then
+                local verticalMove = 0
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then
+                    verticalMove = 20
+                elseif UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
+                    verticalMove = -20
+                end
+                
+                local camera = workspace.CurrentCamera
+                local forward = camera.CFrame.LookVector
+                local right = camera.CFrame.RightVector
+                
+                local moveDirection = Vector3.new(0, 0, 0)
+                
+                if UIS:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + forward end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - forward end
+                if UIS:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + right end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - right end
+                
+                if moveDirection.Magnitude > 0 then
+                    moveDirection = moveDirection.Unit * currentSpeedValue
+                end
+                
+                floatBodyVelocity.Velocity = Vector3.new(moveDirection.X, verticalMove, moveDirection.Z)
+            end
+        end)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Float",
+            Duration = 2,
+            Text = "Float ON (WASD = Move, Space = Up, Shift = Down)"
+        })
+    else
+        if floatBodyVelocity then
+            floatBodyVelocity:Destroy()
+            floatBodyVelocity = nil
+        end
+        if floatConnection then
+            floatConnection:Disconnect()
+            floatConnection = nil
+        end
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Float",
+            Duration = 2,
+            Text = "Float OFF"
+        })
+    end
+end
 
 LocalPlayerTab:AddSlider("Speed", {
     Title = "Speed",
@@ -58,7 +193,8 @@ LocalPlayerTab:AddSlider("Speed", {
     Rounding = 1,
     Callback = function(value)
         pcall(function()
-            if speedEnabled then
+            currentSpeedValue = value
+            if speedEnabled and humanoid and humanoid.Parent then
                 humanoid.WalkSpeed = value
             end
         end)
@@ -71,12 +207,25 @@ LocalPlayerTab:AddToggle("SpeedToggle", {
     Callback = function(value)
         pcall(function()
             speedEnabled = value
+            
+            if speedLoop then
+                speedLoop:Disconnect()
+                speedLoop = nil
+            end
+            
             if value then
                 originalSpeed = humanoid.WalkSpeed
-                local slider = LocalPlayerTab:GetSlider("Speed")
-                humanoid.WalkSpeed = slider.Value
+                speedLoop = game:GetService("RunService").Heartbeat:Connect(function()
+                    if speedEnabled and humanoid and humanoid.Parent then
+                        if humanoid.WalkSpeed ~= currentSpeedValue then
+                            humanoid.WalkSpeed = currentSpeedValue
+                        end
+                    end
+                end)
             else
-                humanoid.WalkSpeed = originalSpeed
+                if humanoid then
+                    humanoid.WalkSpeed = originalSpeed
+                end
             end
         end)
     end
@@ -152,14 +301,6 @@ LocalPlayerTab:AddToggle("InfJump", {
     Callback = function(value)
         pcall(function()
             infiniteJumpEnabled = value
-            if value then
-                local UIS = game:GetService("UserInputService")
-                UIS.JumpRequest:Connect(function()
-                    if infiniteJumpEnabled then
-                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    end
-                end)
-            end
         end)
     end
 })
@@ -173,7 +314,7 @@ LocalPlayerTab:AddSlider("LongJump", {
     Rounding = 1,
     Callback = function(value)
         pcall(function()
-            if longJumpEnabled then
+            if longJumpEnabled and humanoid then
                 humanoid.JumpPower = value
             end
         end)
@@ -191,7 +332,9 @@ LocalPlayerTab:AddToggle("LongJumpToggle", {
                 local slider = LocalPlayerTab:GetSlider("LongJump")
                 humanoid.JumpPower = slider.Value
             else
-                humanoid.JumpPower = originalJumpPower
+                if humanoid then
+                    humanoid.JumpPower = originalJumpPower
+                end
             end
         end)
     end
@@ -236,21 +379,52 @@ LocalPlayerTab:AddToggle("Noclip", {
             if value then
                 local noclipConnection
                 noclipConnection = game:GetService("RunService").Stepped:Connect(function()
-                    if noclipEnabled then
+                    if noclipEnabled and character then
                         for _, part in ipairs(character:GetDescendants()) do
                             if part:IsA("BasePart") then
                                 part.CanCollide = false
                             end
                         end
-                    else
-                        for _, part in ipairs(character:GetDescendants()) do
-                            if part:IsA("BasePart") then
-                                part.CanCollide = true
-                            end
-                        end
-                        if noclipConnection then noclipConnection:Disconnect() end
                     end
                 end)
+            else
+                if character then
+                    for _, part in ipairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                end
+            end
+        end)
+    end
+})
+
+LocalPlayerTab:AddToggle("Invisibility", {
+    Title = "Invisibility",
+    Description = "Make your character invisible",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            if value and not invisEnabled then
+                toggleInvisibility()
+            elseif not value and invisEnabled then
+                toggleInvisibility()
+            end
+        end)
+    end
+})
+
+LocalPlayerTab:AddToggle("Float", {
+    Title = "Float",
+    Description = "Float in air (WASD = Move, Space = Up, Shift = Down)",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            if value and not floatEnabled then
+                toggleFloat()
+            elseif not value and floatEnabled then
+                toggleFloat()
             end
         end)
     end
@@ -269,6 +443,10 @@ GameTab:AddToggle("AntiBunny", {
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
     pcall(function()
+        if infiniteJumpEnabled and not floatEnabled then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+        
         if antiBunnyEnabled then
             local currentTime = tick()
             if currentTime - lastJumpTime < 0.5 then
@@ -398,6 +576,9 @@ VisualTab:AddToggle("FreeCam", {
             freeCamEnabled = value
             
             if value then
+                originalWalkSpeed = humanoid.WalkSpeed
+                humanoid.WalkSpeed = 0
+                
                 local camera = workspace.CurrentCamera
                 originalCameraSubject = camera.CameraSubject
                 
@@ -451,11 +632,37 @@ VisualTab:AddToggle("FreeCam", {
                 if originalCameraSubject then
                     workspace.CurrentCamera.CameraSubject = originalCameraSubject
                 end
+                if originalWalkSpeed and humanoid then
+                    humanoid.WalkSpeed = originalWalkSpeed
+                end
             end
         end)
     end
 })
 
-CreditsTab:AddLabel("Credits")
-CreditsTab:AddLabel("Likegenm - Scripter")
-CreditsTab:AddLabel("Vicinly - Idea + help")
+local CreditsSection = CreditsTab:AddSection("Script Information")
+
+CreditsSection:AddLabel("Likegenm - Scripter")
+CreditsSection:AddLabel("Vicinly - Idea + help")
+CreditsSection:AddLabel("")
+
+local FeaturesSection = CreditsTab:AddSection("Features")
+
+FeaturesSection:AddLabel("• Speed Hack")
+FeaturesSection:AddLabel("• Fly")
+FeaturesSection:AddLabel("• Float (WASD/Space/Shift)")
+FeaturesSection:AddLabel("• Infinite Jump")
+FeaturesSection:AddLabel("• Long Jump")
+FeaturesSection:AddLabel("• Noclip")
+FeaturesSection:AddLabel("• Invisibility")
+FeaturesSection:AddLabel("• Anti Bunny")
+FeaturesSection:AddLabel("• FOV Changer")
+FeaturesSection:AddLabel("• FreeCam")
+FeaturesSection:AddLabel("• Fullbright")
+
+local ControlsSection = CreditsTab:AddSection("Controls")
+
+ControlsSection:AddLabel("T - Teleport to mouse")
+ControlsSection:AddLabel("WASD (Float) - Move horizontally")
+ControlsSection:AddLabel("Space (Float) - Move up")
+ControlsSection:AddLabel("LeftShift (Float) - Move down")
