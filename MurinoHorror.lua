@@ -54,6 +54,7 @@ local originalWalkSpeed = nil
 
 local invisEnabled = false
 local invisChair = nil
+local invisToggleObject = nil -- сохраним ссылку на тумблер
 
 local floatEnabled = false
 local floatBodyVelocity = nil
@@ -75,14 +76,14 @@ end
 
 local function toggleInvisibility()
     invisEnabled = not invisEnabled
-    
+
     if invisEnabled then
         local savedPos = rootPart.CFrame
         local invisPos = Vector3.new(-25.95, 84, 3537.55)
-        
+
         character:MoveTo(invisPos)
         task.wait(0.15)
-        
+
         invisChair = Instance.new("Seat")
         invisChair.Name = "invischair"
         invisChair.Anchored = false
@@ -90,18 +91,18 @@ local function toggleInvisibility()
         invisChair.Transparency = 1
         invisChair.Position = invisPos
         invisChair.Parent = workspace
-        
+
         local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
         if torso then
             local weld = Instance.new("Weld", invisChair)
             weld.Part0 = invisChair
             weld.Part1 = torso
         end
-        
+
         task.wait()
         invisChair.CFrame = savedPos
         setCharacterTransparency(0.5)
-        
+
         game.StarterGui:SetCore("SendNotification", {
             Title = "Invisibility",
             Duration = 2,
@@ -113,26 +114,31 @@ local function toggleInvisibility()
             invisChair = nil
         end
         setCharacterTransparency(0)
-        
+
         game.StarterGui:SetCore("SendNotification", {
             Title = "Invisibility",
             Duration = 2,
             Text = "Invisibility OFF"
         })
     end
+    
+    -- Синхронизируем тумблер, если он уже создан
+    if invisToggleObject then
+        invisToggleObject:SetValue(invisEnabled)
+    end
 end
 
 local function toggleFloat()
     floatEnabled = not floatEnabled
-    
+
     if floatEnabled then
         floatBodyVelocity = Instance.new("BodyVelocity")
         floatBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         floatBodyVelocity.Velocity = Vector3.new(0, 0, 0)
         floatBodyVelocity.Parent = rootPart
-        
+
         local UIS = game:GetService("UserInputService")
-        
+
         floatConnection = game:GetService("RunService").RenderStepped:Connect(function()
             if floatEnabled and floatBodyVelocity and rootPart then
                 local verticalMove = 0
@@ -141,26 +147,26 @@ local function toggleFloat()
                 elseif UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
                     verticalMove = -20
                 end
-                
+
                 local camera = workspace.CurrentCamera
                 local forward = camera.CFrame.LookVector
                 local right = camera.CFrame.RightVector
-                
+
                 local moveDirection = Vector3.new(0, 0, 0)
-                
+
                 if UIS:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + forward end
                 if UIS:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - forward end
                 if UIS:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + right end
                 if UIS:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - right end
-                
+
                 if moveDirection.Magnitude > 0 then
                     moveDirection = moveDirection.Unit * currentSpeedValue
                 end
-                
+
                 floatBodyVelocity.Velocity = Vector3.new(moveDirection.X, verticalMove, moveDirection.Z)
             end
         end)
-        
+
         game.StarterGui:SetCore("SendNotification", {
             Title = "Float",
             Duration = 2,
@@ -175,7 +181,7 @@ local function toggleFloat()
             floatConnection:Disconnect()
             floatConnection = nil
         end
-        
+
         game.StarterGui:SetCore("SendNotification", {
             Title = "Float",
             Duration = 2,
@@ -183,6 +189,8 @@ local function toggleFloat()
         })
     end
 end
+
+-- [[ GUI ЭЛЕМЕНТЫ ]]
 
 LocalPlayerTab:AddSlider("Speed", {
     Title = "Speed",
@@ -207,12 +215,12 @@ LocalPlayerTab:AddToggle("SpeedToggle", {
     Callback = function(value)
         pcall(function()
             speedEnabled = value
-            
+
             if speedLoop then
                 speedLoop:Disconnect()
                 speedLoop = nil
             end
-            
+
             if value then
                 originalSpeed = humanoid.WalkSpeed
                 speedLoop = game:GetService("RunService").Heartbeat:Connect(function()
@@ -256,7 +264,7 @@ LocalPlayerTab:AddToggle("Fly", {
                 bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 100000
                 bodyVelocity.Velocity = Vector3.new(0, 0, 0)
                 bodyVelocity.Parent = rootPart
-                
+
                 local flyConnection
                 flyConnection = game:GetService("RunService").RenderStepped:Connect(function()
                     if flyEnabled then
@@ -264,21 +272,21 @@ LocalPlayerTab:AddToggle("Fly", {
                         local forward = camera.CFrame.LookVector
                         local right = camera.CFrame.RightVector
                         local up = camera.CFrame.UpVector
-                        
+
                         local move = Vector3.new(0, 0, 0)
                         local UIS = game:GetService("UserInputService")
-                        
+
                         if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + forward end
                         if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - forward end
                         if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + right end
                         if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - right end
                         if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + up end
                         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - up end
-                        
+
                         if move.Magnitude > 0 then
                             move = move.Unit * flySpeed
                         end
-                        
+
                         bodyVelocity.Velocity = move
                         humanoid.PlatformStand = true
                     else
@@ -400,7 +408,8 @@ LocalPlayerTab:AddToggle("Noclip", {
     end
 })
 
-LocalPlayerTab:AddToggle("Invisibility", {
+-- СОЗДАЕМ ТУМБЛЕР И СОХРАНЯЕМ ССЫЛКУ НА НЕГО
+invisToggleObject = LocalPlayerTab:AddToggle("Invisibility", {
     Title = "Invisibility",
     Description = "Make your character invisible",
     Default = false,
@@ -446,7 +455,7 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
         if infiniteJumpEnabled and not floatEnabled then
             humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
-        
+
         if antiBunnyEnabled then
             local currentTime = tick()
             if currentTime - lastJumpTime < 0.5 then
@@ -458,6 +467,7 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     end)
 end)
 
+-- Обработчик клавиши T для телепортации
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     pcall(function()
         if gameProcessed then return end
@@ -470,7 +480,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
             raycastParams.FilterDescendantsInstances = {character}
             raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
             local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-            
+
             if raycastResult then
                 rootPart.CFrame = CFrame.new(raycastResult.Position + Vector3.new(0, humanoid.HipHeight + 2, 0))
             else
@@ -522,7 +532,7 @@ VisualTab:AddToggle("Fullbright", {
                 originalGlobalShadows = game.Lighting.GlobalShadows
                 originalFogEnd = game.Lighting.FogEnd
                 originalFogStart = game.Lighting.FogStart
-                
+
                 game.Lighting.Brightness = 2
                 game.Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
                 game.Lighting.GlobalShadows = false
@@ -574,14 +584,14 @@ VisualTab:AddToggle("FreeCam", {
     Callback = function(value)
         pcall(function()
             freeCamEnabled = value
-            
+
             if value then
                 originalWalkSpeed = humanoid.WalkSpeed
                 humanoid.WalkSpeed = 0
-                
+
                 local camera = workspace.CurrentCamera
                 originalCameraSubject = camera.CameraSubject
-                
+
                 freeCamPart = Instance.new("Part")
                 freeCamPart.Name = "FreeCamPart"
                 freeCamPart.Transparency = 1
@@ -589,27 +599,27 @@ VisualTab:AddToggle("FreeCam", {
                 freeCamPart.Anchored = true
                 freeCamPart.Position = camera.CFrame.Position
                 freeCamPart.Parent = workspace
-                
+
                 camera.CameraSubject = freeCamPart
-                
+
                 freeCamConnection = game:GetService("RunService").RenderStepped:Connect(function()
                     if freeCamEnabled then
                         local UIS = game:GetService("UserInputService")
                         local move = Vector3.new(0, 0, 0)
                         local cf = camera.CFrame
-                        
+
                         if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + cf.LookVector end
                         if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - cf.LookVector end
                         if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + cf.RightVector end
                         if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - cf.RightVector end
                         if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, 1, 0) end
                         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - Vector3.new(0, 1, 0) end
-                        
+
                         if move.Magnitude > 0 then
                             move = move.Unit * freeCamSpeed
                             freeCamPart.Position = freeCamPart.Position + move
                         end
-                        
+
                         local mouse = player:GetMouse()
                         if UIS:IsKeyDown(Enum.KeyCode.RightShift) then
                             local newCF = CFrame.new(freeCamPart.Position, freeCamPart.Position + mouse.UnitRay.Direction * 100)
@@ -640,6 +650,16 @@ VisualTab:AddToggle("FreeCam", {
     end
 })
 
+-- ========== ОБРАБОТЧИК КЛАВИШИ Z (ПОМЕЩАЕМ СЮДА, ПОСЛЕ СОЗДАНИЯ ВСЕХ ЭЛЕМЕНТОВ) ==========
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Z then
+        pcall(function()
+            toggleInvisibility()
+        end)
+    end
+end)
+
 local CreditsSection = CreditsTab:AddSection("Script Information")
 
 CreditsSection:AddLabel("Likegenm - Scripter")
@@ -654,7 +674,7 @@ FeaturesSection:AddLabel("• Float (WASD/Space/Shift)")
 FeaturesSection:AddLabel("• Infinite Jump")
 FeaturesSection:AddLabel("• Long Jump")
 FeaturesSection:AddLabel("• Noclip")
-FeaturesSection:AddLabel("• Invisibility")
+FeaturesSection:AddLabel("• Invisibility (Z key)")
 FeaturesSection:AddLabel("• Anti Bunny")
 FeaturesSection:AddLabel("• FOV Changer")
 FeaturesSection:AddLabel("• FreeCam")
@@ -663,6 +683,7 @@ FeaturesSection:AddLabel("• Fullbright")
 local ControlsSection = CreditsTab:AddSection("Controls")
 
 ControlsSection:AddLabel("T - Teleport to mouse")
+ControlsSection:AddLabel("Z - Toggle Invisibility")
 ControlsSection:AddLabel("WASD (Float) - Move horizontally")
 ControlsSection:AddLabel("Space (Float) - Move up")
 ControlsSection:AddLabel("LeftShift (Float) - Move down")
