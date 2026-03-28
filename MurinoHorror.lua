@@ -54,12 +54,24 @@ local originalWalkSpeed = nil
 
 local invisEnabled = false
 local invisChair = nil
-local invisToggleObject = nil -- сохраним ссылку на тумблер
+local invisToggleObject = nil
 
 local floatEnabled = false
 local floatBodyVelocity = nil
 local floatConnection = nil
-local floatMoveConnection = nil
+
+-- AntiRush переменные
+local antiRushEnabled = false
+local antiRushLoop = nil
+local isInRushInvis = false
+local rushInvisChair = nil
+
+-- AntiStun/AntiFreeze переменные (фризит игрока)
+local antiStunEnabled = false
+local antiStunLoop = nil
+local isFrozen = false
+local frozenSpeed = nil
+local frozenJump = nil
 
 local function setCharacterTransparency(transparency)
     pcall(function()
@@ -74,7 +86,188 @@ local function setCharacterTransparency(transparency)
     end)
 end
 
+-- Функция для фриза (останавливает игрока)
+local function freezePlayer()
+    if isFrozen then return end
+    isFrozen = true
+    
+    pcall(function()
+        frozenSpeed = humanoid.WalkSpeed
+        frozenJump = humanoid.JumpPower
+        
+        humanoid.WalkSpeed = 0
+        humanoid.JumpPower = 0
+        humanoid.PlatformStand = true
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "AntiStun",
+            Duration = 2,
+            Text = "❄️ Frozen for 5 seconds"
+        })
+    end)
+end
+
+-- Функция для разморозки
+local function unfreezePlayer()
+    if not isFrozen then return end
+    isFrozen = false
+    
+    pcall(function()
+        if frozenSpeed then humanoid.WalkSpeed = frozenSpeed end
+        if frozenJump then humanoid.JumpPower = frozenJump end
+        humanoid.PlatformStand = false
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "AntiStun",
+            Duration = 2,
+            Text = "✅ Unfrozen"
+        })
+    end)
+end
+
+-- Функция проверки на DontMove (фризит игрока)
+local function checkAndFreeze()
+    if not antiStunEnabled then return end
+    
+    pcall(function()
+        local playerGui = player:FindFirstChild("PlayerGui")
+        if playerGui then
+            local dontMove = playerGui:FindFirstChild("DontMove")
+            if dontMove then
+                local tick = dontMove:FindFirstChild("Tick")
+                if tick and tick:IsA("BoolValue") and tick.Value == true then
+                    if not isFrozen then
+                        freezePlayer()
+                        -- Разморозка через 5 секунд
+                        task.wait(5)
+                        unfreezePlayer()
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- AntiRush функция (невидимость пока есть Skvorec)
+local function startRushInvis()
+    if isInRushInvis then return end
+    isInRushInvis = true
+    
+    pcall(function()
+        local savedPos = rootPart.CFrame
+        local invisPos = Vector3.new(-25.95, 84, 3537.55)
+        character:MoveTo(invisPos)
+        task.wait(0.15)
+        
+        rushInvisChair = Instance.new("Seat")
+        rushInvisChair.Name = "rush_invischair"
+        rushInvisChair.Anchored = false
+        rushInvisChair.CanCollide = false
+        rushInvisChair.Transparency = 1
+        rushInvisChair.Position = invisPos
+        rushInvisChair.Parent = workspace
+        
+        local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+        if torso then
+            local weld = Instance.new("Weld", rushInvisChair)
+            weld.Part0 = rushInvisChair
+            weld.Part1 = torso
+        end
+        
+        task.wait()
+        rushInvisChair.CFrame = savedPos
+        setCharacterTransparency(0.5)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "AntiRush",
+            Duration = 3,
+            Text = "⚠️ Rush detected! Invisibility until Skvorec disappears"
+        })
+    end)
+end
+
+local function stopRushInvis()
+    if not isInRushInvis then return end
+    isInRushInvis = false
+    
+    pcall(function()
+        if rushInvisChair then
+            rushInvisChair:Destroy()
+            rushInvisChair = nil
+        end
+        setCharacterTransparency(0)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "AntiRush",
+            Duration = 2,
+            Text = "✅ Skvorec gone, invisibility off"
+        })
+    end)
+end
+
+-- Запуск AntiRush (проверка Skvorec)
+local function startAntiRush()
+    if antiRushLoop then antiRushLoop:Disconnect() end
+    antiRushLoop = game:GetService("RunService").Stepped:Connect(function()
+        if not antiRushEnabled then return end
+        
+        pcall(function()
+            local hb = workspace:FindFirstChild("Hitboxes")
+            local skvorec = hb and hb:FindFirstChild("Skvorec")
+            
+            if skvorec and skvorec.Parent == hb then
+                -- Skvorec существует - включаем инвиз
+                if not isInRushInvis then
+                    startRushInvis()
+                end
+            else
+                -- Skvorec пропал - выключаем инвиз
+                if isInRushInvis then
+                    stopRushInvis()
+                end
+            end
+        end)
+    end)
+end
+
+local function stopAntiRush()
+    if antiRushLoop then
+        antiRushLoop:Disconnect()
+        antiRushLoop = nil
+    end
+    if isInRushInvis then
+        stopRushInvis()
+    end
+end
+
+-- Запуск AntiStun
+local function startAntiStun()
+    if antiStunLoop then antiStunLoop:Disconnect() end
+    antiStunLoop = game:GetService("RunService").Stepped:Connect(function()
+        checkAndFreeze()
+    end)
+end
+
+local function stopAntiStun()
+    if antiStunLoop then
+        antiStunLoop:Disconnect()
+        antiStunLoop = nil
+    end
+    if isFrozen then
+        unfreezePlayer()
+    end
+end
+
 local function toggleInvisibility()
+    if isInRushInvis then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Invisibility",
+            Duration = 2,
+            Text = "Can't toggle while AntiRush is active"
+        })
+        return
+    end
+    
     invisEnabled = not invisEnabled
 
     if invisEnabled then
@@ -122,7 +315,6 @@ local function toggleInvisibility()
         })
     end
     
-    -- Синхронизируем тумблер, если он уже создан
     if invisToggleObject then
         invisToggleObject:SetValue(invisEnabled)
     end
@@ -190,8 +382,7 @@ local function toggleFloat()
     end
 end
 
--- [[ GUI ЭЛЕМЕНТЫ ]]
-
+-- GUI ЭЛЕМЕНТЫ
 LocalPlayerTab:AddSlider("Speed", {
     Title = "Speed",
     Description = "Change walk speed",
@@ -215,12 +406,7 @@ LocalPlayerTab:AddToggle("SpeedToggle", {
     Callback = function(value)
         pcall(function()
             speedEnabled = value
-
-            if speedLoop then
-                speedLoop:Disconnect()
-                speedLoop = nil
-            end
-
+            if speedLoop then speedLoop:Disconnect() end
             if value then
                 originalSpeed = humanoid.WalkSpeed
                 speedLoop = game:GetService("RunService").Heartbeat:Connect(function()
@@ -231,9 +417,7 @@ LocalPlayerTab:AddToggle("SpeedToggle", {
                     end
                 end)
             else
-                if humanoid then
-                    humanoid.WalkSpeed = originalSpeed
-                end
+                if humanoid then humanoid.WalkSpeed = originalSpeed end
             end
         end)
     end
@@ -247,9 +431,7 @@ LocalPlayerTab:AddSlider("FlySpeed", {
     Max = 200,
     Rounding = 1,
     Callback = function(value)
-        pcall(function()
-            flySpeed = value
-        end)
+        pcall(function() flySpeed = value end)
     end
 })
 
@@ -264,7 +446,7 @@ LocalPlayerTab:AddToggle("Fly", {
                 bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 100000
                 bodyVelocity.Velocity = Vector3.new(0, 0, 0)
                 bodyVelocity.Parent = rootPart
-
+                
                 local flyConnection
                 flyConnection = game:GetService("RunService").RenderStepped:Connect(function()
                     if flyEnabled then
@@ -272,21 +454,18 @@ LocalPlayerTab:AddToggle("Fly", {
                         local forward = camera.CFrame.LookVector
                         local right = camera.CFrame.RightVector
                         local up = camera.CFrame.UpVector
-
+                        
                         local move = Vector3.new(0, 0, 0)
                         local UIS = game:GetService("UserInputService")
-
+                        
                         if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + forward end
                         if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - forward end
                         if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + right end
                         if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - right end
                         if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + up end
                         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - up end
-
-                        if move.Magnitude > 0 then
-                            move = move.Unit * flySpeed
-                        end
-
+                        
+                        if move.Magnitude > 0 then move = move.Unit * flySpeed end
                         bodyVelocity.Velocity = move
                         humanoid.PlatformStand = true
                     else
@@ -307,9 +486,7 @@ LocalPlayerTab:AddToggle("InfJump", {
     Title = "Infinite Jump",
     Default = false,
     Callback = function(value)
-        pcall(function()
-            infiniteJumpEnabled = value
-        end)
+        pcall(function() infiniteJumpEnabled = value end)
     end
 })
 
@@ -322,9 +499,7 @@ LocalPlayerTab:AddSlider("LongJump", {
     Rounding = 1,
     Callback = function(value)
         pcall(function()
-            if longJumpEnabled and humanoid then
-                humanoid.JumpPower = value
-            end
+            if longJumpEnabled and humanoid then humanoid.JumpPower = value end
         end)
     end
 })
@@ -337,12 +512,9 @@ LocalPlayerTab:AddToggle("LongJumpToggle", {
             longJumpEnabled = value
             if value then
                 originalJumpPower = humanoid.JumpPower
-                local slider = LocalPlayerTab:GetSlider("LongJump")
-                humanoid.JumpPower = slider.Value
+                humanoid.JumpPower = LocalPlayerTab:GetSlider("LongJump").Value
             else
-                if humanoid then
-                    humanoid.JumpPower = originalJumpPower
-                end
+                if humanoid then humanoid.JumpPower = originalJumpPower end
             end
         end)
     end
@@ -356,9 +528,7 @@ LocalPlayerTab:AddSlider("HipHeight", {
     Max = 20,
     Rounding = 1,
     Callback = function(value)
-        pcall(function()
-            humanoid.HipHeight = value
-        end)
+        pcall(function() humanoid.HipHeight = value end)
     end
 })
 
@@ -369,8 +539,7 @@ LocalPlayerTab:AddToggle("HipHeightToggle", {
         pcall(function()
             if value then
                 originalHipHeight = humanoid.HipHeight
-                local slider = LocalPlayerTab:GetSlider("HipHeight")
-                humanoid.HipHeight = slider.Value
+                humanoid.HipHeight = LocalPlayerTab:GetSlider("HipHeight").Value
             else
                 humanoid.HipHeight = originalHipHeight
             end
@@ -385,22 +554,17 @@ LocalPlayerTab:AddToggle("Noclip", {
         pcall(function()
             noclipEnabled = value
             if value then
-                local noclipConnection
-                noclipConnection = game:GetService("RunService").Stepped:Connect(function()
+                game:GetService("RunService").Stepped:Connect(function()
                     if noclipEnabled and character then
                         for _, part in ipairs(character:GetDescendants()) do
-                            if part:IsA("BasePart") then
-                                part.CanCollide = false
-                            end
+                            if part:IsA("BasePart") then part.CanCollide = false end
                         end
                     end
                 end)
             else
                 if character then
                     for _, part in ipairs(character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = true
-                        end
+                        if part:IsA("BasePart") then part.CanCollide = true end
                     end
                 end
             end
@@ -408,18 +572,14 @@ LocalPlayerTab:AddToggle("Noclip", {
     end
 })
 
--- СОЗДАЕМ ТУМБЛЕР И СОХРАНЯЕМ ССЫЛКУ НА НЕГО
 invisToggleObject = LocalPlayerTab:AddToggle("Invisibility", {
     Title = "Invisibility",
     Description = "Make your character invisible",
     Default = false,
     Callback = function(value)
         pcall(function()
-            if value and not invisEnabled then
-                toggleInvisibility()
-            elseif not value and invisEnabled then
-                toggleInvisibility()
-            end
+            if value and not invisEnabled then toggleInvisibility()
+            elseif not value and invisEnabled then toggleInvisibility() end
         end)
     end
 })
@@ -430,10 +590,61 @@ LocalPlayerTab:AddToggle("Float", {
     Default = false,
     Callback = function(value)
         pcall(function()
-            if value and not floatEnabled then
-                toggleFloat()
-            elseif not value and floatEnabled then
-                toggleFloat()
+            if value and not floatEnabled then toggleFloat()
+            elseif not value and floatEnabled then toggleFloat() end
+        end)
+    end
+})
+
+-- AntiRush Toggle (невидимость пока есть Skvorec)
+GameTab:AddToggle("AntiRush", {
+    Title = "AntiRush",
+    Description = "Auto invis while Skvorec exists in Hitboxes",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            antiRushEnabled = value
+            if value then
+                startAntiRush()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "AntiRush",
+                    Duration = 2,
+                    Text = "AntiRush ON - Invis while Skvorec present"
+                })
+            else
+                stopAntiRush()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "AntiRush",
+                    Duration = 2,
+                    Text = "AntiRush OFF"
+                })
+            end
+        end)
+    end
+})
+
+-- AntiStun Toggle (фризит игрока когда DontMove.Tick активен)
+GameTab:AddToggle("AntiStun", {
+    Title = "AntiStun",
+    Description = "Freeze player for 5s when DontMove.Tick is active",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            antiStunEnabled = value
+            if value then
+                startAntiStun()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "AntiStun",
+                    Duration = 2,
+                    Text = "AntiStun ON - Will freeze on DontMove"
+                })
+            else
+                stopAntiStun()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "AntiStun",
+                    Duration = 2,
+                    Text = "AntiStun OFF"
+                })
             end
         end)
     end
@@ -444,18 +655,15 @@ GameTab:AddToggle("AntiBunny", {
     Description = "Prevent bunny",
     Default = false,
     Callback = function(value)
-        pcall(function()
-            antiBunnyEnabled = value
-        end)
+        pcall(function() antiBunnyEnabled = value end)
     end
 })
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
     pcall(function()
-        if infiniteJumpEnabled and not floatEnabled then
+        if infiniteJumpEnabled and not floatEnabled and not isFrozen then
             humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
-
         if antiBunnyEnabled then
             local currentTime = tick()
             if currentTime - lastJumpTime < 0.5 then
@@ -467,11 +675,10 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     end)
 end)
 
--- Обработчик клавиши T для телепортации
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     pcall(function()
         if gameProcessed then return end
-        if input.KeyCode == Enum.KeyCode.T then
+        if input.KeyCode == Enum.KeyCode.T and not isFrozen then
             local mouse = player:GetMouse()
             local targetPos = mouse.Hit.p
             local rayOrigin = targetPos + Vector3.new(0, 10, 0)
@@ -480,7 +687,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
             raycastParams.FilterDescendantsInstances = {character}
             raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
             local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-
+            
             if raycastResult then
                 rootPart.CFrame = CFrame.new(raycastResult.Position + Vector3.new(0, humanoid.HipHeight + 2, 0))
             else
@@ -488,6 +695,14 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
             end
         end
     end)
+end)
+
+-- Клавиша Z для инвиза
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Z and not isInRushInvis then
+        pcall(function() toggleInvisibility() end)
+    end
 end)
 
 VisualTab:AddSlider("FOV", {
@@ -498,9 +713,7 @@ VisualTab:AddSlider("FOV", {
     Max = 120,
     Rounding = 1,
     Callback = function(value)
-        pcall(function()
-            workspace.CurrentCamera.FieldOfView = value
-        end)
+        pcall(function() workspace.CurrentCamera.FieldOfView = value end)
     end
 })
 
@@ -510,11 +723,8 @@ VisualTab:AddToggle("InfZoom", {
     Default = false,
     Callback = function(value)
         pcall(function()
-            if value then
-                player.MaxZoomDistance = 1000000
-            else
-                player.MaxZoomDistance = 20
-            end
+            if value then player.MaxZoomDistance = 1000000
+            else player.MaxZoomDistance = 20 end
         end)
     end
 })
@@ -532,7 +742,7 @@ VisualTab:AddToggle("Fullbright", {
                 originalGlobalShadows = game.Lighting.GlobalShadows
                 originalFogEnd = game.Lighting.FogEnd
                 originalFogStart = game.Lighting.FogStart
-
+                
                 game.Lighting.Brightness = 2
                 game.Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
                 game.Lighting.GlobalShadows = false
@@ -557,9 +767,7 @@ VisualTab:AddSlider("Brightness", {
     Max = 5,
     Rounding = 2,
     Callback = function(value)
-        pcall(function()
-            game.Lighting.Brightness = value
-        end)
+        pcall(function() game.Lighting.Brightness = value end)
     end
 })
 
@@ -571,9 +779,7 @@ VisualTab:AddSlider("FreeCamSpeed", {
     Max = 5,
     Rounding = 1,
     Callback = function(value)
-        pcall(function()
-            freeCamSpeed = value
-        end)
+        pcall(function() freeCamSpeed = value end)
     end
 })
 
@@ -584,14 +790,13 @@ VisualTab:AddToggle("FreeCam", {
     Callback = function(value)
         pcall(function()
             freeCamEnabled = value
-
             if value then
                 originalWalkSpeed = humanoid.WalkSpeed
                 humanoid.WalkSpeed = 0
-
+                
                 local camera = workspace.CurrentCamera
                 originalCameraSubject = camera.CameraSubject
-
+                
                 freeCamPart = Instance.new("Part")
                 freeCamPart.Name = "FreeCamPart"
                 freeCamPart.Transparency = 1
@@ -599,27 +804,27 @@ VisualTab:AddToggle("FreeCam", {
                 freeCamPart.Anchored = true
                 freeCamPart.Position = camera.CFrame.Position
                 freeCamPart.Parent = workspace
-
+                
                 camera.CameraSubject = freeCamPart
-
+                
                 freeCamConnection = game:GetService("RunService").RenderStepped:Connect(function()
                     if freeCamEnabled then
                         local UIS = game:GetService("UserInputService")
                         local move = Vector3.new(0, 0, 0)
                         local cf = camera.CFrame
-
+                        
                         if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + cf.LookVector end
                         if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - cf.LookVector end
                         if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + cf.RightVector end
                         if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - cf.RightVector end
                         if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, 1, 0) end
                         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - Vector3.new(0, 1, 0) end
-
+                        
                         if move.Magnitude > 0 then
                             move = move.Unit * freeCamSpeed
                             freeCamPart.Position = freeCamPart.Position + move
                         end
-
+                        
                         local mouse = player:GetMouse()
                         if UIS:IsKeyDown(Enum.KeyCode.RightShift) then
                             local newCF = CFrame.new(freeCamPart.Position, freeCamPart.Position + mouse.UnitRay.Direction * 100)
@@ -631,43 +836,21 @@ VisualTab:AddToggle("FreeCam", {
                     end
                 end)
             else
-                if freeCamConnection then
-                    freeCamConnection:Disconnect()
-                    freeCamConnection = nil
-                end
-                if freeCamPart then
-                    freeCamPart:Destroy()
-                    freeCamPart = nil
-                end
-                if originalCameraSubject then
-                    workspace.CurrentCamera.CameraSubject = originalCameraSubject
-                end
-                if originalWalkSpeed and humanoid then
-                    humanoid.WalkSpeed = originalWalkSpeed
-                end
+                if freeCamConnection then freeCamConnection:Disconnect() end
+                if freeCamPart then freeCamPart:Destroy() end
+                if originalCameraSubject then workspace.CurrentCamera.CameraSubject = originalCameraSubject end
+                if originalWalkSpeed and humanoid then humanoid.WalkSpeed = originalWalkSpeed end
             end
         end)
     end
 })
 
--- ========== ОБРАБОТЧИК КЛАВИШИ Z (ПОМЕЩАЕМ СЮДА, ПОСЛЕ СОЗДАНИЯ ВСЕХ ЭЛЕМЕНТОВ) ==========
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Z then
-        pcall(function()
-            toggleInvisibility()
-        end)
-    end
-end)
-
 local CreditsSection = CreditsTab:AddSection("Script Information")
-
 CreditsSection:AddLabel("Likegenm - Scripter")
 CreditsSection:AddLabel("Vicinly - Idea + help")
 CreditsSection:AddLabel("")
 
 local FeaturesSection = CreditsTab:AddSection("Features")
-
 FeaturesSection:AddLabel("• Speed Hack")
 FeaturesSection:AddLabel("• Fly")
 FeaturesSection:AddLabel("• Float (WASD/Space/Shift)")
@@ -675,13 +858,14 @@ FeaturesSection:AddLabel("• Infinite Jump")
 FeaturesSection:AddLabel("• Long Jump")
 FeaturesSection:AddLabel("• Noclip")
 FeaturesSection:AddLabel("• Invisibility (Z key)")
+FeaturesSection:AddLabel("• AntiRush - Invis while Skvorec exists")
+FeaturesSection:AddLabel("• AntiStun - Freeze 5s when DontMove.Tick")
 FeaturesSection:AddLabel("• Anti Bunny")
 FeaturesSection:AddLabel("• FOV Changer")
 FeaturesSection:AddLabel("• FreeCam")
 FeaturesSection:AddLabel("• Fullbright")
 
 local ControlsSection = CreditsTab:AddSection("Controls")
-
 ControlsSection:AddLabel("T - Teleport to mouse")
 ControlsSection:AddLabel("Z - Toggle Invisibility")
 ControlsSection:AddLabel("WASD (Float) - Move horizontally")
