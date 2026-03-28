@@ -66,9 +66,7 @@ local antiRushLoop = nil
 local isInRushInvis = false
 local rushInvisChair = nil
 
--- AntiStun/AntiFreeze переменные (фризит игрока)
-local antiStunEnabled = false
-local antiStunLoop = nil
+-- Anti Bunny/Stun переменные
 local isFrozen = false
 local frozenSpeed = nil
 local frozenJump = nil
@@ -100,7 +98,7 @@ local function freezePlayer()
         humanoid.PlatformStand = true
         
         game.StarterGui:SetCore("SendNotification", {
-            Title = "AntiStun",
+            Title = "Anti Bunny",
             Duration = 2,
             Text = "❄️ Frozen for 5 seconds"
         })
@@ -118,16 +116,16 @@ local function unfreezePlayer()
         humanoid.PlatformStand = false
         
         game.StarterGui:SetCore("SendNotification", {
-            Title = "AntiStun",
+            Title = "Anti Bunny",
             Duration = 2,
             Text = "✅ Unfrozen"
         })
     end)
 end
 
--- Функция проверки на DontMove (фризит игрока)
+-- Функция проверки на зайца (DontMove) и фриза
 local function checkAndFreeze()
-    if not antiStunEnabled then return end
+    if not antiBunnyEnabled then return end
     
     pcall(function()
         local playerGui = player:FindFirstChild("PlayerGui")
@@ -135,12 +133,14 @@ local function checkAndFreeze()
             local dontMove = playerGui:FindFirstChild("DontMove")
             if dontMove then
                 local tick = dontMove:FindFirstChild("Tick")
-                if tick and tick:IsA("BoolValue") and tick.Value == true then
-                    if not isFrozen then
-                        freezePlayer()
-                        -- Разморозка через 5 секунд
-                        task.wait(5)
-                        unfreezePlayer()
+                if tick then
+                    local playing = tick:FindFirstChild("Playing")
+                    if playing and playing:IsA("BoolValue") and playing.Value == true then
+                        if not isFrozen then
+                            freezePlayer()
+                            task.wait(5)
+                            unfreezePlayer()
+                        end
                     end
                 end
             end
@@ -205,7 +205,7 @@ local function stopRushInvis()
     end)
 end
 
--- Запуск AntiRush (проверка Skvorec)
+-- Запуск AntiRush
 local function startAntiRush()
     if antiRushLoop then antiRushLoop:Disconnect() end
     antiRushLoop = game:GetService("RunService").Stepped:Connect(function()
@@ -216,12 +216,10 @@ local function startAntiRush()
             local skvorec = hb and hb:FindFirstChild("Skvorec")
             
             if skvorec and skvorec.Parent == hb then
-                -- Skvorec существует - включаем инвиз
                 if not isInRushInvis then
                     startRushInvis()
                 end
             else
-                -- Skvorec пропал - выключаем инвиз
                 if isInRushInvis then
                     stopRushInvis()
                 end
@@ -237,24 +235,6 @@ local function stopAntiRush()
     end
     if isInRushInvis then
         stopRushInvis()
-    end
-end
-
--- Запуск AntiStun
-local function startAntiStun()
-    if antiStunLoop then antiStunLoop:Disconnect() end
-    antiStunLoop = game:GetService("RunService").Stepped:Connect(function()
-        checkAndFreeze()
-    end)
-end
-
-local function stopAntiStun()
-    if antiStunLoop then
-        antiStunLoop:Disconnect()
-        antiStunLoop = nil
-    end
-    if isFrozen then
-        unfreezePlayer()
     end
 end
 
@@ -596,7 +576,6 @@ LocalPlayerTab:AddToggle("Float", {
     end
 })
 
--- AntiRush Toggle (невидимость пока есть Skvorec)
 GameTab:AddToggle("AntiRush", {
     Title = "AntiRush",
     Description = "Auto invis while Skvorec exists in Hitboxes",
@@ -623,41 +602,30 @@ GameTab:AddToggle("AntiRush", {
     end
 })
 
--- AntiStun Toggle (фризит игрока когда DontMove.Tick активен)
-GameTab:AddToggle("AntiStun", {
-    Title = "AntiStun",
-    Description = "Freeze player for 5s when DontMove.Tick is active",
+-- Anti Bunny теперь включает и фриз от DontMove
+GameTab:AddToggle("AntiBunny", {
+    Title = "Anti Bunny/Stun",
+    Description = "Prevent bunny + Freeze when DontMove.Tick.Playing is active",
     Default = false,
     Callback = function(value)
         pcall(function()
-            antiStunEnabled = value
-            if value then
-                startAntiStun()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "AntiStun",
-                    Duration = 2,
-                    Text = "AntiStun ON - Will freeze on DontMove"
-                })
-            else
-                stopAntiStun()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "AntiStun",
-                    Duration = 2,
-                    Text = "AntiStun OFF"
-                })
+            antiBunnyEnabled = value
+            if not value and isFrozen then
+                unfreezePlayer()
             end
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Anti Bunny/Stun",
+                Duration = 2,
+                Text = value and "ON - Will prevent bunny and freeze on DontMove" or "OFF"
+            })
         end)
     end
 })
 
-GameTab:AddToggle("AntiBunny", {
-    Title = "Anti Bunny",
-    Description = "Prevent bunny",
-    Default = false,
-    Callback = function(value)
-        pcall(function() antiBunnyEnabled = value end)
-    end
-})
+-- Запуск проверки на зайца и фриза (раз в 0.1 секунду)
+game:GetService("RunService").Stepped:Connect(function()
+    checkAndFreeze()
+end)
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
     pcall(function()
@@ -859,8 +827,7 @@ FeaturesSection:AddLabel("• Long Jump")
 FeaturesSection:AddLabel("• Noclip")
 FeaturesSection:AddLabel("• Invisibility (Z key)")
 FeaturesSection:AddLabel("• AntiRush - Invis while Skvorec exists")
-FeaturesSection:AddLabel("• AntiStun - Freeze 5s when DontMove.Tick")
-FeaturesSection:AddLabel("• Anti Bunny")
+FeaturesSection:AddLabel("• Anti Bunny/Stun - Bunny hop + Freeze on DontMove")
 FeaturesSection:AddLabel("• FOV Changer")
 FeaturesSection:AddLabel("• FreeCam")
 FeaturesSection:AddLabel("• Fullbright")
