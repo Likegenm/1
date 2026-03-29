@@ -32,8 +32,6 @@ local bodyVelocity = nil
 local longJumpEnabled = false
 local originalJumpPower = humanoid.JumpPower
 local originalHipHeight = humanoid.HipHeight
-local antiBunnyEnabled = false
-local lastJumpTime = 0
 local speedLoop = nil
 local currentSpeedValue = 16
 
@@ -66,10 +64,9 @@ local antiRushLoop = nil
 local isInRushInvis = false
 local rushInvisChair = nil
 
--- Anti Bunny/Stun переменные
-local isFrozen = false
-local frozenSpeed = nil
-local frozenJump = nil
+-- Anti Bunny (НОВАЯ ВЕРСИЯ)
+local antiBunnyEnabled = false
+local antiBunnyLoop = nil
 
 local function setCharacterTransparency(transparency)
     pcall(function()
@@ -78,70 +75,6 @@ local function setCharacterTransparency(transparency)
             for _, part in ipairs(char:GetDescendants()) do
                 if part:IsA("BasePart") or part:IsA("Decal") then
                     part.Transparency = transparency
-                end
-            end
-        end
-    end)
-end
-
--- Функция для фриза (останавливает игрока)
-local function freezePlayer()
-    if isFrozen then return end
-    isFrozen = true
-    
-    pcall(function()
-        frozenSpeed = humanoid.WalkSpeed
-        frozenJump = humanoid.JumpPower
-        
-        humanoid.WalkSpeed = 0
-        humanoid.JumpPower = 0
-        humanoid.PlatformStand = true
-        
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Anti Bunny",
-            Duration = 2,
-            Text = "❄️ Frozen for 5 seconds"
-        })
-    end)
-end
-
--- Функция для разморозки
-local function unfreezePlayer()
-    if not isFrozen then return end
-    isFrozen = false
-    
-    pcall(function()
-        if frozenSpeed then humanoid.WalkSpeed = frozenSpeed end
-        if frozenJump then humanoid.JumpPower = frozenJump end
-        humanoid.PlatformStand = false
-        
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Anti Bunny",
-            Duration = 2,
-            Text = "✅ Unfrozen"
-        })
-    end)
-end
-
--- Функция проверки на зайца (DontMove) и фриза
-local function checkAndFreeze()
-    if not antiBunnyEnabled then return end
-    
-    pcall(function()
-        local playerGui = player:FindFirstChild("PlayerGui")
-        if playerGui then
-            local dontMove = playerGui:FindFirstChild("DontMove")
-            if dontMove then
-                local tick = dontMove:FindFirstChild("Tick")
-                if tick then
-                    local playing = tick:FindFirstChild("Playing")
-                    if playing and playing:IsA("BoolValue") and playing.Value == true then
-                        if not isFrozen then
-                            freezePlayer()
-                            task.wait(5)
-                            unfreezePlayer()
-                        end
-                    end
                 end
             end
         end
@@ -235,6 +168,53 @@ local function stopAntiRush()
     end
     if isInRushInvis then
         stopRushInvis()
+    end
+end
+
+-- НОВАЯ ФУНКЦИЯ ANTI BUNNY (блокировка движения при DontMove.Tick.Playing)
+local function startAntiBunny()
+    if antiBunnyLoop then antiBunnyLoop:Disconnect() end
+    antiBunnyLoop = task.spawn(function()
+        while antiBunnyEnabled do
+            pcall(function()
+                local playerGui = player:FindFirstChild("PlayerGui")
+                if playerGui then
+                    local dontMove = playerGui:FindFirstChild("DontMove")
+                    if dontMove then
+                        local tick = dontMove:FindFirstChild("Tick")
+                        if tick then
+                            local playing = tick:FindFirstChild("Playing")
+                            if playing and playing:IsA("BoolValue") and playing.Value == true then
+                                -- Блокируем движение
+                                local char = player.Character
+                                if char then
+                                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                                    if hrp then
+                                        local blockVelocity = Instance.new("BodyVelocity")
+                                        blockVelocity.Velocity = Vector3.new(0, 0, 0)
+                                        blockVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                                        blockVelocity.Parent = hrp
+                                        
+                                        -- Останавливаем на 5 секунд
+                                        task.wait(5)
+                                        
+                                        blockVelocity:Destroy()
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function stopAntiBunny()
+    if antiBunnyLoop then
+        task.cancel(antiBunnyLoop)
+        antiBunnyLoop = nil
     end
 end
 
@@ -602,43 +582,37 @@ GameTab:AddToggle("AntiRush", {
     end
 })
 
--- Anti Bunny теперь включает и фриз от DontMove
+-- НОВЫЙ Anti Bunny (блокировка движения при DontMove)
 GameTab:AddToggle("AntiBunny", {
-    Title = "Anti Bunny/Stun",
-    Description = "Prevent bunny + Freeze when DontMove.Tick.Playing is active",
+    Title = "Anti Bunny",
+    Description = "Block movement when DontMove.Tick.Playing is active",
     Default = false,
     Callback = function(value)
         pcall(function()
             antiBunnyEnabled = value
-            if not value and isFrozen then
-                unfreezePlayer()
+            if value then
+                startAntiBunny()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Bunny",
+                    Duration = 2,
+                    Text = "Anti Bunny ON - Will block movement when frozen"
+                })
+            else
+                stopAntiBunny()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Bunny",
+                    Duration = 2,
+                    Text = "Anti Bunny OFF"
+                })
             end
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Anti Bunny/Stun",
-                Duration = 2,
-                Text = value and "ON - Will prevent bunny and freeze on DontMove" or "OFF"
-            })
         end)
     end
 })
 
--- Запуск проверки на зайца и фриза (раз в 0.1 секунду)
-game:GetService("RunService").Stepped:Connect(function()
-    checkAndFreeze()
-end)
-
 game:GetService("UserInputService").JumpRequest:Connect(function()
     pcall(function()
-        if infiniteJumpEnabled and not floatEnabled and not isFrozen then
+        if infiniteJumpEnabled and not floatEnabled then
             humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-        if antiBunnyEnabled then
-            local currentTime = tick()
-            if currentTime - lastJumpTime < 0.5 then
-                humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
-                return
-            end
-            lastJumpTime = currentTime
         end
     end)
 end)
@@ -646,7 +620,7 @@ end)
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     pcall(function()
         if gameProcessed then return end
-        if input.KeyCode == Enum.KeyCode.T and not isFrozen then
+        if input.KeyCode == Enum.KeyCode.T then
             local mouse = player:GetMouse()
             local targetPos = mouse.Hit.p
             local rayOrigin = targetPos + Vector3.new(0, 10, 0)
@@ -827,7 +801,7 @@ FeaturesSection:AddLabel("• Long Jump")
 FeaturesSection:AddLabel("• Noclip")
 FeaturesSection:AddLabel("• Invisibility (Z key)")
 FeaturesSection:AddLabel("• AntiRush - Invis while Skvorec exists")
-FeaturesSection:AddLabel("• Anti Bunny/Stun - Bunny hop + Freeze on DontMove")
+FeaturesSection:AddLabel("• Anti Bunny - Block movement when DontMove active")
 FeaturesSection:AddLabel("• FOV Changer")
 FeaturesSection:AddLabel("• FreeCam")
 FeaturesSection:AddLabel("• Fullbright")
