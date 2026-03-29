@@ -68,6 +68,10 @@ local rushInvisChair = nil
 local antiBunnyEnabled = false
 local antiBunnyLoop = nil
 
+-- Anti Train переменные
+local antiTrainEnabled = false
+local antiTrainLoop = nil
+
 local function setCharacterTransparency(transparency)
     pcall(function()
         local char = player.Character
@@ -85,13 +89,13 @@ end
 local function startRushInvis()
     if isInRushInvis then return end
     isInRushInvis = true
-    
+
     pcall(function()
         local savedPos = rootPart.CFrame
         local invisPos = Vector3.new(-25.95, 84, 3537.55)
         character:MoveTo(invisPos)
         task.wait(0.15)
-        
+
         rushInvisChair = Instance.new("Seat")
         rushInvisChair.Name = "rush_invischair"
         rushInvisChair.Anchored = false
@@ -99,18 +103,18 @@ local function startRushInvis()
         rushInvisChair.Transparency = 1
         rushInvisChair.Position = invisPos
         rushInvisChair.Parent = workspace
-        
+
         local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
         if torso then
             local weld = Instance.new("Weld", rushInvisChair)
             weld.Part0 = rushInvisChair
             weld.Part1 = torso
         end
-        
+
         task.wait()
         rushInvisChair.CFrame = savedPos
         setCharacterTransparency(0.5)
-        
+
         game.StarterGui:SetCore("SendNotification", {
             Title = "AntiRush",
             Duration = 3,
@@ -122,14 +126,14 @@ end
 local function stopRushInvis()
     if not isInRushInvis then return end
     isInRushInvis = false
-    
+
     pcall(function()
         if rushInvisChair then
             rushInvisChair:Destroy()
             rushInvisChair = nil
         end
         setCharacterTransparency(0)
-        
+
         game.StarterGui:SetCore("SendNotification", {
             Title = "AntiRush",
             Duration = 2,
@@ -143,11 +147,11 @@ local function startAntiRush()
     if antiRushLoop then antiRushLoop:Disconnect() end
     antiRushLoop = game:GetService("RunService").Stepped:Connect(function()
         if not antiRushEnabled then return end
-        
+
         pcall(function()
             local hb = workspace:FindFirstChild("Hitboxes")
             local skvorec = hb and hb:FindFirstChild("Skvorec")
-            
+
             if skvorec and skvorec.Parent == hb then
                 if not isInRushInvis then
                     startRushInvis()
@@ -171,7 +175,6 @@ local function stopAntiRush()
     end
 end
 
--- НОВАЯ ФУНКЦИЯ ANTI BUNNY (блокировка движения при DontMove.Tick.Playing)
 local function startAntiBunny()
     if antiBunnyLoop then antiBunnyLoop:Disconnect() end
     antiBunnyLoop = task.spawn(function()
@@ -181,28 +184,7 @@ local function startAntiBunny()
                 if playerGui then
                     local dontMove = playerGui:FindFirstChild("DontMove")
                     if dontMove then
-                        local tick = dontMove:FindFirstChild("Tick")
-                        if tick then
-                            local playing = tick:FindFirstChild("Playing")
-                            if playing and playing:IsA("BoolValue") and playing.Value == true then
-                                -- Блокируем движение
-                                local char = player.Character
-                                if char then
-                                    local hrp = char:FindFirstChild("HumanoidRootPart")
-                                    if hrp then
-                                        local blockVelocity = Instance.new("BodyVelocity")
-                                        blockVelocity.Velocity = Vector3.new(0, 0, 0)
-                                        blockVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                                        blockVelocity.Parent = hrp
-                                        
-                                        -- Останавливаем на 5 секунд
-                                        task.wait(5)
-                                        
-                                        blockVelocity:Destroy()
-                                    end
-                                end
-                            end
-                        end
+                        dontMove:Destroy()
                     end
                 end
             end)
@@ -218,6 +200,52 @@ local function stopAntiBunny()
     end
 end
 
+
+-- Функция Anti Train (удаляет Working Train каждые 0.001 секунды)
+local function startAntiTrain()
+    if antiTrainLoop then antiTrainLoop:Disconnect() end
+    
+    -- Используем Heartbeat для максимально частой проверки (каждый кадр, ~60-144 раз в секунду)
+    -- Добавляем дополнительный цикл для проверки каждые 0.001 секунды
+    antiTrainLoop = game:GetService("RunService").Heartbeat:Connect(function()
+        if not antiTrainEnabled then return end
+        
+        pcall(function()
+            local map = workspace:FindFirstChild("Map")
+            if map then
+                -- Ищем объект с названием WorkingTrain (без пробела или с пробелом)
+                local workingTrain = map:FindFirstChild("WorkingTrain") or map:FindFirstChild("Working Train")
+                if workingTrain then
+                    workingTrain:Destroy()
+                end
+            end
+        end)
+    end)
+    
+    -- Дополнительный быстрый цикл для проверки каждые 0.001 секунды
+    task.spawn(function()
+        while antiTrainEnabled do
+            pcall(function()
+                local map = workspace:FindFirstChild("Map")
+                if map then
+                    local workingTrain = map:FindFirstChild("WorkingTrain") or map:FindFirstChild("Working Train")
+                    if workingTrain then
+                        workingTrain:Destroy()
+                    end
+                end
+            end)
+            task.wait(0.001) -- Проверка каждую 0.001 секунды
+        end
+    end)
+end
+
+local function stopAntiTrain()
+    if antiTrainLoop then
+        antiTrainLoop:Disconnect()
+        antiTrainLoop = nil
+    end
+end
+
 local function toggleInvisibility()
     if isInRushInvis then
         game.StarterGui:SetCore("SendNotification", {
@@ -227,7 +255,7 @@ local function toggleInvisibility()
         })
         return
     end
-    
+
     invisEnabled = not invisEnabled
 
     if invisEnabled then
@@ -274,7 +302,7 @@ local function toggleInvisibility()
             Text = "Invisibility OFF"
         })
     end
-    
+
     if invisToggleObject then
         invisToggleObject:SetValue(invisEnabled)
     end
@@ -406,7 +434,7 @@ LocalPlayerTab:AddToggle("Fly", {
                 bodyVelocity.MaxForce = Vector3.new(1, 1, 1) * 100000
                 bodyVelocity.Velocity = Vector3.new(0, 0, 0)
                 bodyVelocity.Parent = rootPart
-                
+
                 local flyConnection
                 flyConnection = game:GetService("RunService").RenderStepped:Connect(function()
                     if flyEnabled then
@@ -414,17 +442,17 @@ LocalPlayerTab:AddToggle("Fly", {
                         local forward = camera.CFrame.LookVector
                         local right = camera.CFrame.RightVector
                         local up = camera.CFrame.UpVector
-                        
+
                         local move = Vector3.new(0, 0, 0)
                         local UIS = game:GetService("UserInputService")
-                        
+
                         if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + forward end
                         if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - forward end
                         if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + right end
                         if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - right end
                         if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + up end
                         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - up end
-                        
+
                         if move.Magnitude > 0 then move = move.Unit * flySpeed end
                         bodyVelocity.Velocity = move
                         humanoid.PlatformStand = true
@@ -582,7 +610,6 @@ GameTab:AddToggle("AntiRush", {
     end
 })
 
--- НОВЫЙ Anti Bunny (блокировка движения при DontMove)
 GameTab:AddToggle("AntiBunny", {
     Title = "Anti Bunny",
     Description = "Block movement when DontMove.Tick.Playing is active",
@@ -609,6 +636,33 @@ GameTab:AddToggle("AntiBunny", {
     end
 })
 
+-- НОВЫЙ Anti Train с проверкой каждые 0.001 секунды
+GameTab:AddToggle("AntiTrain", {
+    Title = "Anti Train",
+    Description = "Remove 'Working Train' from Map every 0.001 seconds",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            antiTrainEnabled = value
+            if value then
+                startAntiTrain()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Train",
+                    Duration = 2,
+                    Text = "Anti Train ON - Checking every 0.001 seconds"
+                })
+            else
+                stopAntiTrain()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Train",
+                    Duration = 2,
+                    Text = "Anti Train OFF"
+                })
+            end
+        end)
+    end
+})
+
 game:GetService("UserInputService").JumpRequest:Connect(function()
     pcall(function()
         if infiniteJumpEnabled and not floatEnabled then
@@ -629,7 +683,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
             raycastParams.FilterDescendantsInstances = {character}
             raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
             local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-            
+
             if raycastResult then
                 rootPart.CFrame = CFrame.new(raycastResult.Position + Vector3.new(0, humanoid.HipHeight + 2, 0))
             else
@@ -684,7 +738,7 @@ VisualTab:AddToggle("Fullbright", {
                 originalGlobalShadows = game.Lighting.GlobalShadows
                 originalFogEnd = game.Lighting.FogEnd
                 originalFogStart = game.Lighting.FogStart
-                
+
                 game.Lighting.Brightness = 2
                 game.Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
                 game.Lighting.GlobalShadows = false
@@ -735,10 +789,10 @@ VisualTab:AddToggle("FreeCam", {
             if value then
                 originalWalkSpeed = humanoid.WalkSpeed
                 humanoid.WalkSpeed = 0
-                
+
                 local camera = workspace.CurrentCamera
                 originalCameraSubject = camera.CameraSubject
-                
+
                 freeCamPart = Instance.new("Part")
                 freeCamPart.Name = "FreeCamPart"
                 freeCamPart.Transparency = 1
@@ -746,27 +800,27 @@ VisualTab:AddToggle("FreeCam", {
                 freeCamPart.Anchored = true
                 freeCamPart.Position = camera.CFrame.Position
                 freeCamPart.Parent = workspace
-                
+
                 camera.CameraSubject = freeCamPart
-                
+
                 freeCamConnection = game:GetService("RunService").RenderStepped:Connect(function()
                     if freeCamEnabled then
                         local UIS = game:GetService("UserInputService")
                         local move = Vector3.new(0, 0, 0)
                         local cf = camera.CFrame
-                        
+
                         if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + cf.LookVector end
                         if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - cf.LookVector end
                         if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + cf.RightVector end
                         if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - cf.RightVector end
                         if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, 1, 0) end
                         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - Vector3.new(0, 1, 0) end
-                        
+
                         if move.Magnitude > 0 then
                             move = move.Unit * freeCamSpeed
                             freeCamPart.Position = freeCamPart.Position + move
                         end
-                        
+
                         local mouse = player:GetMouse()
                         if UIS:IsKeyDown(Enum.KeyCode.RightShift) then
                             local newCF = CFrame.new(freeCamPart.Position, freeCamPart.Position + mouse.UnitRay.Direction * 100)
@@ -787,28 +841,3 @@ VisualTab:AddToggle("FreeCam", {
     end
 })
 
-local CreditsSection = CreditsTab:AddSection("Script Information")
-CreditsSection:AddLabel("Likegenm - Scripter")
-CreditsSection:AddLabel("Vicinly - Idea + help")
-CreditsSection:AddLabel("")
-
-local FeaturesSection = CreditsTab:AddSection("Features")
-FeaturesSection:AddLabel("• Speed Hack")
-FeaturesSection:AddLabel("• Fly")
-FeaturesSection:AddLabel("• Float (WASD/Space/Shift)")
-FeaturesSection:AddLabel("• Infinite Jump")
-FeaturesSection:AddLabel("• Long Jump")
-FeaturesSection:AddLabel("• Noclip")
-FeaturesSection:AddLabel("• Invisibility (Z key)")
-FeaturesSection:AddLabel("• AntiRush - Invis while Skvorec exists")
-FeaturesSection:AddLabel("• Anti Bunny - Block movement when DontMove active")
-FeaturesSection:AddLabel("• FOV Changer")
-FeaturesSection:AddLabel("• FreeCam")
-FeaturesSection:AddLabel("• Fullbright")
-
-local ControlsSection = CreditsTab:AddSection("Controls")
-ControlsSection:AddLabel("T - Teleport to mouse")
-ControlsSection:AddLabel("Z - Toggle Invisibility")
-ControlsSection:AddLabel("WASD (Float) - Move horizontally")
-ControlsSection:AddLabel("Space (Float) - Move up")
-ControlsSection:AddLabel("LeftShift (Float) - Move down")
