@@ -64,13 +64,25 @@ local antiRushLoop = nil
 local isInRushInvis = false
 local rushInvisChair = nil
 
--- Anti Bunny (НОВАЯ ВЕРСИЯ)
+-- Anti Bunny переменные
 local antiBunnyEnabled = false
 local antiBunnyLoop = nil
 
 -- Anti Train переменные
 local antiTrainEnabled = false
 local antiTrainLoop = nil
+
+-- Anti Anton Chigur переменные
+local antiAntonChigurEnabled = false
+local antiAntonChigurLoop = nil
+
+-- Anti amamam переменные
+local antiAmamamEnabled = false
+local antiAmamamLoop = nil
+
+-- Anti Arthur переменные
+local antiArthurEnabled = false
+local antiArthurLoop = nil
 
 local function setCharacterTransparency(transparency)
     pcall(function()
@@ -85,167 +97,7 @@ local function setCharacterTransparency(transparency)
     end)
 end
 
--- AntiRush функция (невидимость пока есть Skvorec)
-local function startRushInvis()
-    if isInRushInvis then return end
-    isInRushInvis = true
-
-    pcall(function()
-        local savedPos = rootPart.CFrame
-        local invisPos = Vector3.new(-25.95, 84, 3537.55)
-        character:MoveTo(invisPos)
-        task.wait(0.15)
-
-        rushInvisChair = Instance.new("Seat")
-        rushInvisChair.Name = "rush_invischair"
-        rushInvisChair.Anchored = false
-        rushInvisChair.CanCollide = false
-        rushInvisChair.Transparency = 1
-        rushInvisChair.Position = invisPos
-        rushInvisChair.Parent = workspace
-
-        local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-        if torso then
-            local weld = Instance.new("Weld", rushInvisChair)
-            weld.Part0 = rushInvisChair
-            weld.Part1 = torso
-        end
-
-        task.wait()
-        rushInvisChair.CFrame = savedPos
-        setCharacterTransparency(0.5)
-
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "AntiRush",
-            Duration = 3,
-            Text = "⚠️ Rush detected! Invisibility until Skvorec disappears"
-        })
-    end)
-end
-
-local function stopRushInvis()
-    if not isInRushInvis then return end
-    isInRushInvis = false
-
-    pcall(function()
-        if rushInvisChair then
-            rushInvisChair:Destroy()
-            rushInvisChair = nil
-        end
-        setCharacterTransparency(0)
-
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "AntiRush",
-            Duration = 2,
-            Text = "✅ Skvorec gone, invisibility off"
-        })
-    end)
-end
-
--- Запуск AntiRush
-local function startAntiRush()
-    if antiRushLoop then antiRushLoop:Disconnect() end
-    antiRushLoop = game:GetService("RunService").Stepped:Connect(function()
-        if not antiRushEnabled then return end
-
-        pcall(function()
-            local hb = workspace:FindFirstChild("Hitboxes")
-            local skvorec = hb and hb:FindFirstChild("Skvorec")
-
-            if skvorec and skvorec.Parent == hb then
-                if not isInRushInvis then
-                    startRushInvis()
-                end
-            else
-                if isInRushInvis then
-                    stopRushInvis()
-                end
-            end
-        end)
-    end)
-end
-
-local function stopAntiRush()
-    if antiRushLoop then
-        antiRushLoop:Disconnect()
-        antiRushLoop = nil
-    end
-    if isInRushInvis then
-        stopRushInvis()
-    end
-end
-
-local function startAntiBunny()
-    if antiBunnyLoop then antiBunnyLoop:Disconnect() end
-    antiBunnyLoop = task.spawn(function()
-        while antiBunnyEnabled do
-            pcall(function()
-                local playerGui = player:FindFirstChild("PlayerGui")
-                if playerGui then
-                    local dontMove = playerGui:FindFirstChild("DontMove")
-                    if dontMove then
-                        dontMove:Destroy()
-                    end
-                end
-            end)
-            task.wait(0.1)
-        end
-    end)
-end
-
-local function stopAntiBunny()
-    if antiBunnyLoop then
-        task.cancel(antiBunnyLoop)
-        antiBunnyLoop = nil
-    end
-end
-
-
--- Функция Anti Train (удаляет Working Train каждые 0.001 секунды)
-local function startAntiTrain()
-    if antiTrainLoop then antiTrainLoop:Disconnect() end
-    
-    -- Используем Heartbeat для максимально частой проверки (каждый кадр, ~60-144 раз в секунду)
-    -- Добавляем дополнительный цикл для проверки каждые 0.001 секунды
-    antiTrainLoop = game:GetService("RunService").Heartbeat:Connect(function()
-        if not antiTrainEnabled then return end
-        
-        pcall(function()
-            local map = workspace:FindFirstChild("Map")
-            if map then
-                -- Ищем объект с названием WorkingTrain (без пробела или с пробелом)
-                local workingTrain = map:FindFirstChild("WorkingTrain") or map:FindFirstChild("Working Train")
-                if workingTrain then
-                    workingTrain:Destroy()
-                end
-            end
-        end)
-    end)
-    
-    -- Дополнительный быстрый цикл для проверки каждые 0.001 секунды
-    task.spawn(function()
-        while antiTrainEnabled do
-            pcall(function()
-                local map = workspace:FindFirstChild("Map")
-                if map then
-                    local workingTrain = map:FindFirstChild("WorkingTrain") or map:FindFirstChild("Working Train")
-                    if workingTrain then
-                        workingTrain:Destroy()
-                    end
-                end
-            end)
-            task.wait(0.001) -- Проверка каждую 0.001 секунды
-        end
-    end)
-end
-
-local function stopAntiTrain()
-    if antiTrainLoop then
-        antiTrainLoop:Disconnect()
-        antiTrainLoop = nil
-    end
-end
-
+-- Функция инвиза
 local function toggleInvisibility()
     if isInRushInvis then
         game.StarterGui:SetCore("SendNotification", {
@@ -308,6 +160,251 @@ local function toggleInvisibility()
     end
 end
 
+-- AntiRush функция
+local function startRushInvis()
+    if isInRushInvis then return end
+    isInRushInvis = true
+
+    pcall(function()
+        local savedPos = rootPart.CFrame
+        local invisPos = Vector3.new(-25.95, 84, 3537.55)
+        character:MoveTo(invisPos)
+        task.wait(0.15)
+
+        rushInvisChair = Instance.new("Seat")
+        rushInvisChair.Name = "rush_invischair"
+        rushInvisChair.Anchored = false
+        rushInvisChair.CanCollide = false
+        rushInvisChair.Transparency = 1
+        rushInvisChair.Position = invisPos
+        rushInvisChair.Parent = workspace
+
+        local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+        if torso then
+            local weld = Instance.new("Weld", rushInvisChair)
+            weld.Part0 = rushInvisChair
+            weld.Part1 = torso
+        end
+
+        task.wait()
+        rushInvisChair.CFrame = savedPos
+        setCharacterTransparency(0.5)
+
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "AntiRush",
+            Duration = 3,
+            Text = "⚠️ Rush detected! Invisibility until Skvorec disappears"
+        })
+    end)
+end
+
+local function stopRushInvis()
+    if not isInRushInvis then return end
+    isInRushInvis = false
+
+    pcall(function()
+        if rushInvisChair then
+            rushInvisChair:Destroy()
+            rushInvisChair = nil
+        end
+        setCharacterTransparency(0)
+
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "AntiRush",
+            Duration = 2,
+            Text = "✅ Skvorec gone, invisibility off"
+        })
+    end)
+end
+
+local function startAntiRush()
+    if antiRushLoop then antiRushLoop:Disconnect() end
+    antiRushLoop = game:GetService("RunService").Stepped:Connect(function()
+        if not antiRushEnabled then return end
+
+        pcall(function()
+            local hb = workspace:FindFirstChild("Hitboxes")
+            local skvorec = hb and hb:FindFirstChild("Skvorec")
+
+            if skvorec and skvorec.Parent == hb then
+                if not isInRushInvis then
+                    startRushInvis()
+                end
+            else
+                if isInRushInvis then
+                    stopRushInvis()
+                end
+            end
+        end)
+    end)
+end
+
+local function stopAntiRush()
+    if antiRushLoop then
+        antiRushLoop:Disconnect()
+        antiRushLoop = nil
+    end
+    if isInRushInvis then
+        stopRushInvis()
+    end
+end
+
+-- Anti Bunny функция
+local function startAntiBunny()
+    if antiBunnyLoop then 
+        task.cancel(antiBunnyLoop)
+        antiBunnyLoop = nil
+    end
+    
+    antiBunnyLoop = task.spawn(function()
+        while antiBunnyEnabled do
+            pcall(function()
+                local playerGui = player:FindFirstChild("PlayerGui")
+                if playerGui then
+                    local dontMove = playerGui:FindFirstChild("DontMove")
+                    if dontMove then
+                        dontMove:Destroy()
+                    end
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function stopAntiBunny()
+    if antiBunnyLoop then
+        task.cancel(antiBunnyLoop)
+        antiBunnyLoop = nil
+    end
+end
+
+-- Anti Anton Chigur функция (удаляет GUI)
+local function startAntiAntonChigur()
+    if antiAntonChigurLoop then
+        task.cancel(antiAntonChigurLoop)
+        antiAntonChigurLoop = nil
+    end
+
+    antiAntonChigurLoop = task.spawn(function()
+        while antiAntonChigurEnabled do
+            pcall(function()
+                local antonGui = player.PlayerGui:FindFirstChild("AntonChigur")
+                if antonGui then
+                    antonGui:Destroy()
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function stopAntiAntonChigur()
+    if antiAntonChigurLoop then
+        task.cancel(antiAntonChigurLoop)
+        antiAntonChigurLoop = nil
+    end
+end
+
+-- Anti amamam функция (удаляет GUI)
+local function startAntiAmamam()
+    if antiAmamamLoop then
+        task.cancel(antiAmamamLoop)
+        antiAmamamLoop = nil
+    end
+
+    antiAmamamLoop = task.spawn(function()
+        while antiAmamamEnabled do
+            pcall(function()
+                local amamamGui = player.PlayerGui:FindFirstChild("amamam")
+                if amamamGui then
+                    amamamGui:Destroy()
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function stopAntiAmamam()
+    if antiAmamamLoop then
+        task.cancel(antiAmamamLoop)
+        antiAmamamLoop = nil
+    end
+end
+
+-- Anti Arthur функция (удаляет GUI)
+local function startAntiArthur()
+    if antiArthurLoop then
+        task.cancel(antiArthurLoop)
+        antiArthurLoop = nil
+    end
+
+    antiArthurLoop = task.spawn(function()
+        while antiArthurEnabled do
+            pcall(function()
+                local arthurGui = player.PlayerGui:FindFirstChild("ArturSpawn")
+                if arthurGui then
+                    arthurGui:Destroy()
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function stopAntiArthur()
+    if antiArthurLoop then
+        task.cancel(antiArthurLoop)
+        antiArthurLoop = nil
+    end
+end
+
+-- Anti Train функция
+local function startAntiTrain()
+    if antiTrainLoop then 
+        antiTrainLoop:Disconnect()
+        antiTrainLoop = nil
+    end
+    
+    antiTrainLoop = game:GetService("RunService").Heartbeat:Connect(function()
+        if not antiTrainEnabled then return end
+        
+        pcall(function()
+            local map = workspace:FindFirstChild("Map")
+            if map then
+                local workingTrain = map:FindFirstChild("WorkingTrain") or map:FindFirstChild("Working Train")
+                if workingTrain then
+                    workingTrain:Destroy()
+                end
+            end
+        end)
+    end)
+    
+    task.spawn(function()
+        while antiTrainEnabled do
+            pcall(function()
+                local map = workspace:FindFirstChild("Map")
+                if map then
+                    local workingTrain = map:FindFirstChild("WorkingTrain") or map:FindFirstChild("Working Train")
+                    if workingTrain then
+                        workingTrain:Destroy()
+                    end
+                end
+            end)
+            task.wait(0.001)
+        end
+    end)
+end
+
+local function stopAntiTrain()
+    if antiTrainLoop then
+        antiTrainLoop:Disconnect()
+        antiTrainLoop = nil
+    end
+end
+
+-- Float функция
 local function toggleFloat()
     floatEnabled = not floatEnabled
 
@@ -610,9 +707,87 @@ GameTab:AddToggle("AntiRush", {
     end
 })
 
+GameTab:AddToggle("AntiAntonChigur", {
+    Title = "Anti Anton Chigur",
+    Description = "Auto remove AntonChigur GUI",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            antiAntonChigurEnabled = value
+            if value then
+                startAntiAntonChigur()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Anton Chigur",
+                    Duration = 2,
+                    Text = "Anti Anton Chigur ON - Removing GUI"
+                })
+            else
+                stopAntiAntonChigur()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Anton Chigur",
+                    Duration = 2,
+                    Text = "Anti Anton Chigur OFF"
+                })
+            end
+        end)
+    end
+})
+
+GameTab:AddToggle("AntiAmamam", {
+    Title = "Anti amamam",
+    Description = "Auto remove amamam GUI",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            antiAmamamEnabled = value
+            if value then
+                startAntiAmamam()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti amamam",
+                    Duration = 2,
+                    Text = "Anti amamam ON - Removing GUI"
+                })
+            else
+                stopAntiAmamam()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti amamam",
+                    Duration = 2,
+                    Text = "Anti amamam OFF"
+                })
+            end
+        end)
+    end
+})
+
+GameTab:AddToggle("AntiArthur", {
+    Title = "Anti Arthur",
+    Description = "Auto remove ArturSpawn GUI",
+    Default = false,
+    Callback = function(value)
+        pcall(function()
+            antiArthurEnabled = value
+            if value then
+                startAntiArthur()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Arthur",
+                    Duration = 2,
+                    Text = "Anti Arthur ON - Removing GUI"
+                })
+            else
+                stopAntiArthur()
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Anti Arthur",
+                    Duration = 2,
+                    Text = "Anti Arthur OFF"
+                })
+            end
+        end)
+    end
+})
+
 GameTab:AddToggle("AntiBunny", {
     Title = "Anti Bunny",
-    Description = "Block movement when DontMove.Tick.Playing is active",
+    Description = "Remove DontMove GUI when frozen",
     Default = false,
     Callback = function(value)
         pcall(function()
@@ -622,7 +797,7 @@ GameTab:AddToggle("AntiBunny", {
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Anti Bunny",
                     Duration = 2,
-                    Text = "Anti Bunny ON - Will block movement when frozen"
+                    Text = "Anti Bunny ON"
                 })
             else
                 stopAntiBunny()
@@ -636,7 +811,6 @@ GameTab:AddToggle("AntiBunny", {
     end
 })
 
--- НОВЫЙ Anti Train с проверкой каждые 0.001 секунды
 GameTab:AddToggle("AntiTrain", {
     Title = "Anti Train",
     Description = "Remove 'Working Train' from Map every 0.001 seconds",
@@ -649,7 +823,7 @@ GameTab:AddToggle("AntiTrain", {
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Anti Train",
                     Duration = 2,
-                    Text = "Anti Train ON - Checking every 0.001 seconds"
+                    Text = "Anti Train ON"
                 })
             else
                 stopAntiTrain()
@@ -840,4 +1014,3 @@ VisualTab:AddToggle("FreeCam", {
         end)
     end
 })
-
