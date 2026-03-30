@@ -58,6 +58,12 @@ local floatEnabled = false
 local floatBodyVelocity = nil
 local floatConnection = nil
 
+-- Музыкальные переменные
+local menuMusicEnabled = false
+local menuMusicSound = nil
+local musicVolume = 0.5
+local musicSpeed = 1.0
+
 -- AntiRush переменные
 local antiRushEnabled = false
 local antiRushLoop = nil
@@ -157,6 +163,38 @@ local function toggleInvisibility()
 
     if invisToggleObject then
         invisToggleObject:SetValue(invisEnabled)
+    end
+end
+
+-- Музыкальные функции
+local function PlayMenuMusic()
+    if menuMusicSound then
+        menuMusicSound:Stop()
+        menuMusicSound:Destroy()
+    end
+    
+    menuMusicSound = Instance.new("Sound")
+    menuMusicSound.SoundId = "rbxassetid://1848319100"
+    menuMusicSound.Volume = musicVolume
+    menuMusicSound.PlaybackSpeed = musicSpeed
+    menuMusicSound.Looped = true
+    menuMusicSound.Parent = workspace
+    
+    menuMusicSound:Play()
+end
+
+local function StopMenuMusic()
+    if menuMusicSound then
+        menuMusicSound:Stop()
+        menuMusicSound:Destroy()
+        menuMusicSound = nil
+    end
+end
+
+local function UpdateMusicSettings()
+    if menuMusicSound then
+        menuMusicSound.Volume = musicVolume
+        menuMusicSound.PlaybackSpeed = musicSpeed
     end
 end
 
@@ -681,6 +719,7 @@ LocalPlayerTab:AddToggle("Float", {
     end
 })
 
+-- Game Tab Toggles
 GameTab:AddToggle("AntiRush", {
     Title = "AntiRush",
     Description = "Auto invis while Skvorec exists in Hitboxes",
@@ -834,6 +873,47 @@ GameTab:AddToggle("AntiTrain", {
                 })
             end
         end)
+    end
+})
+
+-- Музыкальные элементы
+GameTab:AddToggle("MenuMusic", {
+    Title = "Menu Music",
+    Description = "Play menu music",
+    Default = false,
+    Callback = function(Value)
+        menuMusicEnabled = Value
+        if Value then
+            PlayMenuMusic()
+        else
+            StopMenuMusic()
+        end
+    end
+})
+
+GameTab:AddSlider("MusicVolume", {
+    Title = "Music Volume",
+    Description = "Adjust music volume",
+    Default = 0.5,
+    Min = 0.1,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(Value)
+        musicVolume = Value
+        UpdateMusicSettings()
+    end
+})
+
+GameTab:AddSlider("MusicSpeed", {
+    Title = "Music Speed",
+    Description = "Adjust music playback speed",
+    Default = 1.0,
+    Min = 0.1,
+    Max = 2.0,
+    Rounding = 2,
+    Callback = function(Value)
+        musicSpeed = Value
+        UpdateMusicSettings()
     end
 })
 
