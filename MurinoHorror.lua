@@ -58,35 +58,28 @@ local floatEnabled = false
 local floatBodyVelocity = nil
 local floatConnection = nil
 
--- Музыкальные переменные
 local menuMusicEnabled = false
 local menuMusicSound = nil
 local musicVolume = 0.5
 local musicSpeed = 1.0
 
--- AntiRush переменные
 local antiRushEnabled = false
 local antiRushLoop = nil
 local isInRushInvis = false
 local rushInvisChair = nil
 
--- Anti Bunny переменные
 local antiBunnyEnabled = false
 local antiBunnyLoop = nil
 
--- Anti Train переменные
 local antiTrainEnabled = false
 local antiTrainLoop = nil
 
--- Anti Anton Chigur переменные
 local antiAntonChigurEnabled = false
 local antiAntonChigurLoop = nil
 
--- Anti amamam переменные
 local antiAmamamEnabled = false
 local antiAmamamLoop = nil
 
--- Anti Arthur переменные
 local antiArthurEnabled = false
 local antiArthurLoop = nil
 
@@ -103,7 +96,6 @@ local function setCharacterTransparency(transparency)
     end)
 end
 
--- Функция инвиза
 local function toggleInvisibility()
     if isInRushInvis then
         game.StarterGui:SetCore("SendNotification", {
@@ -166,7 +158,6 @@ local function toggleInvisibility()
     end
 end
 
--- Музыкальные функции
 local function PlayMenuMusic()
     if menuMusicSound then
         menuMusicSound:Stop()
@@ -198,7 +189,6 @@ local function UpdateMusicSettings()
     end
 end
 
--- AntiRush функция
 local function startRushInvis()
     if isInRushInvis then return end
     isInRushInvis = true
@@ -287,7 +277,6 @@ local function stopAntiRush()
     end
 end
 
--- Anti Bunny функция
 local function startAntiBunny()
     if antiBunnyLoop then 
         task.cancel(antiBunnyLoop)
@@ -317,7 +306,6 @@ local function stopAntiBunny()
     end
 end
 
--- Anti Anton Chigur функция (удаляет GUI)
 local function startAntiAntonChigur()
     if antiAntonChigurLoop then
         task.cancel(antiAntonChigurLoop)
@@ -344,7 +332,6 @@ local function stopAntiAntonChigur()
     end
 end
 
--- Anti amamam функция (удаляет GUI)
 local function startAntiAmamam()
     if antiAmamamLoop then
         task.cancel(antiAmamamLoop)
@@ -371,7 +358,6 @@ local function stopAntiAmamam()
     end
 end
 
--- Anti Arthur функция (удаляет GUI)
 local function startAntiArthur()
     if antiArthurLoop then
         task.cancel(antiArthurLoop)
@@ -398,7 +384,6 @@ local function stopAntiArthur()
     end
 end
 
--- Anti Train функция
 local function startAntiTrain()
     if antiTrainLoop then 
         antiTrainLoop:Disconnect()
@@ -442,7 +427,6 @@ local function stopAntiTrain()
     end
 end
 
--- Float функция
 local function toggleFloat()
     floatEnabled = not floatEnabled
 
@@ -505,7 +489,6 @@ local function toggleFloat()
     end
 end
 
--- GUI ЭЛЕМЕНТЫ
 LocalPlayerTab:AddSlider("Speed", {
     Title = "Speed",
     Description = "Change walk speed",
@@ -719,7 +702,6 @@ LocalPlayerTab:AddToggle("Float", {
     end
 })
 
--- Game Tab Toggles
 GameTab:AddToggle("AntiRush", {
     Title = "AntiRush",
     Description = "Auto invis while Skvorec exists in Hitboxes",
@@ -876,7 +858,6 @@ GameTab:AddToggle("AntiTrain", {
     end
 })
 
--- Музыкальные элементы
 GameTab:AddToggle("MenuMusic", {
     Title = "Menu Music",
     Description = "Play menu music",
@@ -947,7 +928,6 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
     end)
 end)
 
--- Клавиша Z для инвиза
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.Z and not isInRushInvis then
