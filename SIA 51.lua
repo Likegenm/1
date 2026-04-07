@@ -16,13 +16,14 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
-local Tab = Window:CreateTab("Main", 4483362458) -- Title, Image
+local Tab = Window:CreateTab("Main", 4483362458) 
+_G.Tab = Tab
 
 local Bypass = Tab:CreateSection("Bypasser")
 
 local BypassButton = Bypass:CreateButton({
    Name = "Bypass AntiCheat",
    Callback = function()
-	
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/PartScripts/refs/heads/main/RedStar.lua"))()
    end,
 })  
