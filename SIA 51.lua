@@ -6,8 +6,7 @@ local Window = OrionLib:MakeWindow({
     SaveConfig = true,
     ConfigFolder = "OrionTest",
     IntroEnabled = true,
-    IntroText = "by Likegenm",
-    OpenKey = Enum.KeyCode.LeftControl
+    IntroText = "by Likegenm"
 })
 
 local Tab1 = Window:MakeTab({
@@ -33,6 +32,95 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.LeftControl then
+        Window:Toggle()
+    end
+end)
+
+local savedPosition = nil
+
+local TeleportSection = Tab3:AddSection({
+    Name = "Teleports"
+})
+
+Tab3:AddButton({
+    Name = "Save Position",
+    Callback = function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            savedPosition = char.HumanoidRootPart.Position
+        end
+    end    
+})
+
+Tab3:AddButton({
+    Name = "Teleport To Position",
+    Callback = function()
+        if savedPosition then
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char.HumanoidRootPart.CFrame = CFrame.new(savedPosition)
+            end
+        end
+    end    
+})
+
+Tab3:AddButton({
+    Name = "Teleport to LXW",
+    Callback = function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(-13.04, 875.00, -46.00)
+        end
+    end    
+})
+
+local WeaponSection = Tab3:AddSection({
+    Name = "Weapon Teleports"
+})
+
+Tab3:AddButton({
+    Name = "Teleport Volcan(weapon)",
+    Callback = function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(-600.26, 964.85, 155.14)
+        end
+    end    
+})
+
+Tab3:AddButton({
+    Name = "Teleport Volcan",
+    Callback = function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(-536.87, 994.78, 303.97)
+        end
+    end    
+})
+
+Tab3:AddButton({
+    Name = "Teleport to XEN Spitter",
+    Callback = function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(-583.48, 1081.49, 1086.42)
+        end
+    end    
+})
+
+Tab3:AddButton({
+    Name = "Teleport to Missle Launcher",
+    Callback = function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(-352.94, 1073.00, 408.77)
+        end
+    end    
+})
 
 local WSSection = Tab2:AddSection({
     Name = "WalkSpeed"
@@ -215,6 +303,14 @@ local function stopFlying()
     end
 end
 
+local function toggleFly()
+    if flying then
+        stopFlying()
+    else
+        startFlying()
+    end
+end
+
 Tab2:AddToggle({
     Name = "Fly",
     Default = false,
@@ -226,6 +322,17 @@ Tab2:AddToggle({
         end
     end    
 })
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F then
+        local flyToggle = Tab2:GetToggle("Fly")
+        if flyToggle then
+            flyToggle:Set(not flying)
+        end
+        toggleFly()
+    end
+end)
 
 Tab2:AddSlider({
     Name = "FlySpeed",
