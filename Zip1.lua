@@ -1,4 +1,3 @@
-
 --[[
 
 ██╗     ██╗██╗██╗  ██╗███████╗ ██████╗ ███████╗███╗   ██╗███╗   ███╗
@@ -16,6 +15,15 @@
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Real-Scripts/refs/heads/main/DownoloadLiblary.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Test/refs/heads/main/Irina.lua"))()
+
+workspace.FallenPartsDestroyHeight = 0/0
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if hum and hum.Health <= 0 then
+        hum.Health = hum.MaxHealth
+    end
+end)
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
@@ -964,7 +972,7 @@ PlatformSection:Toggle({
                 platformPart.Material = Enum.Material.Neon
                 platformPart.Parent = workspace
                 
-                platformPart.Position = Vector3.new(0, -500, 0)
+                platformPart.Position = Vector3.new(0, -5000, 0)
                 
                 local lastVelocity = Vector3.new(0, 0, 0)
                 
@@ -975,7 +983,7 @@ PlatformSection:Toggle({
                         
                         platformPart.Position = Vector3.new(
                             rootPart.Position.X,
-                            -500,
+                            -5000,
                             rootPart.Position.Z
                         )
                         
@@ -2658,7 +2666,7 @@ local LocationsSection = TeleportTab:Section({
 local teleportMode = "CFrame"
 local locations = {
     ["Arena"] = {X = -164.81, Y = 439.51, Z = -367.23},
-    ["Void"] = {X = -81.32, Y = -496.50, Z = -313.67},
+    ["Void"] = {X = -81.32, Y = -4995, Z = -313.67},
     ["Mountain"] = {X = 358.53, Y = 699.10, Z = 358.56},
     ["Corner1"] = {X = 47.70, Y = 440.51, Z = 473.56},
     ["Corner2"] = {X = -248.36, Y = 441.75, Z = -238.39},
