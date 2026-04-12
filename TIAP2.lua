@@ -1,7 +1,9 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/BypassVoid.lua"))()
+
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Qanuir/orion-ui/refs/heads/main/source.lua"))()
 
 local Window = OrionLib:MakeWindow({
-    Name = "Title of the library",
+    Name = "Troll is a pinning 2 script",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "OrionTest",
@@ -35,20 +37,4 @@ local WSSlider = Tab:AddSlider({
     end    
 })
 
-local BVSection = Tab:AddSection({
-    Name = "Bypass Void"
-})
 
-Tab:AddButton({
-    Name = "Bypass Void",
-    Callback = function()
-        workspace.FallenPartsDestroyHeight = 0/0
-
-game:GetService("RunService").Heartbeat:Connect(function()
-    local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if hum and hum.Health <= 0 then
-        hum.Health = hum.MaxHealth
-    end
-end)
-    end    
-})
