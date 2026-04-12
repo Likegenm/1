@@ -967,7 +967,7 @@ PlatformSection:Toggle({
                 platformPart.Anchored = true
                 platformPart.CanCollide = true
                 platformPart.Transparency = platformTransparency
-                platformPart.Size = Vector3.new(platformSize, 1, platformSize)
+                platformPart.Size = Vector3.new(platformSize, 5, platformSize)
                 platformPart.Color = platformColor
                 platformPart.Material = Enum.Material.Neon
                 platformPart.Parent = workspace
