@@ -25,7 +25,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Qanuir/orion-ui/refs/heads/main/source.lua"))()
 
 local Window = OrionLib:MakeWindow({
-    Name = "Title of the library",
+    Name = "TIAP2 script",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "OrionTest",
