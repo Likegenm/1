@@ -83,6 +83,18 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     end
 end)
 
+local JerkSection = Tab:AddSection({
+    Name = "Jerk"
+})
+
+Tab:AddButton({
+    Name = "Execute Jerk",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+        loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    end
+})
+
 local TPSection = Tab:AddSection({
     Name = "Teleports"
 })
@@ -249,6 +261,64 @@ end})
 Tab:AddButton({Name = "Invisible", Callback = function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/InvisforPhantasm.lua"))()
 end})
+
+local OrbitSection = Tab:AddSection({Name = "Orbit Players"})
+
+local orbitActive = false
+local orbitSpeed = 2
+local orbitRadius = 10
+local orbitConnection = nil
+local selectedOrbitPlayer = nil
+
+local function getPlayers()
+    local players = {}
+    for _, plr in pairs(game.Players:GetPlayers()) do
+        if plr ~= game.Players.LocalPlayer then
+            table.insert(players, plr.Name)
+        end
+    end
+    return players
+end
+
+Tab:AddDropdown({
+    Name = "Select Player",
+    Default = "",
+    Options = getPlayers(),
+    Callback = function(Value)
+        selectedOrbitPlayer = game.Players:FindFirstChild(Value)
+    end
+})
+
+Tab:AddToggle({Name = "Orbit Player", Default = false, Callback = function(Value)
+    orbitActive = Value
+    if orbitActive and selectedOrbitPlayer then
+        local char = game.Players.LocalPlayer.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        
+        local angle = 0
+        orbitConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            if not orbitActive or not selectedOrbitPlayer or not selectedOrbitPlayer.Character then return end
+            local targetHrp = selectedOrbitPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not targetHrp then return end
+            
+            angle = angle + orbitSpeed * 0.05
+            local x = math.cos(angle) * orbitRadius
+            local z = math.sin(angle) * orbitRadius
+            hrp.CFrame = targetHrp.CFrame * CFrame.new(x, 0, z)
+        end)
+    else
+        if orbitConnection then
+            orbitConnection:Disconnect()
+            orbitConnection = nil
+        end
+    end
+end})
+
+Tab:AddSlider({Name = "Orbit Speed", Min = 1, Max = 10, Default = 2, Color = Color3.fromRGB(255, 255, 255), Increment = 1, ValueName = "Speed", Callback = function(Value) orbitSpeed = Value end})
+
+Tab:AddSlider({Name = "Orbit Radius", Min = 5, Max = 30, Default = 10, Color = Color3.fromRGB(255, 255, 255), Increment = 1, ValueName = "Radius", Callback = function(Value) orbitRadius = Value end})
 
 local TrollSection = Tab:AddSection({Name = "Troll"})
 
