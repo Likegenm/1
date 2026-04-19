@@ -1,5 +1,3 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/BypassVoid.lua"))()
-
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -254,6 +252,79 @@ local VehicleFlySpeedSlider = Tab:CreateSlider({
    end,
 })
 
+local white = game:GetService("Teams").white
+local red = game:GetService("Teams").red
+local black = game:GetService("Teams").black
+local blue = game:GetService("Teams").blue
+local green = game:GetService("Teams").green
+local magenta = game:GetService("Teams").magenta
+local yellow = game:GetService("Teams").yellow
+
+local TeamChangerSection = Tab:CreateSection("Team Changer")
+
+local GreenTeamButton = Tab:CreateButton({
+   Name = "Green Team",
+   Callback = function()
+       pcall(function()
+           workspace.ChangeTeam:FireServer(green)
+       end)
+   end,
+})
+
+local MagentaTeamButton = Tab:CreateButton({
+   Name = "Magenta Team",
+   Callback = function()
+       pcall(function()
+           workspace.ChangeTeam:FireServer(magenta)
+       end)
+   end,
+})
+
+local YellowTeamButton = Tab:CreateButton({
+   Name = "Yellow Team",
+   Callback = function()
+       pcall(function()
+           workspace.ChangeTeam:FireServer(yellow)
+       end)
+   end,
+})
+
+local WhiteTeamButton = Tab:CreateButton({
+   Name = "White Team",
+   Callback = function()
+       pcall(function()
+           workspace.ChangeTeam:FireServer(white)
+       end)
+   end,
+})
+
+local RedTeamButton = Tab:CreateButton({
+   Name = "Red Team",
+   Callback = function()
+       pcall(function()
+           workspace.ChangeTeam:FireServer(red)
+       end)
+   end,
+})
+
+local BlackTeamButton = Tab:CreateButton({
+   Name = "Black Team",
+   Callback = function()
+       pcall(function()
+           workspace.ChangeTeam:FireServer(black)
+       end)
+   end,
+})
+
+local BlueTeamButton = Tab:CreateButton({
+   Name = "Blue Team",
+   Callback = function()
+       pcall(function()
+           workspace.ChangeTeam:FireServer(blue)
+       end)
+   end,
+})
+
 local TeleportsSection = Tab:CreateSection("Teleports")
 
 local TeleportVoidButton = Tab:CreateButton({
@@ -267,8 +338,8 @@ local TeleportVoidButton = Tab:CreateButton({
    end,
 })
 
-local WhiteTeamButton = Tab:CreateButton({
-   Name = "White Team",
+local TeleportWhiteButton = Tab:CreateButton({
+   Name = "Teleport White",
    Callback = function()
        local char = game.Players.LocalPlayer.Character
        if char and char:FindFirstChild("HumanoidRootPart") then
@@ -277,8 +348,8 @@ local WhiteTeamButton = Tab:CreateButton({
    end,
 })
 
-local RedTeamButton = Tab:CreateButton({
-   Name = "Red Team",
+local TeleportRedButton = Tab:CreateButton({
+   Name = "Teleport Red",
    Callback = function()
        local char = game.Players.LocalPlayer.Character
        if char and char:FindFirstChild("HumanoidRootPart") then
@@ -287,8 +358,8 @@ local RedTeamButton = Tab:CreateButton({
    end,
 })
 
-local BlackTeamButton = Tab:CreateButton({
-   Name = "Black Team",
+local TeleportBlackButton = Tab:CreateButton({
+   Name = "Teleport Black",
    Callback = function()
        local char = game.Players.LocalPlayer.Character
        if char and char:FindFirstChild("HumanoidRootPart") then
@@ -297,8 +368,8 @@ local BlackTeamButton = Tab:CreateButton({
    end,
 })
 
-local BlueTeamButton = Tab:CreateButton({
-   Name = "Blue Team",
+local TeleportBlueButton = Tab:CreateButton({
+   Name = "Teleport Blue",
    Callback = function()
        local char = game.Players.LocalPlayer.Character
        if char and char:FindFirstChild("HumanoidRootPart") then
@@ -307,8 +378,8 @@ local BlueTeamButton = Tab:CreateButton({
    end,
 })
 
-local PurpleTeamButton = Tab:CreateButton({
-   Name = "Purple Team",
+local TeleportPurpleButton = Tab:CreateButton({
+   Name = "Teleport Purple",
    Callback = function()
        local char = game.Players.LocalPlayer.Character
        if char and char:FindFirstChild("HumanoidRootPart") then
@@ -317,8 +388,8 @@ local PurpleTeamButton = Tab:CreateButton({
    end,
 })
 
-local YellowTeamButton = Tab:CreateButton({
-   Name = "Yellow Team",
+local TeleportYellowButton = Tab:CreateButton({
+   Name = "Teleport Yellow",
    Callback = function()
        local char = game.Players.LocalPlayer.Character
        if char and char:FindFirstChild("HumanoidRootPart") then
@@ -433,6 +504,28 @@ player.CharacterAdded:Connect(function()
     end
 end)
 
+local GravitySection = Tab:CreateSection("Gravity")
+
+local GravitySlider = Tab:CreateSlider({
+   Name = "Gravity",
+   Range = {0, 400},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = workspace.Gravity,
+   Flag = "GravitySlider",
+   Callback = function(Value)
+       workspace.Gravity = Value
+   end,
+})
+
+local ResetGravityButton = Tab:CreateButton({
+   Name = "Reset Gravity",
+   Callback = function()
+       workspace.Gravity = 196.2
+       GravitySlider:Set(196.2)
+   end,
+})
+
 local MiscSection = Tab:CreateSection("Misc")
 local noclipActive = false
 local noclipConnection = nil
@@ -474,3 +567,5 @@ local InvisButton = Tab:CreateButton({
        loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/InvisforPhantasm.lua"))()
    end,
 })
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/BypassVoid.lua"))()
