@@ -1,21 +1,35 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Window = Fluent:CreateWindow({
-    Title = "Murino Horror",
-    SubTitle = "by Likegenm + Vicinly",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = false,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.RightShift 
+local Window = Rayfield:CreateWindow({
+   Name = "Murino Horror",
+   LoadingTitle = "Murino Horror Interface",
+   LoadingSubtitle = "by Likegenm + Vicinly",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil,
+      FileName = "MurinoHorror_Hub"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvitelink",
+      RememberJoins = true
+   },
+   KeySystem = false,
+   KeySettings = {
+      Title = "Untitled",
+      Subtitle = "Key System",
+      Note = "No method of obtaining the key is provided",
+      FileName = "Key",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"Hello"}
+   }
 })
 
-local LocalPlayerTab = Window:AddTab({ Title = "LocalPlayer", Icon = "user" })
-local GameTab = Window:AddTab({ Title = "Game", Icon = "sword" })
-local VisualTab = Window:AddTab({ Title = "Visual", Icon = "eye" })
-local CreditsTab = Window:AddTab({ Title = "Credits", Icon = "info" })
+local LocalPlayerTab = Window:CreateTab("LocalPlayer", 4483362458)
+local GameTab = Window:CreateTab("Game", 4483362458)
+local VisualTab = Window:CreateTab("Visual", 4483362458)
+local CreditsTab = Window:CreateTab("Credits", 4483362458)
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -52,7 +66,6 @@ local originalWalkSpeed = nil
 
 local invisEnabled = false
 local invisChair = nil
-local invisToggleObject = nil
 
 local floatEnabled = false
 local floatBodyVelocity = nil
@@ -151,10 +164,6 @@ local function toggleInvisibility()
             Duration = 2,
             Text = "Invisibility OFF"
         })
-    end
-
-    if invisToggleObject then
-        invisToggleObject:SetValue(invisEnabled)
     end
 end
 
@@ -489,13 +498,15 @@ local function toggleFloat()
     end
 end
 
-LocalPlayerTab:AddSlider("Speed", {
-    Title = "Speed",
-    Description = "Change walk speed",
-    Default = 16,
-    Min = 16,
-    Max = 100,
-    Rounding = 1,
+local SpeedSection = LocalPlayerTab:CreateSection("Speed")
+
+local SpeedSlider = LocalPlayerTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = {16, 100},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 16,
+    Flag = "WalkSpeed",
     Callback = function(value)
         pcall(function()
             currentSpeedValue = value
@@ -503,12 +514,13 @@ LocalPlayerTab:AddSlider("Speed", {
                 humanoid.WalkSpeed = value
             end
         end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddToggle("SpeedToggle", {
-    Title = "Enable Speed",
-    Default = false,
+local SpeedToggle = LocalPlayerTab:CreateToggle({
+    Name = "Enable Speed",
+    CurrentValue = false,
+    Flag = "SpeedToggle",
     Callback = function(value)
         pcall(function()
             speedEnabled = value
@@ -526,24 +538,27 @@ LocalPlayerTab:AddToggle("SpeedToggle", {
                 if humanoid then humanoid.WalkSpeed = originalSpeed end
             end
         end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddSlider("FlySpeed", {
-    Title = "Fly Speed",
-    Description = "Adjust fly movement speed",
-    Default = 50,
-    Min = 10,
-    Max = 200,
-    Rounding = 1,
+local FlySection = LocalPlayerTab:CreateSection("Fly")
+
+local FlySpeedSlider = LocalPlayerTab:CreateSlider({
+    Name = "Fly Speed",
+    Range = {10, 200},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 50,
+    Flag = "FlySpeed",
     Callback = function(value)
         pcall(function() flySpeed = value end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddToggle("Fly", {
-    Title = "Fly",
-    Default = false,
+local FlyToggle = LocalPlayerTab:CreateToggle({
+    Name = "Fly",
+    CurrentValue = false,
+    Flag = "Fly",
     Callback = function(value)
         pcall(function()
             flyEnabled = value
@@ -585,77 +600,87 @@ LocalPlayerTab:AddToggle("Fly", {
                 humanoid.PlatformStand = false
             end
         end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddToggle("InfJump", {
-    Title = "Infinite Jump",
-    Default = false,
+local JumpSection = LocalPlayerTab:CreateSection("Jump")
+
+local InfJumpToggle = LocalPlayerTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfJump",
     Callback = function(value)
         pcall(function() infiniteJumpEnabled = value end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddSlider("LongJump", {
-    Title = "Long Jump Power",
-    Description = "Set jump power",
-    Default = 50,
-    Min = 50,
-    Max = 300,
-    Rounding = 1,
+local LongJumpSlider = LocalPlayerTab:CreateSlider({
+    Name = "Long Jump Power",
+    Range = {50, 300},
+    Increment = 10,
+    Suffix = "Power",
+    CurrentValue = 50,
+    Flag = "LongJumpPower",
     Callback = function(value)
         pcall(function()
             if longJumpEnabled and humanoid then humanoid.JumpPower = value end
         end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddToggle("LongJumpToggle", {
-    Title = "Long Jump",
-    Default = false,
+local LongJumpToggle = LocalPlayerTab:CreateToggle({
+    Name = "Long Jump",
+    CurrentValue = false,
+    Flag = "LongJump",
     Callback = function(value)
         pcall(function()
             longJumpEnabled = value
             if value then
                 originalJumpPower = humanoid.JumpPower
-                humanoid.JumpPower = LocalPlayerTab:GetSlider("LongJump").Value
+                humanoid.JumpPower = 100
             else
                 if humanoid then humanoid.JumpPower = originalJumpPower end
             end
         end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddSlider("HipHeight", {
-    Title = "Hip Height",
-    Description = "Change hip height",
-    Default = 0,
-    Min = 0,
-    Max = 20,
-    Rounding = 1,
+local HipSection = LocalPlayerTab:CreateSection("Hip Height")
+
+local HipHeightSlider = LocalPlayerTab:CreateSlider({
+    Name = "Hip Height",
+    Range = {0, 20},
+    Increment = 1,
+    Suffix = "Height",
+    CurrentValue = 0,
+    Flag = "HipHeight",
     Callback = function(value)
         pcall(function() humanoid.HipHeight = value end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddToggle("HipHeightToggle", {
-    Title = "Enable Hip Height",
-    Default = false,
+local HipHeightToggle = LocalPlayerTab:CreateToggle({
+    Name = "Enable Hip Height",
+    CurrentValue = false,
+    Flag = "HipHeightToggle",
     Callback = function(value)
         pcall(function()
             if value then
                 originalHipHeight = humanoid.HipHeight
-                humanoid.HipHeight = LocalPlayerTab:GetSlider("HipHeight").Value
+                humanoid.HipHeight = 10
             else
                 humanoid.HipHeight = originalHipHeight
             end
         end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddToggle("Noclip", {
-    Title = "Noclip",
-    Default = false,
+local OtherSection = LocalPlayerTab:CreateSection("Other")
+
+local NoclipToggle = LocalPlayerTab:CreateToggle({
+    Name = "Noclip",
+    CurrentValue = false,
+    Flag = "Noclip",
     Callback = function(value)
         pcall(function()
             noclipEnabled = value
@@ -675,37 +700,39 @@ LocalPlayerTab:AddToggle("Noclip", {
                 end
             end
         end)
-    end
+    end,
 })
 
-invisToggleObject = LocalPlayerTab:AddToggle("Invisibility", {
-    Title = "Invisibility",
-    Description = "Make your character invisible",
-    Default = false,
+local InvisToggle = LocalPlayerTab:CreateToggle({
+    Name = "Invisibility",
+    CurrentValue = false,
+    Flag = "Invisibility",
     Callback = function(value)
         pcall(function()
             if value and not invisEnabled then toggleInvisibility()
             elseif not value and invisEnabled then toggleInvisibility() end
         end)
-    end
+    end,
 })
 
-LocalPlayerTab:AddToggle("Float", {
-    Title = "Float",
-    Description = "Float in air (WASD = Move, Space = Up, Shift = Down)",
-    Default = false,
+local FloatToggle = LocalPlayerTab:CreateToggle({
+    Name = "Float",
+    CurrentValue = false,
+    Flag = "Float",
     Callback = function(value)
         pcall(function()
             if value and not floatEnabled then toggleFloat()
             elseif not value and floatEnabled then toggleFloat() end
         end)
-    end
+    end,
 })
 
-GameTab:AddToggle("AntiRush", {
-    Title = "AntiRush",
-    Description = "Auto invis while Skvorec exists in Hitboxes",
-    Default = false,
+local AntiSection = GameTab:CreateSection("Anti")
+
+local AntiRushToggle = GameTab:CreateToggle({
+    Name = "AntiRush",
+    CurrentValue = false,
+    Flag = "AntiRush",
     Callback = function(value)
         pcall(function()
             antiRushEnabled = value
@@ -725,244 +752,161 @@ GameTab:AddToggle("AntiRush", {
                 })
             end
         end)
-    end
+    end,
 })
 
-GameTab:AddToggle("AntiAntonChigur", {
-    Title = "Anti Anton Chigur",
-    Description = "Auto remove AntonChigur GUI",
-    Default = false,
+local AntiAntonToggle = GameTab:CreateToggle({
+    Name = "Anti Anton Chigur",
+    CurrentValue = false,
+    Flag = "AntiAnton",
     Callback = function(value)
         pcall(function()
             antiAntonChigurEnabled = value
             if value then
                 startAntiAntonChigur()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Anton Chigur",
-                    Duration = 2,
-                    Text = "Anti Anton Chigur ON - Removing GUI"
-                })
             else
                 stopAntiAntonChigur()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Anton Chigur",
-                    Duration = 2,
-                    Text = "Anti Anton Chigur OFF"
-                })
             end
         end)
-    end
+    end,
 })
 
-GameTab:AddToggle("AntiAmamam", {
-    Title = "Anti amamam",
-    Description = "Auto remove amamam GUI",
-    Default = false,
+local AntiAmamamToggle = GameTab:CreateToggle({
+    Name = "Anti amamam",
+    CurrentValue = false,
+    Flag = "AntiAmamam",
     Callback = function(value)
         pcall(function()
             antiAmamamEnabled = value
             if value then
                 startAntiAmamam()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti amamam",
-                    Duration = 2,
-                    Text = "Anti amamam ON - Removing GUI"
-                })
             else
                 stopAntiAmamam()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti amamam",
-                    Duration = 2,
-                    Text = "Anti amamam OFF"
-                })
             end
         end)
-    end
+    end,
 })
 
-GameTab:AddToggle("AntiArthur", {
-    Title = "Anti Arthur",
-    Description = "Auto remove ArturSpawn GUI",
-    Default = false,
+local AntiArthurToggle = GameTab:CreateToggle({
+    Name = "Anti Arthur",
+    CurrentValue = false,
+    Flag = "AntiArthur",
     Callback = function(value)
         pcall(function()
             antiArthurEnabled = value
             if value then
                 startAntiArthur()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Arthur",
-                    Duration = 2,
-                    Text = "Anti Arthur ON - Removing GUI"
-                })
             else
                 stopAntiArthur()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Arthur",
-                    Duration = 2,
-                    Text = "Anti Arthur OFF"
-                })
             end
         end)
-    end
+    end,
 })
 
-GameTab:AddToggle("AntiBunny", {
-    Title = "Anti Bunny",
-    Description = "Remove DontMove GUI when frozen",
-    Default = false,
+local AntiBunnyToggle = GameTab:CreateToggle({
+    Name = "Anti Bunny",
+    CurrentValue = false,
+    Flag = "AntiBunny",
     Callback = function(value)
         pcall(function()
             antiBunnyEnabled = value
             if value then
                 startAntiBunny()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Bunny",
-                    Duration = 2,
-                    Text = "Anti Bunny ON"
-                })
             else
                 stopAntiBunny()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Bunny",
-                    Duration = 2,
-                    Text = "Anti Bunny OFF"
-                })
             end
         end)
-    end
+    end,
 })
 
-GameTab:AddToggle("AntiTrain", {
-    Title = "Anti Train",
-    Description = "Remove 'Working Train' from Map every 0.001 seconds",
-    Default = false,
+local AntiTrainToggle = GameTab:CreateToggle({
+    Name = "Anti Train",
+    CurrentValue = false,
+    Flag = "AntiTrain",
     Callback = function(value)
         pcall(function()
             antiTrainEnabled = value
             if value then
                 startAntiTrain()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Train",
-                    Duration = 2,
-                    Text = "Anti Train ON"
-                })
             else
                 stopAntiTrain()
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Anti Train",
-                    Duration = 2,
-                    Text = "Anti Train OFF"
-                })
             end
         end)
-    end
+    end,
 })
 
-GameTab:AddToggle("MenuMusic", {
-    Title = "Menu Music",
-    Description = "Play menu music",
-    Default = false,
-    Callback = function(Value)
-        menuMusicEnabled = Value
-        if Value then
+local MusicSection = GameTab:CreateSection("Music")
+
+local MenuMusicToggle = GameTab:CreateToggle({
+    Name = "Menu Music",
+    CurrentValue = false,
+    Flag = "MenuMusic",
+    Callback = function(value)
+        menuMusicEnabled = value
+        if value then
             PlayMenuMusic()
         else
             StopMenuMusic()
         end
-    end
+    end,
 })
 
-GameTab:AddSlider("MusicVolume", {
-    Title = "Music Volume",
-    Description = "Adjust music volume",
-    Default = 0.5,
-    Min = 0.1,
-    Max = 1,
-    Rounding = 2,
-    Callback = function(Value)
-        musicVolume = Value
+local MusicVolumeSlider = GameTab:CreateSlider({
+    Name = "Music Volume",
+    Range = {0.1, 1},
+    Increment = 0.1,
+    Suffix = "Volume",
+    CurrentValue = 0.5,
+    Flag = "MusicVolume",
+    Callback = function(value)
+        musicVolume = value
         UpdateMusicSettings()
-    end
+    end,
 })
 
-GameTab:AddSlider("MusicSpeed", {
-    Title = "Music Speed",
-    Description = "Adjust music playback speed",
-    Default = 1.0,
-    Min = 0.1,
-    Max = 2.0,
-    Rounding = 2,
-    Callback = function(Value)
-        musicSpeed = Value
+local MusicSpeedSlider = GameTab:CreateSlider({
+    Name = "Music Speed",
+    Range = {0.1, 2.0},
+    Increment = 0.1,
+    Suffix = "Speed",
+    CurrentValue = 1.0,
+    Flag = "MusicSpeed",
+    Callback = function(value)
+        musicSpeed = value
         UpdateMusicSettings()
-    end
+    end,
 })
 
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    pcall(function()
-        if infiniteJumpEnabled and not floatEnabled then
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end)
-end)
+local VisualSection = VisualTab:CreateSection("Visual")
 
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    pcall(function()
-        if gameProcessed then return end
-        if input.KeyCode == Enum.KeyCode.T then
-            local mouse = player:GetMouse()
-            local targetPos = mouse.Hit.p
-            local rayOrigin = targetPos + Vector3.new(0, 10, 0)
-            local rayDirection = Vector3.new(0, -20, 0)
-            local raycastParams = RaycastParams.new()
-            raycastParams.FilterDescendantsInstances = {character}
-            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-            local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-
-            if raycastResult then
-                rootPart.CFrame = CFrame.new(raycastResult.Position + Vector3.new(0, humanoid.HipHeight + 2, 0))
-            else
-                rootPart.CFrame = CFrame.new(targetPos)
-            end
-        end
-    end)
-end)
-
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Z and not isInRushInvis then
-        pcall(function() toggleInvisibility() end)
-    end
-end)
-
-VisualTab:AddSlider("FOV", {
-    Title = "Field of View",
-    Description = "Change camera FOV",
-    Default = 70,
-    Min = 70,
-    Max = 120,
-    Rounding = 1,
+local FOVSlider = VisualTab:CreateSlider({
+    Name = "Field of View",
+    Range = {70, 120},
+    Increment = 1,
+    Suffix = "FOV",
+    CurrentValue = 70,
+    Flag = "FOV",
     Callback = function(value)
         pcall(function() workspace.CurrentCamera.FieldOfView = value end)
-    end
+    end,
 })
 
-VisualTab:AddToggle("InfZoom", {
-    Title = "Infinite Zoom",
-    Description = "Set max zoom distance to 1,000,000",
-    Default = false,
+local InfZoomToggle = VisualTab:CreateToggle({
+    Name = "Infinite Zoom",
+    CurrentValue = false,
+    Flag = "InfZoom",
     Callback = function(value)
         pcall(function()
             if value then player.MaxZoomDistance = 1000000
             else player.MaxZoomDistance = 20 end
         end)
-    end
+    end,
 })
 
-VisualTab:AddToggle("Fullbright", {
-    Title = "Fullbright",
-    Description = "Remove darkness and fog",
-    Default = false,
+local FullbrightToggle = VisualTab:CreateToggle({
+    Name = "Fullbright",
+    CurrentValue = false,
+    Flag = "Fullbright",
     Callback = function(value)
         pcall(function()
             fullbrightEnabled = value
@@ -986,37 +930,39 @@ VisualTab:AddToggle("Fullbright", {
                 game.Lighting.FogStart = originalFogStart
             end
         end)
-    end
+    end,
 })
 
-VisualTab:AddSlider("Brightness", {
-    Title = "Brightness",
-    Description = "Adjust game brightness",
-    Default = 2,
-    Min = 0,
-    Max = 5,
-    Rounding = 2,
+local BrightnessSlider = VisualTab:CreateSlider({
+    Name = "Brightness",
+    Range = {0, 5},
+    Increment = 0.1,
+    Suffix = "Brightness",
+    CurrentValue = 2,
+    Flag = "Brightness",
     Callback = function(value)
         pcall(function() game.Lighting.Brightness = value end)
-    end
+    end,
 })
 
-VisualTab:AddSlider("FreeCamSpeed", {
-    Title = "FreeCam Speed",
-    Description = "Adjust free camera movement speed",
-    Default = 3,
-    Min = 1,
-    Max = 5,
-    Rounding = 1,
+local FreeCamSection = VisualTab:CreateSection("FreeCam")
+
+local FreeCamSpeedSlider = VisualTab:CreateSlider({
+    Name = "FreeCam Speed",
+    Range = {1, 5},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 3,
+    Flag = "FreeCamSpeed",
     Callback = function(value)
         pcall(function() freeCamSpeed = value end)
-    end
+    end,
 })
 
-VisualTab:AddToggle("FreeCam", {
-    Title = "FreeCam",
-    Description = "Free camera mode",
-    Default = false,
+local FreeCamToggle = VisualTab:CreateToggle({
+    Name = "FreeCam",
+    CurrentValue = false,
+    Flag = "FreeCam",
     Callback = function(value)
         pcall(function()
             freeCamEnabled = value
@@ -1072,5 +1018,32 @@ VisualTab:AddToggle("FreeCam", {
                 if originalWalkSpeed and humanoid then humanoid.WalkSpeed = originalWalkSpeed end
             end
         end)
-    end
+    end,
 })
+
+local CreditsSection = CreditsTab:CreateSection("Credits")
+
+CreditsTab:CreateLabel("Script by Likegenm + Vicinly")
+CreditsTab:CreateLabel("K to OpenUI")
+CreditsTab:CreateLabel("Thanks for using!")
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    pcall(function()
+        if infiniteJumpEnabled and not floatEnabled then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end)
+end)
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Z and not isInRushInvis then
+        pcall(function() toggleInvisibility() end)
+    end
+end)
+
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    humanoid = character:WaitForChild("Humanoid")
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end)
