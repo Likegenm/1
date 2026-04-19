@@ -1024,7 +1024,7 @@ local FreeCamToggle = VisualTab:CreateToggle({
 local CreditsSection = CreditsTab:CreateSection("Credits")
 
 CreditsTab:CreateLabel("Script by Likegenm + Vicinly")
-CreditsTab:CreateLabel("K to OpenUI")
+CreditsTab:CreateLabel("Murino Horror Hub")
 CreditsTab:CreateLabel("Thanks for using!")
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
