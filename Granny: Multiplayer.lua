@@ -24,11 +24,11 @@ end
 local chapter = findPreset()
 
 if chapter == 1 then
-    print("Chapter 1")
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/G1.lua"))()
 elseif chapter == 2 then
-    print("Chapter 2")
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/G2.lua"))()
 elseif chapter == 3 then
-    print("Chapter 3")
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/1/refs/heads/main/G3.lua"))()
 else
     print("Chapter not found")
 end
