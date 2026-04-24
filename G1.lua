@@ -682,7 +682,7 @@ local function findSlendrinaModel()
 end
 
 SlendrinaTab:CreateButton({
-   Name = "Kill Slendrina",
+   Name = "Kill Slendrina Mother",
    Callback = function()
       local slendrina = findSlendrinaModel()
       if slendrina then
@@ -695,7 +695,7 @@ SlendrinaTab:CreateButton({
 })
 
 SlendrinaTab:CreateButton({
-   Name = "Destroy Slendrina",
+   Name = "Destroy Slendrina Mother",
    Callback = function()
       local slendrina = findSlendrinaModel()
       if slendrina then
@@ -720,7 +720,7 @@ SlendrinaTab:CreateButton({
 local SlendrinaTeleportSection = SlendrinaTab:CreateSection("Teleport")
 
 SlendrinaTab:CreateButton({
-   Name = "Teleport Slendrina",
+   Name = "Teleport Slendrina Mother",
    Callback = function()
       local slendrina = findSlendrinaModel()
       if slendrina then
@@ -737,9 +737,9 @@ local AntiSlendrinaSection = SlendrinaTab:CreateSection("Anti Slendrina")
 local antiSlendrinaKillEnabled = false
 
 SlendrinaTab:CreateToggle({
-   Name = "Anti Slendrina (Kill)",
+   Name = "Anti Slendrina Mother (Kill)",
    CurrentValue = false,
-   Flag = "AntiSlendrinaKill",
+   Flag = "AntiSlendrinaMotherKill",
    Callback = function(Value)
       antiSlendrinaKillEnabled = Value
    end
