@@ -177,7 +177,7 @@ local createNameTag = function(obj)
    billboard.Size = UDim2.new(0, 200, 0, 30)
    billboard.StudsOffset = Vector3.new(0, 2, 0)
    billboard.AlwaysOnTop = true
-   
+
    local textLabel = Instance.new("TextLabel")
    textLabel.Parent = billboard
    textLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -187,7 +187,7 @@ local createNameTag = function(obj)
    textLabel.TextStrokeTransparency = 0.5
    textLabel.Font = Enum.Font.SourceSansBold
    textLabel.TextSize = 14
-   
+
    table.insert(nametagObjects, billboard)
    return billboard
 end
@@ -247,7 +247,7 @@ local createDistanceTag = function(obj)
    billboard.Size = UDim2.new(0, 200, 0, 20)
    billboard.StudsOffset = Vector3.new(0, -1, 0)
    billboard.AlwaysOnTop = true
-   
+
    local textLabel = Instance.new("TextLabel")
    textLabel.Parent = billboard
    textLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -257,7 +257,7 @@ local createDistanceTag = function(obj)
    textLabel.TextStrokeTransparency = 0.5
    textLabel.Font = Enum.Font.SourceSansBold
    textLabel.TextSize = 12
-   
+
    table.insert(distanceTags, {billboard = billboard, target = obj})
    return billboard
 end
@@ -561,7 +561,7 @@ VisualTab:CreateToggle({
          defaultLighting.FogEnd = lighting.FogEnd
          defaultLighting.GlobalShadows = lighting.GlobalShadows
          defaultLighting.OutdoorAmbient = lighting.OutdoorAmbient
-         
+
          lighting.Brightness = 2
          lighting.ClockTime = 14
          lighting.FogEnd = 100000
@@ -661,6 +661,17 @@ GrannyTab:CreateToggle({
    end
 })
 
+local instanceKillGrannyEnabled = false
+
+GrannyTab:CreateToggle({
+   Name = "Instance Kill Granny",
+   CurrentValue = false,
+   Flag = "InstanceKillGranny",
+   Callback = function(Value)
+      instanceKillGrannyEnabled = Value
+   end
+})
+
 local SlendrinaTab = Window:CreateTab("Slendrina Mother", 4483362458)
 
 local SlendrinaKillSection = SlendrinaTab:CreateSection("Kill")
@@ -745,6 +756,134 @@ SlendrinaTab:CreateToggle({
    end
 })
 
+local instanceKillSlendrinaEnabled = false
+
+SlendrinaTab:CreateToggle({
+   Name = "Instance Kill Slendrina Mother",
+   CurrentValue = false,
+   Flag = "InstanceKillSlendrina",
+   Callback = function(Value)
+      instanceKillSlendrinaEnabled = Value
+   end
+})
+
+local PetsTab = Window:CreateTab("Pets", 4483362458)
+
+local SpiderSection = PetsTab:CreateSection("Spider")
+
+local function findSpiderModels()
+   local spiders = {}
+   for i = 1, 10 do
+      local preset = workspace:FindFirstChild("Preset" .. i)
+      if preset then
+         local locks = preset:FindFirstChild("Locks")
+         if locks then
+            for _, obj in pairs(locks:GetDescendants()) do
+               if obj.Name == "Spider" and obj:FindFirstChildWhichIsA("Humanoid") then
+                  table.insert(spiders, obj)
+               end
+            end
+         end
+      end
+   end
+   return spiders
+end
+
+PetsTab:CreateButton({
+   Name = "Kill Spider",
+   Callback = function()
+      local spiders = findSpiderModels()
+      for _, spider in pairs(spiders) do
+         local humanoid = spider:FindFirstChildWhichIsA("Humanoid")
+         if humanoid then
+            humanoid.Health = 0
+         end
+      end
+   end
+})
+
+PetsTab:CreateButton({
+   Name = "Stun Spider",
+   Callback = function()
+      local spiders = findSpiderModels()
+      for _, spider in pairs(spiders) do
+         local humanoid = spider:FindFirstChildWhichIsA("Humanoid")
+         if humanoid then
+            humanoid.WalkSpeed = 0
+         end
+      end
+   end
+})
+
+PetsTab:CreateButton({
+   Name = "Destroy Spider",
+   Callback = function()
+      local spiders = findSpiderModels()
+      for _, spider in pairs(spiders) do
+         spider:Destroy()
+      end
+   end
+})
+
+local AntiCrowSection = PetsTab:CreateSection("AntiCrow")
+
+local function findCrowModels()
+   local crows = {}
+   for i = 1, 10 do
+      local preset = workspace:FindFirstChild("Preset" .. i)
+      if preset then
+         local locks = preset:FindFirstChild("Locks")
+         if locks then
+            for _, obj in pairs(locks:GetDescendants()) do
+               if obj.Name == "CrowModel" then
+                  local humanoid = obj:FindFirstChild("CrowZombie")
+                  if humanoid then
+                     table.insert(crows, obj)
+                  end
+               end
+            end
+         end
+      end
+   end
+   return crows
+end
+
+PetsTab:CreateButton({
+   Name = "Kill Crow",
+   Callback = function()
+      local crows = findCrowModels()
+      for _, crow in pairs(crows) do
+         local humanoid = crow:FindFirstChild("CrowZombie")
+         if humanoid then
+            humanoid.Health = 0
+         end
+      end
+   end
+})
+
+PetsTab:CreateButton({
+   Name = "Stun Crow",
+   Callback = function()
+      local crows = findCrowModels()
+      for _, crow in pairs(crows) do
+         local humanoid = crow:FindFirstChild("CrowZombie")
+         if humanoid then
+            humanoid.WalkSpeed = 0
+         end
+      end
+   end
+})
+
+PetsTab:CreateButton({
+   Name = "Destroy Crow",
+   Callback = function()
+      local crows = findCrowModels()
+      for _, crow in pairs(crows) do
+         crow:Destroy()
+      end
+   end
+})
+
 local LocalPlayerTab = Window:CreateTab("LocalPlayer", 4483362458)
 
 local AntiFallSection = LocalPlayerTab:CreateSection("Anti Fall")
@@ -761,7 +900,7 @@ LocalPlayerTab:CreateToggle({
       if Value then
          local char = player.Character or player.CharacterAdded:Wait()
          local hum = char:WaitForChild("Humanoid")
-         
+
          if antiFallConnection then antiFallConnection:Disconnect() end
          antiFallConnection = hum.StateChanged:Connect(function(oldState, newState)
             if not antiFallEnabled then return end
@@ -770,13 +909,13 @@ LocalPlayerTab:CreateToggle({
                if not currentChar then return end
                local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
                if not rootPart then return end
-               
+
                local rayParams = RaycastParams.new()
                rayParams.FilterType = Enum.RaycastFilterType.Blacklist
                rayParams.FilterDescendantsInstances = {currentChar}
-               
+
                local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -999, 0), rayParams)
-               
+
                if rayResult then
                   rootPart.CFrame = CFrame.new(rayResult.Position + Vector3.new(0, 3, 0))
                end
@@ -824,25 +963,25 @@ local function activateInvis()
    if invis_on then return end
    local charNow = player.Character
    if not charNow or not charNow:FindFirstChild("HumanoidRootPart") then return end
-   
+
    local savedpos = charNow.HumanoidRootPart.CFrame
    charNow.HumanoidRootPart.CFrame = CFrame.new(invisX, invisY, invisZ)
    task.wait(0.15)
-   
+
    local Seat = Instance.new('Seat', game.Workspace)
    Seat.Anchored = false
    Seat.CanCollide = false
    Seat.Name = 'invischair'
    Seat.Transparency = 1
    Seat.Position = Vector3.new(invisX, invisY, invisZ)
-   
+
    local Weld = Instance.new("Weld", Seat)
    local torso = charNow:FindFirstChild("Torso") or charNow:FindFirstChild("UpperTorso")
    if torso then
       Weld.Part0 = Seat
       Weld.Part1 = torso
    end
-   
+
    task.wait()
    Seat.CFrame = savedpos
    setTransparency(charNow, 0.5)
@@ -875,7 +1014,79 @@ LocalPlayerTab:CreateToggle({
    end
 })
 
-game:GetService("RunService").Heartbeat:Connect(function()
+local PickUpAuraSection = LocalPlayerTab:CreateSection("PickUp Aura")
+
+local pickUpAuraEnabled = false
+local pickUpAuraRange = 10
+
+LocalPlayerTab:CreateToggle({
+   Name = "PickUp Aura",
+   CurrentValue = false,
+   Flag = "PickUpAura",
+   Callback = function(Value)
+      pickUpAuraEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "PickUp Aura Range",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "PickUpAuraRange",
+   Callback = function(Value)
+      pickUpAuraRange = Value
+   end
+})
+
+local RangeSection = LocalPlayerTab:CreateSection("Range")
+
+local rangeCircleEnabled = false
+local rangeCircleColor = Color3.fromRGB(255, 255, 255)
+local rangeCircleRainbow = false
+local rangeCircle = nil
+
+LocalPlayerTab:CreateToggle({
+   Name = "Range",
+   CurrentValue = false,
+   Flag = "Range",
+   Callback = function(Value)
+      rangeCircleEnabled = Value
+      if not Value and rangeCircle then
+         rangeCircle:Destroy()
+         rangeCircle = nil
+      end
+   end
+})
+
+LocalPlayerTab:CreateToggle({
+   Name = "Range Rainbow",
+   CurrentValue = false,
+   Flag = "RangeRainbow",
+   Callback = function(Value)
+      rangeCircleRainbow = Value
+   end
+})
+
+LocalPlayerTab:CreateColorPicker({
+   Name = "Range Color",
+   Color = Color3.fromRGB(255, 255, 255),
+   Flag = "RangeColor",
+   Callback = function(Value)
+      rangeCircleColor = Value
+      if rangeCircle then
+         rangeCircle.BrickColor = BrickColor.new(Value)
+      end
+   end
+})
+
+local instanceKillGrannyTimer = 0
+local instanceKillSlendrinaTimer = 0
+local espUpdateTimer = 0
+local pickUpAuraTimer = 0
+
+game:GetService("RunService").Heartbeat:Connect(function(delta)
    if speedEnabled then
       local char = player.Character
       if char then
@@ -885,41 +1096,123 @@ game:GetService("RunService").Heartbeat:Connect(function()
          end
       end
    end
+
+   instanceKillGrannyTimer = instanceKillGrannyTimer + delta
+   if instanceKillGrannyEnabled and instanceKillGrannyTimer >= 1 then
+      instanceKillGrannyTimer = 0
+      local granny = findGrannyModel()
+      if granny then
+         local humanoid = granny:FindFirstChildWhichIsA("Humanoid")
+         if humanoid then
+            humanoid.Health = 0
+         end
+      end
+   end
+
+   instanceKillSlendrinaTimer = instanceKillSlendrinaTimer + delta
+   if instanceKillSlendrinaEnabled and instanceKillSlendrinaTimer >= 1 then
+      instanceKillSlendrinaTimer = 0
+      local slendrina = findSlendrinaModel()
+      if slendrina then
+         slendrina:Destroy()
+      end
+   end
+
+   espUpdateTimer = espUpdateTimer + delta
+   if espUpdateTimer >= 5 then
+      espUpdateTimer = 0
+      if espEnabled then applyESP() end
+      if grannyESPEnabled then applyGrannyESP() end
+      if slendrinaESPEnabled then applySlendrinaESP() end
+   end
+
+   pickUpAuraTimer = pickUpAuraTimer + delta
+   if pickUpAuraEnabled and pickUpAuraTimer >= 0.5 then
+      pickUpAuraTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            for i = 1, 10 do
+               local preset = workspace:FindFirstChild("Preset" .. i)
+               if preset then
+                  for _, obj in pairs(preset:GetChildren()) do
+                     if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
+                        local dist = (obj.Position - root.Position).Magnitude
+                        if dist <= pickUpAuraRange then
+                           obj.InteractRemote:FireServer(player)
+                        end
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   if rangeCircleEnabled then
+      local char = player.Character
+      if char and char:FindFirstChild("HumanoidRootPart") then
+         local root = char.HumanoidRootPart
+         local legY = root.Position.Y - 3
+         if not rangeCircle then
+            rangeCircle = Instance.new("Part")
+            rangeCircle.Name = "RangeCircle"
+            rangeCircle.Anchored = true
+            rangeCircle.CanCollide = false
+            rangeCircle.Massless = true
+            rangeCircle.Size = Vector3.new(0.2, 0.2, 0.2)
+            rangeCircle.Shape = Enum.PartType.Cylinder
+            rangeCircle.Material = Enum.Material.Neon
+            rangeCircle.BrickColor = BrickColor.new(rangeCircleColor)
+            rangeCircle.Parent = workspace
+         end
+         rangeCircle.Position = Vector3.new(root.Position.X, legY, root.Position.Z)
+         local rot = tick() * 180
+         rangeCircle.Orientation = Vector3.new(0, rot % 360, 90)
+         rangeCircle.Size = Vector3.new(pickUpAuraRange * 0.2, pickUpAuraRange * 2, pickUpAuraRange * 2)
+      end
+   else
+      if rangeCircle then
+         rangeCircle:Destroy()
+         rangeCircle = nil
+      end
+   end
 end)
 
 game:GetService("RunService").RenderStepped:Connect(function(delta)
    local cam = workspace.CurrentCamera
    local hue = tick() % 5 / 5
    local rainbowColor = Color3.fromHSV(hue, 1, 1)
-   
+
    if invisTimer > 0 then
       invisTimer = invisTimer - delta
       if invisTimer <= 0 then
          deactivateInvis()
       end
    end
-   
+
    if rainbowESP then
       for _, h in pairs(espObjects) do
          h.FillColor = rainbowColor
          h.OutlineColor = rainbowColor
       end
    end
-   
+
    if rainbowGrannyESP then
       for _, h in pairs(grannyESPObjects) do
          h.FillColor = rainbowColor
          h.OutlineColor = rainbowColor
       end
    end
-   
+
    if rainbowSlendrinaESP then
       for _, h in pairs(slendrinaESPObjects) do
          h.FillColor = rainbowColor
          h.OutlineColor = rainbowColor
       end
    end
-   
+
    if distanceEnabled then
       local char = player.Character
       local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -937,7 +1230,7 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
          end
       end
    end
-   
+
    if tracersEnabled then
       for _, t in pairs(tracers) do
          if t.target and t.target.Parent then
@@ -957,7 +1250,7 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
          end
       end
    end
-   
+
    if antiGrannyKillEnabled then
       local char = player.Character
       local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -974,7 +1267,7 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
          end
       end
    end
-   
+
    if antiSlendrinaKillEnabled then
       local char = player.Character
       local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -990,6 +1283,10 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
             end
          end
       end
+   end
+
+   if rangeCircleRainbow and rangeCircle then
+      rangeCircle.BrickColor = BrickColor.new(rainbowColor)
    end
 end)
 
@@ -1012,17 +1309,21 @@ player.CharacterAdded:Connect(function(newChar)
             if not currentChar then return end
             local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
             if not rootPart then return end
-            
+
             local rayParams = RaycastParams.new()
             rayParams.FilterType = Enum.RaycastFilterType.Blacklist
             rayParams.FilterDescendantsInstances = {currentChar}
-            
+
             local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -999, 0), rayParams)
-            
+
             if rayResult then
                rootPart.CFrame = CFrame.new(rayResult.Position + Vector3.new(0, 3, 0))
             end
          end
       end)
+   end
+   if rangeCircle then
+      rangeCircle:Destroy()
+      rangeCircle = nil
    end
 end)
