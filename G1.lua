@@ -515,7 +515,7 @@ VisualTab:CreateToggle({
 })
 
 VisualTab:CreateColorPicker({
-   Name = "Slendrina ESP Color",
+   Name = "Slendrina Mother ESP Color",
    Color = Color3.fromRGB(255, 0, 255),
    Flag = "SlendrinaESPColor",
    Callback = function(Value)
@@ -661,7 +661,7 @@ GrannyTab:CreateToggle({
    end
 })
 
-local SlendrinaTab = Window:CreateTab("Slendrina", 4483362458)
+local SlendrinaTab = Window:CreateTab("Slendrina Mother", 4483362458)
 
 local SlendrinaKillSection = SlendrinaTab:CreateSection("Kill")
 
