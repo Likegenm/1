@@ -3,7 +3,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
    Name = "Granny: Multiplayer Chapter: 1 | by Likegenm",
    LoadingTitle = "Loading...",
-   LoadingSubtitle = "by Script",
+   LoadingSubtitle = "by Likegenm",
    ConfigurationSaving = {
       Enabled = false
    },
@@ -529,6 +529,14 @@ VisualTab:CreateColorPicker({
 
 local thirdPersonEnabled = false
 
+local oldIndex
+oldIndex = hookmetamethod(game, "__newindex", function(self, prop, value)
+    if self == player and prop == "CameraMode" then
+        return
+    end
+    return oldIndex(self, prop, value)
+end)
+
 VisualTab:CreateToggle({
    Name = "Third Person",
    CurrentValue = false,
@@ -536,6 +544,7 @@ VisualTab:CreateToggle({
    Callback = function(Value)
       thirdPersonEnabled = Value
       if Value then
+         player.CameraMode = Enum.CameraMode.Classic
          player.CameraMinZoomDistance = 0.5
          player.CameraMaxZoomDistance = 20
       else
@@ -645,6 +654,58 @@ GrannyTab:CreateButton({
             hrp.CFrame = CFrame.new(0, -500, 0)
          end
       end
+   end
+})
+
+local OrbitSection = GrannyTab:CreateSection("Orbit")
+
+local orbitEnabled = false
+local orbitSpeed = 5
+local orbitRadius = 10
+local orbitHeight = 0
+
+GrannyTab:CreateToggle({
+   Name = "Orbit Granny",
+   CurrentValue = false,
+   Flag = "OrbitGranny",
+   Callback = function(Value)
+      orbitEnabled = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Orbit Speed",
+   Range = {1, 20},
+   Increment = 1,
+   Suffix = "",
+   CurrentValue = 5,
+   Flag = "OrbitSpeed",
+   Callback = function(Value)
+      orbitSpeed = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Orbit Radius",
+   Range = {5, 30},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "OrbitRadius",
+   Callback = function(Value)
+      orbitRadius = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Orbit Height",
+   Range = {-10, 10},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 0,
+   Flag = "OrbitHeight",
+   Callback = function(Value)
+      orbitHeight = Value
    end
 })
 
@@ -1040,6 +1101,32 @@ LocalPlayerTab:CreateSlider({
    end
 })
 
+local UseAuraSection = LocalPlayerTab:CreateSection("Use Aura")
+
+local useAuraEnabled = false
+local useAuraRange = 10
+
+LocalPlayerTab:CreateToggle({
+   Name = "Use Aura",
+   CurrentValue = false,
+   Flag = "UseAura",
+   Callback = function(Value)
+      useAuraEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Use Aura Range",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "UseAuraRange",
+   Callback = function(Value)
+      useAuraRange = Value
+   end
+})
+
 local RangeSection = LocalPlayerTab:CreateSection("Range")
 
 local rangeCircleEnabled = false
@@ -1085,6 +1172,16 @@ local instanceKillGrannyTimer = 0
 local instanceKillSlendrinaTimer = 0
 local espUpdateTimer = 0
 local pickUpAuraTimer = 0
+local useAuraTimer = 0
+local orbitAngle = 0
+
+game:GetService("RunService").RenderStepped:Connect(function(delta)
+   if thirdPersonEnabled then
+      player.CameraMode = Enum.CameraMode.Classic
+      player.CameraMinZoomDistance = 0.5
+      player.CameraMaxZoomDistance = 20
+   end
+end)
 
 game:GetService("RunService").Heartbeat:Connect(function(delta)
    if speedEnabled then
@@ -1146,6 +1243,46 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
                   end
                end
             end
+         end
+      end
+   end
+
+   useAuraTimer = useAuraTimer + delta
+   if useAuraEnabled and useAuraTimer >= 0.5 then
+      useAuraTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            for i = 1, 10 do
+               local preset = workspace:FindFirstChild("Preset" .. i)
+               if preset then
+                  for _, obj in pairs(preset:GetChildren()) do
+                     if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
+                        if obj:FindFirstChild("ProximityPrompt") then
+                           local dist = (obj.Position - root.Position).Magnitude
+                           if dist <= useAuraRange then
+                              fireproximityprompt(obj.ProximityPrompt)
+                           end
+                        end
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   if orbitEnabled then
+      local char = player.Character
+      if char and char:FindFirstChild("HumanoidRootPart") then
+         local granny = findGrannyModel()
+         if granny and granny:FindFirstChild("HumanoidRootPart") then
+            orbitAngle = orbitAngle + (orbitSpeed * delta)
+            local offsetX = math.cos(orbitAngle) * orbitRadius
+            local offsetZ = math.sin(orbitAngle) * orbitRadius
+            local targetPos = granny.HumanoidRootPart.Position + Vector3.new(offsetX, orbitHeight, offsetZ)
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
          end
       end
    end
