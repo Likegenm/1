@@ -3,7 +3,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
    Name = "Granny: Multiplayer Chapter: 1 | by Likegenm",
    LoadingTitle = "Loading...",
-   LoadingSubtitle = "by Likegenm",
+   LoadingSubtitle = "by Script",
    ConfigurationSaving = {
       Enabled = false
    },
@@ -29,6 +29,8 @@ local nametagColor = Color3.fromRGB(255, 255, 255)
 local distanceTags = {}
 local distanceEnabled = false
 local distanceColor = Color3.fromRGB(255, 255, 255)
+
+local Players = game:GetService("Players")
 
 local scanItems = function()
    allItems = {}
@@ -527,6 +529,130 @@ VisualTab:CreateColorPicker({
    end
 })
 
+local PlayersESPSection = VisualTab:CreateSection("Players ESP")
+
+local playersESPObjects = {}
+local playersESPColor = Color3.fromRGB(0, 255, 0)
+local playersESPEnabled = false
+local rainbowPlayersESP = false
+
+local playersTracers = {}
+local playersTracersEnabled = false
+local playersTracerColor = Color3.fromRGB(0, 255, 0)
+local rainbowPlayersTracers = false
+
+local clearPlayersESP = function()
+   for _, h in pairs(playersESPObjects) do
+      h:Destroy()
+   end
+   playersESPObjects = {}
+end
+
+local applyPlayersESP = function()
+   clearPlayersESP()
+   if not playersESPEnabled then return end
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr ~= player and plr.Character then
+         local highlight = Instance.new("Highlight")
+         highlight.Parent = plr.Character
+         highlight.Adornee = plr.Character
+         highlight.FillColor = playersESPColor
+         highlight.FillTransparency = 0.5
+         highlight.OutlineColor = playersESPColor
+         highlight.OutlineTransparency = 0
+         table.insert(playersESPObjects, highlight)
+      end
+   end
+end
+
+local clearPlayersTracers = function()
+   for _, t in pairs(playersTracers) do
+      t.tracer:Remove()
+   end
+   playersTracers = {}
+end
+
+local applyPlayersTracers = function()
+   clearPlayersTracers()
+   if not playersTracersEnabled then return end
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr ~= player and plr.Character then
+         local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            local tracer = Drawing.new("Line")
+            tracer.Visible = true
+            tracer.Color = playersTracerColor
+            tracer.Thickness = 1
+            tracer.Transparency = 1
+            table.insert(playersTracers, {tracer = tracer, target = hrp})
+         end
+      end
+   end
+end
+
+VisualTab:CreateToggle({
+   Name = "Players ESP",
+   CurrentValue = false,
+   Flag = "PlayersESP",
+   Callback = function(Value)
+      playersESPEnabled = Value
+      if Value then applyPlayersESP() else clearPlayersESP() end
+   end
+})
+
+VisualTab:CreateToggle({
+   Name = "Rainbow Players ESP",
+   CurrentValue = false,
+   Flag = "RainbowPlayersESP",
+   Callback = function(Value)
+      rainbowPlayersESP = Value
+   end
+})
+
+VisualTab:CreateColorPicker({
+   Name = "Players ESP Color",
+   Color = Color3.fromRGB(0, 255, 0),
+   Flag = "PlayersESPColor",
+   Callback = function(Value)
+      playersESPColor = Value
+      for _, h in pairs(playersESPObjects) do
+         h.FillColor = Value
+         h.OutlineColor = Value
+      end
+   end
+})
+
+VisualTab:CreateToggle({
+   Name = "Players Tracers",
+   CurrentValue = false,
+   Flag = "PlayersTracers",
+   Callback = function(Value)
+      playersTracersEnabled = Value
+      if Value then applyPlayersTracers() else clearPlayersTracers() end
+   end
+})
+
+VisualTab:CreateToggle({
+   Name = "Rainbow Players Tracers",
+   CurrentValue = false,
+   Flag = "RainbowPlayersTracers",
+   Callback = function(Value)
+      rainbowPlayersTracers = Value
+   end
+})
+
+VisualTab:CreateColorPicker({
+   Name = "Players Tracer Color",
+   Color = Color3.fromRGB(0, 255, 0),
+   Flag = "PlayersTracerColor",
+   Callback = function(Value)
+      playersTracerColor = Value
+      for _, t in pairs(playersTracers) do
+         t.tracer.Color = Value
+      end
+   end
+})
+
 local thirdPersonEnabled = false
 
 local oldIndex
@@ -945,6 +1071,59 @@ PetsTab:CreateButton({
    end
 })
 
+local TeleportsTab = Window:CreateTab("Teleports", 4483362458)
+
+local PlayersTeleportSection = TeleportsTab:CreateSection("Teleport to Player")
+
+local selectedPlayer = ""
+
+local function getPlayerList()
+   local list = {}
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr ~= player then
+         table.insert(list, plr.Name)
+      end
+   end
+   return list
+end
+
+local playerDropdown = TeleportsTab:CreateDropdown({
+   Name = "Select Player",
+   Options = getPlayerList(),
+   CurrentOption = "",
+   Flag = "SelectPlayer",
+   Callback = function(Value)
+      selectedPlayer = Value
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Refresh Players",
+   Callback = function()
+      playerDropdown:Refresh(getPlayerList())
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Player",
+   Callback = function()
+      if selectedPlayer == "" then return end
+      local target = Players:FindFirstChild(selectedPlayer)
+      if target and target.Character then
+         local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            local char = player.Character
+            if char then
+               local myHrp = char:FindFirstChild("HumanoidRootPart")
+               if myHrp then
+                  myHrp.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
+               end
+            end
+         end
+      end
+   end
+})
+
 local LocalPlayerTab = Window:CreateTab("LocalPlayer", 4483362458)
 
 local AntiFallSection = LocalPlayerTab:CreateSection("Anti Fall")
@@ -1221,6 +1400,8 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
       if espEnabled then applyESP() end
       if grannyESPEnabled then applyGrannyESP() end
       if slendrinaESPEnabled then applySlendrinaESP() end
+      if playersESPEnabled then applyPlayersESP() end
+      if playersTracersEnabled then applyPlayersTracers() end
    end
 
    pickUpAuraTimer = pickUpAuraTimer + delta
@@ -1350,6 +1531,13 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
       end
    end
 
+   if rainbowPlayersESP then
+      for _, h in pairs(playersESPObjects) do
+         h.FillColor = rainbowColor
+         h.OutlineColor = rainbowColor
+      end
+   end
+
    if distanceEnabled then
       local char = player.Character
       local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -1380,6 +1568,26 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
                t.tracer.Visible = false
             end
             if rainbowTracers then
+               t.tracer.Color = rainbowColor
+            end
+         else
+            t.tracer.Visible = false
+         end
+      end
+   end
+
+   if playersTracersEnabled then
+      for _, t in pairs(playersTracers) do
+         if t.target and t.target.Parent then
+            local screenPos, onScreen = cam:WorldToViewportPoint(t.target.Position)
+            if onScreen then
+               t.tracer.From = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y)
+               t.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
+               t.tracer.Visible = true
+            else
+               t.tracer.Visible = false
+            end
+            if rainbowPlayersTracers then
                t.tracer.Color = rainbowColor
             end
          else
@@ -1436,6 +1644,8 @@ player.CharacterAdded:Connect(function(newChar)
    if tracersEnabled then applyTracers() end
    if grannyESPEnabled then applyGrannyESP() end
    if slendrinaESPEnabled then applySlendrinaESP() end
+   if playersESPEnabled then applyPlayersESP() end
+   if playersTracersEnabled then applyPlayersTracers() end
    if antiFallEnabled then
       local hum = newChar:WaitForChild("Humanoid")
       if antiFallConnection then antiFallConnection:Disconnect() end
@@ -1463,4 +1673,20 @@ player.CharacterAdded:Connect(function(newChar)
       rangeCircle:Destroy()
       rangeCircle = nil
    end
+end)
+
+Players.PlayerAdded:Connect(function(plr)
+   plr.CharacterAdded:Connect(function(char)
+      task.wait(0.5)
+      if playersESPEnabled then applyPlayersESP() end
+      if playersTracersEnabled then applyPlayersTracers() end
+      playerDropdown:Refresh(getPlayerList())
+   end)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+   task.wait(0.5)
+   if playersESPEnabled then applyPlayersESP() end
+   if playersTracersEnabled then applyPlayersTracers() end
+   playerDropdown:Refresh(getPlayerList())
 end)
