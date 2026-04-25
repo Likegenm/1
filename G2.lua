@@ -1,7 +1,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Granny: Chapter 2",
+   Name = "Granny: Multiplayer Chapter: 2 | by Likegenm",
    LoadingTitle = "Loading...",
    LoadingSubtitle = "by Likegenm",
    ConfigurationSaving = {
@@ -23,6 +23,12 @@ local rainbowESP = false
 local rainbowTracers = false
 local espEnabled = false
 local tracersEnabled = false
+local nametagObjects = {}
+local nametagsEnabled = false
+local nametagColor = Color3.fromRGB(255, 255, 255)
+local distanceTags = {}
+local distanceEnabled = false
+local distanceColor = Color3.fromRGB(255, 255, 255)
 
 local scanItems = function()
    allItems = {}
@@ -162,11 +168,151 @@ Tab:CreateColorPicker({
    end
 })
 
+local NameTagSection = Tab:CreateSection("Item NameTags")
+
+local createNameTag = function(obj)
+   local billboard = Instance.new("BillboardGui")
+   billboard.Parent = obj
+   billboard.Adornee = obj
+   billboard.Size = UDim2.new(0, 200, 0, 30)
+   billboard.StudsOffset = Vector3.new(0, 2, 0)
+   billboard.AlwaysOnTop = true
+   
+   local textLabel = Instance.new("TextLabel")
+   textLabel.Parent = billboard
+   textLabel.Size = UDim2.new(1, 0, 1, 0)
+   textLabel.BackgroundTransparency = 1
+   textLabel.Text = obj.Name
+   textLabel.TextColor3 = nametagColor
+   textLabel.TextStrokeTransparency = 0.5
+   textLabel.Font = Enum.Font.SourceSansBold
+   textLabel.TextSize = 14
+   
+   table.insert(nametagObjects, billboard)
+   return billboard
+end
+
+local clearNameTags = function()
+   for _, nt in pairs(nametagObjects) do
+      nt:Destroy()
+   end
+   nametagObjects = {}
+end
+
+local applyNameTags = function()
+   clearNameTags()
+   if not nametagsEnabled then return end
+   for i = 1, 10 do
+      local preset = workspace:FindFirstChild("Preset" .. i)
+      if preset then
+         for _, obj in pairs(preset:GetChildren()) do
+            if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
+               createNameTag(obj)
+            end
+         end
+      end
+   end
+end
+
+Tab:CreateToggle({
+   Name = "Item NameTags",
+   CurrentValue = false,
+   Flag = "ItemNameTags",
+   Callback = function(Value)
+      nametagsEnabled = Value
+      if Value then applyNameTags() else clearNameTags() end
+   end
+})
+
+Tab:CreateColorPicker({
+   Name = "NameTag Color",
+   Color = Color3.fromRGB(255, 255, 255),
+   Flag = "NameTagColor",
+   Callback = function(Value)
+      nametagColor = Value
+      for _, nt in pairs(nametagObjects) do
+         if nt:FindFirstChildOfClass("TextLabel") then
+            nt:FindFirstChildOfClass("TextLabel").TextColor3 = Value
+         end
+      end
+   end
+})
+
+local DistanceSection = Tab:CreateSection("Item Distance")
+
+local createDistanceTag = function(obj)
+   local billboard = Instance.new("BillboardGui")
+   billboard.Parent = obj
+   billboard.Adornee = obj
+   billboard.Size = UDim2.new(0, 200, 0, 20)
+   billboard.StudsOffset = Vector3.new(0, -1, 0)
+   billboard.AlwaysOnTop = true
+   
+   local textLabel = Instance.new("TextLabel")
+   textLabel.Parent = billboard
+   textLabel.Size = UDim2.new(1, 0, 1, 0)
+   textLabel.BackgroundTransparency = 1
+   textLabel.Text = "0 studs"
+   textLabel.TextColor3 = distanceColor
+   textLabel.TextStrokeTransparency = 0.5
+   textLabel.Font = Enum.Font.SourceSansBold
+   textLabel.TextSize = 12
+   
+   table.insert(distanceTags, {billboard = billboard, target = obj})
+   return billboard
+end
+
+local clearDistanceTags = function()
+   for _, dt in pairs(distanceTags) do
+      dt.billboard:Destroy()
+   end
+   distanceTags = {}
+end
+
+local applyDistanceTags = function()
+   clearDistanceTags()
+   if not distanceEnabled then return end
+   for i = 1, 10 do
+      local preset = workspace:FindFirstChild("Preset" .. i)
+      if preset then
+         for _, obj in pairs(preset:GetChildren()) do
+            if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
+               createDistanceTag(obj)
+            end
+         end
+      end
+   end
+end
+
+Tab:CreateToggle({
+   Name = "Item Distance",
+   CurrentValue = false,
+   Flag = "ItemDistance",
+   Callback = function(Value)
+      distanceEnabled = Value
+      if Value then applyDistanceTags() else clearDistanceTags() end
+   end
+})
+
+Tab:CreateColorPicker({
+   Name = "Distance Color",
+   Color = Color3.fromRGB(255, 255, 255),
+   Flag = "DistanceColor",
+   Callback = function(Value)
+      distanceColor = Value
+      for _, dt in pairs(distanceTags) do
+         if dt.billboard:FindFirstChildOfClass("TextLabel") then
+            dt.billboard:FindFirstChildOfClass("TextLabel").TextColor3 = Value
+         end
+      end
+   end
+})
+
 local TracerSection = Tab:CreateSection("Item Tracers")
 
 local tracers = {}
 
-local createTracer = function(obj)
+local createItemTracer = function(obj)
    local tracer = Drawing.new("Line")
    tracer.Visible = true
    tracer.Color = tracerColor
@@ -191,7 +337,7 @@ local applyTracers = function()
       if preset then
          for _, obj in pairs(preset:GetChildren()) do
             if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
-               createTracer(obj)
+               createItemTracer(obj)
             end
          end
       end
@@ -431,152 +577,327 @@ VisualTab:CreateToggle({
    end
 })
 
-local GrannyTracerSection = VisualTab:CreateSection("Granny Tracers")
-local grannyTracers = {}
-local grannyTracerColor = Color3.fromRGB(255, 0, 0)
-local grannyTracersEnabled = false
-local rainbowGrannyTracers = false
+local GrannyTab = Window:CreateTab("Granny", 4483362458)
 
-local createGrannyTracer = function(obj)
-   local tracer = Drawing.new("Line")
-   tracer.Visible = true
-   tracer.Color = grannyTracerColor
-   tracer.Thickness = 2
-   tracer.Transparency = 1
-   table.insert(grannyTracers, {tracer = tracer, target = obj})
-   return tracer
-end
+local KillSection = GrannyTab:CreateSection("Kill")
 
-local clearGrannyTracers = function()
-   for _, t in pairs(grannyTracers) do
-      t.tracer:Remove()
-   end
-   grannyTracers = {}
-end
-
-local applyGrannyTracers = function()
-   clearGrannyTracers()
-   if not grannyTracersEnabled then return end
+local function findGrannyModel()
    for i = 1, 10 do
       local preset = workspace:FindFirstChild("Preset" .. i)
       if preset then
          local locks = preset:FindFirstChild("Locks")
          if locks then
             local granny = locks:FindFirstChild("Granny")
-            if granny and granny:IsA("BasePart") then
-               createGrannyTracer(granny)
+            if granny then
+               return granny
             end
          end
       end
    end
+   return nil
 end
 
-VisualTab:CreateToggle({
-   Name = "Granny Tracers",
-   CurrentValue = false,
-   Flag = "GrannyTracers",
-   Callback = function(Value)
-      grannyTracersEnabled = Value
-      if Value then applyGrannyTracers() else clearGrannyTracers() end
-   end
-})
-
-VisualTab:CreateToggle({
-   Name = "Rainbow Granny Tracers",
-   CurrentValue = false,
-   Flag = "RainbowGrannyTracers",
-   Callback = function(Value)
-      rainbowGrannyTracers = Value
-   end
-})
-
-VisualTab:CreateColorPicker({
-   Name = "Granny Tracer Color",
-   Color = Color3.fromRGB(255, 0, 0),
-   Flag = "GrannyTracerColor",
-   Callback = function(Value)
-      grannyTracerColor = Value
-      for _, t in pairs(grannyTracers) do
-         t.tracer.Color = Value
+GrannyTab:CreateButton({
+   Name = "Kill Granny",
+   Callback = function()
+      local granny = findGrannyModel()
+      if granny then
+         local zombie = granny:FindFirstChild("Zombie")
+         if zombie then
+            zombie.Health = 0
+         end
       end
    end
 })
 
-local GrandpaTracerSection = VisualTab:CreateSection("Grandpa Tracers")
-local grandpaTracers = {}
-local grandpaTracerColor = Color3.fromRGB(0, 255, 0)
-local grandpaTracersEnabled = false
-local rainbowGrandpaTracers = false
-
-local createGrandpaTracer = function(obj)
-   local tracer = Drawing.new("Line")
-   tracer.Visible = true
-   tracer.Color = grandpaTracerColor
-   tracer.Thickness = 2
-   tracer.Transparency = 1
-   table.insert(grandpaTracers, {tracer = tracer, target = obj})
-   return tracer
-end
-
-local clearGrandpaTracers = function()
-   for _, t in pairs(grandpaTracers) do
-      t.tracer:Remove()
+GrannyTab:CreateButton({
+   Name = "Destroy Granny",
+   Callback = function()
+      local granny = findGrannyModel()
+      if granny then
+         granny:Destroy()
+      end
    end
-   grandpaTracers = {}
-end
+})
 
-local applyGrandpaTracers = function()
-   clearGrandpaTracers()
-   if not grandpaTracersEnabled then return end
+GrannyTab:CreateButton({
+   Name = "Stun Granny",
+   Callback = function()
+      local granny = findGrannyModel()
+      if granny then
+         local zombie = granny:FindFirstChild("Zombie")
+         if zombie then
+            zombie.WalkSpeed = 0
+         end
+      end
+   end
+})
+
+local TeleportSection = GrannyTab:CreateSection("Teleport")
+
+GrannyTab:CreateButton({
+   Name = "Teleport Granny",
+   Callback = function()
+      local granny = findGrannyModel()
+      if granny then
+         local hrp = granny:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(0, -500, 0)
+         end
+      end
+   end
+})
+
+local AntiGrannySection = GrannyTab:CreateSection("Anti Granny")
+
+local antiGrannyKillEnabled = false
+
+GrannyTab:CreateToggle({
+   Name = "Anti Granny (Kill)",
+   CurrentValue = false,
+   Flag = "AntiGrannyKill",
+   Callback = function(Value)
+      antiGrannyKillEnabled = Value
+   end
+})
+
+local GrandpaTab = Window:CreateTab("Grandpa", 4483362458)
+
+local GrandpaKillSection = GrandpaTab:CreateSection("Kill")
+
+local function findGrandpaModel()
    for i = 1, 10 do
       local preset = workspace:FindFirstChild("Preset" .. i)
       if preset then
          local locks = preset:FindFirstChild("Locks")
          if locks then
             local grandpa = locks:FindFirstChild("Grandpa")
-            if grandpa and grandpa:IsA("BasePart") then
-               createGrandpaTracer(grandpa)
+            if grandpa then
+               return grandpa
             end
          end
       end
    end
+   return nil
 end
 
-VisualTab:CreateToggle({
-   Name = "Grandpa Tracers",
-   CurrentValue = false,
-   Flag = "GrandpaTracers",
-   Callback = function(Value)
-      grandpaTracersEnabled = Value
-      if Value then applyGrandpaTracers() else clearGrandpaTracers() end
-   end
-})
-
-VisualTab:CreateToggle({
-   Name = "Rainbow Grandpa Tracers",
-   CurrentValue = false,
-   Flag = "RainbowGrandpaTracers",
-   Callback = function(Value)
-      rainbowGrandpaTracers = Value
-   end
-})
-
-VisualTab:CreateColorPicker({
-   Name = "Grandpa Tracer Color",
-   Color = Color3.fromRGB(0, 255, 0),
-   Flag = "GrandpaTracerColor",
-   Callback = function(Value)
-      grandpaTracerColor = Value
-      for _, t in pairs(grandpaTracers) do
-         t.tracer.Color = Value
+GrandpaTab:CreateButton({
+   Name = "Kill Grandpa",
+   Callback = function()
+      local grandpa = findGrandpaModel()
+      if grandpa then
+         local zombie = grandpa:FindFirstChild("Zombie")
+         if zombie then
+            zombie.Health = 0
+         end
       end
    end
 })
 
-game:GetService("RunService").RenderStepped:Connect(function()
+GrandpaTab:CreateButton({
+   Name = "Destroy Grandpa",
+   Callback = function()
+      local grandpa = findGrandpaModel()
+      if grandpa then
+         grandpa:Destroy()
+      end
+   end
+})
+
+GrandpaTab:CreateButton({
+   Name = "Stun Grandpa",
+   Callback = function()
+      local grandpa = findGrandpaModel()
+      if grandpa then
+         local zombie = grandpa:FindFirstChild("Zombie")
+         if zombie then
+            zombie.WalkSpeed = 0
+         end
+      end
+   end
+})
+
+local GrandpaTeleportSection = GrandpaTab:CreateSection("Teleport")
+
+GrandpaTab:CreateButton({
+   Name = "Teleport Grandpa",
+   Callback = function()
+      local grandpa = findGrandpaModel()
+      if grandpa then
+         local hrp = grandpa:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(0, -500, 0)
+         end
+      end
+   end
+})
+
+local AntiGrandpaSection = GrandpaTab:CreateSection("Anti Grandpa")
+
+local antiGrandpaKillEnabled = false
+
+GrandpaTab:CreateToggle({
+   Name = "Anti Grandpa (Kill)",
+   CurrentValue = false,
+   Flag = "AntiGrandpaKill",
+   Callback = function(Value)
+      antiGrandpaKillEnabled = Value
+   end
+})
+
+local LocalPlayerTab = Window:CreateTab("LocalPlayer", 4483362458)
+
+local AntiFallSection = LocalPlayerTab:CreateSection("Anti Fall")
+
+local antiFallEnabled = false
+local antiFallConnection = nil
+
+LocalPlayerTab:CreateToggle({
+   Name = "Anti Fall",
+   CurrentValue = false,
+   Flag = "AntiFall",
+   Callback = function(Value)
+      antiFallEnabled = Value
+      if Value then
+         local char = player.Character or player.CharacterAdded:Wait()
+         local hum = char:WaitForChild("Humanoid")
+         
+         if antiFallConnection then antiFallConnection:Disconnect() end
+         antiFallConnection = hum.StateChanged:Connect(function(oldState, newState)
+            if not antiFallEnabled then return end
+            if newState == Enum.HumanoidStateType.Freefall then
+               local currentChar = player.Character
+               if not currentChar then return end
+               local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
+               if not rootPart then return end
+               
+               local rayParams = RaycastParams.new()
+               rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+               rayParams.FilterDescendantsInstances = {currentChar}
+               
+               local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -999, 0), rayParams)
+               
+               if rayResult then
+                  rootPart.CFrame = CFrame.new(rayResult.Position + Vector3.new(0, 3, 0))
+               end
+            end
+         end)
+      else
+         if antiFallConnection then
+            antiFallConnection:Disconnect()
+            antiFallConnection = nil
+         end
+      end
+   end
+})
+
+local SpeedSection = LocalPlayerTab:CreateSection("Speed")
+
+local speedEnabled = false
+
+LocalPlayerTab:CreateToggle({
+   Name = "Speed",
+   CurrentValue = false,
+   Flag = "Speed",
+   Callback = function(Value)
+      speedEnabled = Value
+   end
+})
+
+local InvisibleSection = LocalPlayerTab:CreateSection("Invisible")
+
+local invis_on = false
+local invisTimer = 0
+local invisX = 1000
+local invisY = 1000
+local invisZ = 1000
+
+local function setTransparency(character, transparency)
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") then
+            part.Transparency = transparency
+        end
+    end
+end
+
+local function activateInvis()
+   if invis_on then return end
+   local charNow = player.Character
+   if not charNow or not charNow:FindFirstChild("HumanoidRootPart") then return end
+   
+   local savedpos = charNow.HumanoidRootPart.CFrame
+   charNow.HumanoidRootPart.CFrame = CFrame.new(invisX, invisY, invisZ)
+   task.wait(0.15)
+   
+   local Seat = Instance.new('Seat', game.Workspace)
+   Seat.Anchored = false
+   Seat.CanCollide = false
+   Seat.Name = 'invischair'
+   Seat.Transparency = 1
+   Seat.Position = Vector3.new(invisX, invisY, invisZ)
+   
+   local Weld = Instance.new("Weld", Seat)
+   local torso = charNow:FindFirstChild("Torso") or charNow:FindFirstChild("UpperTorso")
+   if torso then
+      Weld.Part0 = Seat
+      Weld.Part1 = torso
+   end
+   
+   task.wait()
+   Seat.CFrame = savedpos
+   setTransparency(charNow, 0.5)
+   invis_on = true
+   invisTimer = 3
+end
+
+local function deactivateInvis()
+   if not invis_on then return end
+   local invisChair = workspace:FindFirstChild('invischair')
+   if invisChair then invisChair:Destroy() end
+   local charNow = player.Character
+   if charNow then
+      setTransparency(charNow, 0)
+   end
+   invis_on = false
+   invisTimer = 0
+end
+
+LocalPlayerTab:CreateToggle({
+   Name = "Invisible",
+   CurrentValue = false,
+   Flag = "Invisible",
+   Callback = function(Value)
+      if Value then
+         activateInvis()
+      else
+         deactivateInvis()
+      end
+   end
+})
+
+game:GetService("RunService").Heartbeat:Connect(function()
+   if speedEnabled then
+      local char = player.Character
+      if char then
+         local hum = char:FindFirstChild("Humanoid")
+         if hum then
+            hum.WalkSpeed = 10
+         end
+      end
+   end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function(delta)
    local cam = workspace.CurrentCamera
    local hue = tick() % 5 / 5
    local rainbowColor = Color3.fromHSV(hue, 1, 1)
+   
+   if invisTimer > 0 then
+      invisTimer = invisTimer - delta
+      if invisTimer <= 0 then
+         deactivateInvis()
+      end
+   end
    
    if rainbowESP then
       for _, h in pairs(espObjects) do
@@ -596,6 +917,24 @@ game:GetService("RunService").RenderStepped:Connect(function()
       for _, h in pairs(grandpaESPObjects) do
          h.FillColor = rainbowColor
          h.OutlineColor = rainbowColor
+      end
+   end
+   
+   if distanceEnabled then
+      local char = player.Character
+      local root = char and char:FindFirstChild("HumanoidRootPart")
+      if root then
+         for _, dt in pairs(distanceTags) do
+            if dt.target and dt.target.Parent then
+               local dist = math.floor((dt.target.Position - root.Position).Magnitude)
+               if dt.billboard:FindFirstChildOfClass("TextLabel") then
+                  dt.billboard:FindFirstChildOfClass("TextLabel").Text = dist .. " studs"
+               end
+               dt.billboard.Enabled = true
+            else
+               dt.billboard.Enabled = false
+            end
+         end
       end
    end
    
@@ -619,53 +958,71 @@ game:GetService("RunService").RenderStepped:Connect(function()
       end
    end
    
-   if grannyTracersEnabled then
-      for _, t in pairs(grannyTracers) do
-         if t.target and t.target.Parent then
-            local screenPos, onScreen = cam:WorldToViewportPoint(t.target.Position)
-            if onScreen then
-               t.tracer.From = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y)
-               t.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
-               t.tracer.Visible = true
-            else
-               t.tracer.Visible = false
+   if antiGrannyKillEnabled then
+      local char = player.Character
+      local root = char and char:FindFirstChild("HumanoidRootPart")
+      if root then
+         local granny = findGrannyModel()
+         if granny and granny:FindFirstChild("HumanoidRootPart") then
+            local dist = (granny.HumanoidRootPart.Position - root.Position).Magnitude
+            if dist <= 10 then
+               local zombie = granny:FindFirstChild("Zombie")
+               if zombie then
+                  zombie.Health = 0
+               end
             end
-            if rainbowGrannyTracers then
-               t.tracer.Color = rainbowColor
-            end
-         else
-            t.tracer.Visible = false
          end
       end
    end
    
-   if grandpaTracersEnabled then
-      for _, t in pairs(grandpaTracers) do
-         if t.target and t.target.Parent then
-            local screenPos, onScreen = cam:WorldToViewportPoint(t.target.Position)
-            if onScreen then
-               t.tracer.From = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y)
-               t.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
-               t.tracer.Visible = true
-            else
-               t.tracer.Visible = false
+   if antiGrandpaKillEnabled then
+      local char = player.Character
+      local root = char and char:FindFirstChild("HumanoidRootPart")
+      if root then
+         local grandpa = findGrandpaModel()
+         if grandpa and grandpa:FindFirstChild("HumanoidRootPart") then
+            local dist = (grandpa.HumanoidRootPart.Position - root.Position).Magnitude
+            if dist <= 10 then
+               local zombie = grandpa:FindFirstChild("Zombie")
+               if zombie then
+                  zombie.Health = 0
+               end
             end
-            if rainbowGrandpaTracers then
-               t.tracer.Color = rainbowColor
-            end
-         else
-            t.tracer.Visible = false
          end
       end
    end
 end)
 
-player.CharacterAdded:Connect(function()
+player.CharacterAdded:Connect(function(newChar)
    task.wait(0.5)
+   if invis_on then deactivateInvis() end
    if espEnabled then applyESP() end
+   if nametagsEnabled then applyNameTags() end
+   if distanceEnabled then applyDistanceTags() end
    if tracersEnabled then applyTracers() end
    if grannyESPEnabled then applyGrannyESP() end
    if grandpaESPEnabled then applyGrandpaESP() end
-   if grannyTracersEnabled then applyGrannyTracers() end
-   if grandpaTracersEnabled then applyGrandpaTracers() end
+   if antiFallEnabled then
+      local hum = newChar:WaitForChild("Humanoid")
+      if antiFallConnection then antiFallConnection:Disconnect() end
+      antiFallConnection = hum.StateChanged:Connect(function(oldState, newState)
+         if not antiFallEnabled then return end
+         if newState == Enum.HumanoidStateType.Freefall then
+            local currentChar = player.Character
+            if not currentChar then return end
+            local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
+            if not rootPart then return end
+            
+            local rayParams = RaycastParams.new()
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+            rayParams.FilterDescendantsInstances = {currentChar}
+            
+            local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -999, 0), rayParams)
+            
+            if rayResult then
+               rootPart.CFrame = CFrame.new(rayResult.Position + Vector3.new(0, 3, 0))
+            end
+         end
+      end)
+   end
 end)
