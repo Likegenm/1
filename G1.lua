@@ -3,7 +3,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
    Name = "Granny: Multiplayer Chapter: 1 | by Likegenm",
    LoadingTitle = "Loading...",
-   LoadingSubtitle = "by Script",
+   LoadingSubtitle = "by Likegenm",
    ConfigurationSaving = {
       Enabled = false
    },
@@ -31,6 +31,7 @@ local distanceEnabled = false
 local distanceColor = Color3.fromRGB(255, 255, 255)
 
 local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
 
 local scanItems = function()
    allItems = {}
@@ -689,25 +690,91 @@ VisualTab:CreateToggle({
    Flag = "Fullbright",
    Callback = function(Value)
       fullbrightEnabled = Value
-      local lighting = game:GetService("Lighting")
+      local lighting = Lighting
       if Value then
          defaultLighting.Brightness = lighting.Brightness
          defaultLighting.ClockTime = lighting.ClockTime
          defaultLighting.FogEnd = lighting.FogEnd
          defaultLighting.GlobalShadows = lighting.GlobalShadows
          defaultLighting.OutdoorAmbient = lighting.OutdoorAmbient
+         defaultLighting.Ambient = lighting.Ambient
 
          lighting.Brightness = 2
          lighting.ClockTime = 14
          lighting.FogEnd = 100000
          lighting.GlobalShadows = false
          lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+         lighting.Ambient = Color3.fromRGB(128, 128, 128)
       else
          lighting.Brightness = defaultLighting.Brightness
          lighting.ClockTime = defaultLighting.ClockTime
          lighting.FogEnd = defaultLighting.FogEnd
          lighting.GlobalShadows = defaultLighting.GlobalShadows
          lighting.OutdoorAmbient = defaultLighting.OutdoorAmbient
+         lighting.Ambient = defaultLighting.Ambient
+      end
+   end
+})
+
+local AmbientColorSection = VisualTab:CreateSection("Ambient Color")
+
+local ambientColorEnabled = false
+local ambientColorValue = Color3.fromRGB(255, 255, 255)
+
+VisualTab:CreateToggle({
+   Name = "Ambient Color",
+   CurrentValue = false,
+   Flag = "AmbientColor",
+   Callback = function(Value)
+      ambientColorEnabled = Value
+      if Value then
+         Lighting.Ambient = ambientColorValue
+      else
+         Lighting.Ambient = defaultLighting.Ambient or Color3.new()
+      end
+   end
+})
+
+VisualTab:CreateColorPicker({
+   Name = "Ambient Color",
+   Color = Color3.fromRGB(255, 255, 255),
+   Flag = "AmbientColorPicker",
+   Callback = function(Value)
+      ambientColorValue = Value
+      if ambientColorEnabled then
+         Lighting.Ambient = Value
+      end
+   end
+})
+
+local TimeChangerSection = VisualTab:CreateSection("Time Changer")
+
+local timeChangerEnabled = false
+local timeValue = 14
+
+VisualTab:CreateToggle({
+   Name = "Time Changer",
+   CurrentValue = false,
+   Flag = "TimeChanger",
+   Callback = function(Value)
+      timeChangerEnabled = Value
+      if not Value then
+         Lighting.ClockTime = defaultLighting.ClockTime or 14
+      end
+   end
+})
+
+VisualTab:CreateSlider({
+   Name = "Time",
+   Range = {0, 24},
+   Increment = 0.1,
+   Suffix = "",
+   CurrentValue = 14,
+   Flag = "TimeSlider",
+   Callback = function(Value)
+      timeValue = Value
+      if timeChangerEnabled then
+         Lighting.ClockTime = Value
       end
    end
 })
@@ -756,7 +823,7 @@ GrannyTab:CreateButton({
 })
 
 GrannyTab:CreateButton({
-   Name = "Stun Granny",
+   Name = "Freeze Granny",
    Callback = function()
       local granny = findGrannyModel()
       if granny then
@@ -764,7 +831,24 @@ GrannyTab:CreateButton({
          if humanoid then
             humanoid.WalkSpeed = 0
          end
+         local hrp = granny:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.Anchored = true
+         end
       end
+   end
+})
+
+local ViewAngleGrannySection = GrannyTab:CreateSection("View Angle")
+
+local viewAngleGrannyEnabled = false
+
+GrannyTab:CreateToggle({
+   Name = "View Angle Granny",
+   CurrentValue = false,
+   Flag = "ViewAngleGranny",
+   Callback = function(Value)
+      viewAngleGrannyEnabled = Value
    end
 })
 
@@ -832,6 +916,32 @@ GrannyTab:CreateSlider({
    Flag = "OrbitHeight",
    Callback = function(Value)
       orbitHeight = Value
+   end
+})
+
+local AutoStunGrannySection = GrannyTab:CreateSection("Auto Freeze")
+
+local autoFreezeGrannyEnabled = false
+local autoFreezeGrannyRange = 10
+
+GrannyTab:CreateToggle({
+   Name = "Auto Freeze Granny",
+   CurrentValue = false,
+   Flag = "AutoFreezeGranny",
+   Callback = function(Value)
+      autoFreezeGrannyEnabled = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Auto Freeze Range",
+   Range = {1, 50},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "AutoFreezeGrannyRange",
+   Callback = function(Value)
+      autoFreezeGrannyRange = Value
    end
 })
 
@@ -903,7 +1013,7 @@ SlendrinaTab:CreateButton({
 })
 
 SlendrinaTab:CreateButton({
-   Name = "Stun Slendrina",
+   Name = "Freeze Slendrina",
    Callback = function()
       local slendrina = findSlendrinaModel()
       if slendrina then
@@ -911,7 +1021,24 @@ SlendrinaTab:CreateButton({
          if humanoid then
             humanoid.WalkSpeed = 0
          end
+         local hrp = slendrina:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.Anchored = true
+         end
       end
+   end
+})
+
+local ViewAngleSlendrinaSection = SlendrinaTab:CreateSection("View Angle")
+
+local viewAngleSlendrinaEnabled = false
+
+SlendrinaTab:CreateToggle({
+   Name = "View Angle Slendrina",
+   CurrentValue = false,
+   Flag = "ViewAngleSlendrina",
+   Callback = function(Value)
+      viewAngleSlendrinaEnabled = Value
    end
 })
 
@@ -927,6 +1054,32 @@ SlendrinaTab:CreateButton({
             hrp.CFrame = CFrame.new(0, -500, 0)
          end
       end
+   end
+})
+
+local AutoStunSlendrinaSection = SlendrinaTab:CreateSection("Auto Freeze")
+
+local autoFreezeSlendrinaEnabled = false
+local autoFreezeSlendrinaRange = 10
+
+SlendrinaTab:CreateToggle({
+   Name = "Auto Freeze Slendrina",
+   CurrentValue = false,
+   Flag = "AutoFreezeSlendrina",
+   Callback = function(Value)
+      autoFreezeSlendrinaEnabled = Value
+   end
+})
+
+SlendrinaTab:CreateSlider({
+   Name = "Auto Freeze Range",
+   Range = {1, 50},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "AutoFreezeSlendrinaRange",
+   Callback = function(Value)
+      autoFreezeSlendrinaRange = Value
    end
 })
 
@@ -990,13 +1143,17 @@ PetsTab:CreateButton({
 })
 
 PetsTab:CreateButton({
-   Name = "Stun Spider",
+   Name = "Freeze Spider",
    Callback = function()
       local spiders = findSpiderModels()
       for _, spider in pairs(spiders) do
          local humanoid = spider:FindFirstChildWhichIsA("Humanoid")
          if humanoid then
             humanoid.WalkSpeed = 0
+         end
+         local hrp = spider:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.Anchored = true
          end
       end
    end
@@ -1020,8 +1177,7 @@ local function findCrowModels()
       local preset = workspace:FindFirstChild("Preset" .. i)
       if preset then
          local locks = preset:FindFirstChild("Locks")
-         if locks then
-            for _, obj in pairs(locks:GetDescendants()) do
+         if locks then            for _, obj in pairs(locks:GetDescendants()) do
                if obj.Name == "CrowModel" then
                   local humanoid = obj:FindFirstChild("CrowZombie")
                   if humanoid then
@@ -1049,13 +1205,17 @@ PetsTab:CreateButton({
 })
 
 PetsTab:CreateButton({
-   Name = "Stun Crow",
+   Name = "Freeze Crow",
    Callback = function()
       local crows = findCrowModels()
       for _, crow in pairs(crows) do
          local humanoid = crow:FindFirstChild("CrowZombie")
          if humanoid then
             humanoid.WalkSpeed = 0
+         end
+         local hrp = crow:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.Anchored = true
          end
       end
    end
@@ -1116,7 +1276,7 @@ TeleportsTab:CreateButton({
             if char then
                local myHrp = char:FindFirstChild("HumanoidRootPart")
                if myHrp then
-                  myHrp.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
+                  myHrp.CFrame = hrp.CFrame
                end
             end
          end
@@ -1124,7 +1284,132 @@ TeleportsTab:CreateButton({
    end
 })
 
+local MapTeleportsSection = TeleportsTab:CreateSection("Map Teleports")
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Cage",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(-290.11, 12.54, -10.74)
+         end
+      end
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Spider",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(-305.85, 21.46, -12.14)
+         end
+      end
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Crow",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(-338.57, -3.67, -3.03)
+         end
+      end
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to SlendrinaMother",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(-316.92, -17.86, -4.56)
+         end
+      end
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Void",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(hrp.Position.X, -4995, hrp.Position.Z)
+         end
+      end
+   end
+})
+
+local SavedPositionSection = TeleportsTab:CreateSection("Saved Position")
+
+local savedPosition = nil
+
+TeleportsTab:CreateButton({
+   Name = "Save Position",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            savedPosition = hrp.CFrame
+         end
+      end
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Position",
+   Callback = function()
+      if savedPosition then
+         local char = player.Character
+         if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+               hrp.CFrame = savedPosition
+            end
+         end
+      end
+   end
+})
+
 local LocalPlayerTab = Window:CreateTab("LocalPlayer", 4483362458)
+
+local KillAuraSection = LocalPlayerTab:CreateSection("Kill Aura")
+
+local killAuraEnabled = false
+local killAuraRange = 10
+
+LocalPlayerTab:CreateToggle({
+   Name = "Kill Aura",
+   CurrentValue = false,
+   Flag = "KillAura",
+   Callback = function(Value)
+      killAuraEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Kill Aura Range",
+   Range = {1, 50},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "KillAuraRange",
+   Callback = function(Value)
+      killAuraRange = Value
+   end
+})
 
 local AntiFallSection = LocalPlayerTab:CreateSection("Anti Fall")
 
@@ -1180,6 +1465,19 @@ LocalPlayerTab:CreateToggle({
    Flag = "Speed",
    Callback = function(Value)
       speedEnabled = Value
+   end
+})
+
+local BunnyHopSection = LocalPlayerTab:CreateSection("Bunny Hop")
+
+local bunnyHopEnabled = false
+
+LocalPlayerTab:CreateToggle({
+   Name = "Bunny Hop",
+   CurrentValue = false,
+   Flag = "BunnyHop",
+   Callback = function(Value)
+      bunnyHopEnabled = Value
    end
 })
 
@@ -1347,12 +1645,96 @@ LocalPlayerTab:CreateColorPicker({
    end
 })
 
+local NoclipSection = LocalPlayerTab:CreateSection("Noclip")
+
+local noclipEnabled = false
+local noclipChance = 50
+local noclipMaxThickness = 3.0
+
+LocalPlayerTab:CreateToggle({
+   Name = "Noclip",
+   CurrentValue = false,
+   Flag = "Noclip",
+   Callback = function(Value)
+      noclipEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Noclip Chance",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "%",
+   CurrentValue = 50,
+   Flag = "NoclipChance",
+   Callback = function(Value)
+      noclipChance = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Max Wall Thickness",
+   Range = {1, 6},
+   Increment = 0.1,
+   Suffix = "Studs",
+   CurrentValue = 3.0,
+   Flag = "NoclipThickness",
+   Callback = function(Value)
+      noclipMaxThickness = Value
+   end
+})
+
+local LagSwitchSection = LocalPlayerTab:CreateSection("Lag Switch")
+
+local lagSwitchEnabled = false
+local lagSwitchDuration = 1
+local lagSwitchInterval = 5
+
+LocalPlayerTab:CreateToggle({
+   Name = "Lag Switch",
+   CurrentValue = false,
+   Flag = "LagSwitch",
+   Callback = function(Value)
+      lagSwitchEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Lag Duration",
+   Range = {0.1, 5},
+   Increment = 0.1,
+   Suffix = "s",
+   CurrentValue = 1,
+   Flag = "LagDuration",
+   Callback = function(Value)
+      lagSwitchDuration = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Lag Interval",
+   Range = {1, 30},
+   Increment = 1,
+   Suffix = "s",
+   CurrentValue = 5,
+   Flag = "LagInterval",
+   Callback = function(Value)
+      lagSwitchInterval = Value
+   end
+})
+
 local instanceKillGrannyTimer = 0
 local instanceKillSlendrinaTimer = 0
 local espUpdateTimer = 0
 local pickUpAuraTimer = 0
 local useAuraTimer = 0
 local orbitAngle = 0
+local killAuraTimer = 0
+local autoFreezeGrannyTimer = 0
+local autoFreezeSlendrinaTimer = 0
+local lagSwitchTimer = 0
+local lagSwitchActive = false
+local noclipTimer = 0
 
 game:GetService("RunService").RenderStepped:Connect(function(delta)
    if thirdPersonEnabled then
@@ -1371,6 +1753,20 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
             hum.WalkSpeed = 10
          end
       end
+   end
+
+   if bunnyHopEnabled then
+      local char = player.Character
+      if char then
+         local hum = char:FindFirstChild("Humanoid")
+         if hum and hum.MoveDirection.Magnitude > 0 and hum:GetState() == Enum.HumanoidStateType.Running then
+            hum.Jump = true
+         end
+      end
+   end
+
+   if timeChangerEnabled then
+      Lighting.ClockTime = timeValue
    end
 
    instanceKillGrannyTimer = instanceKillGrannyTimer + delta
@@ -1454,6 +1850,144 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
       end
    end
 
+   killAuraTimer = killAuraTimer + delta
+   if killAuraEnabled and killAuraTimer >= 0.5 then
+      killAuraTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local granny = findGrannyModel()
+            if granny and granny:FindFirstChild("HumanoidRootPart") then
+               local dist = (granny.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= killAuraRange then
+                  local humanoid = granny:FindFirstChildWhichIsA("Humanoid")
+                  if humanoid then humanoid.Health = 0 end
+               end
+            end
+            local slendrina = findSlendrinaModel()
+            if slendrina and slendrina:FindFirstChild("HumanoidRootPart") then
+               local dist = (slendrina.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= killAuraRange then
+                  local humanoid = slendrina:FindFirstChildWhichIsA("Humanoid")
+                  if humanoid then humanoid.Health = 0 end
+               end
+            end
+            local spiders = findSpiderModels()
+            for _, spider in pairs(spiders) do
+               local hrp = spider:FindFirstChild("HumanoidRootPart")
+               if hrp then
+                  local dist = (hrp.Position - root.Position).Magnitude
+                  if dist <= killAuraRange then
+                     local humanoid = spider:FindFirstChildWhichIsA("Humanoid")
+                     if humanoid then humanoid.Health = 0 end
+                  end
+               end
+            end
+            local crows = findCrowModels()
+            for _, crow in pairs(crows) do
+               local hrp = crow:FindFirstChild("HumanoidRootPart")
+               if hrp then
+                  local dist = (hrp.Position - root.Position).Magnitude
+                  if dist <= killAuraRange then
+                     local humanoid = crow:FindFirstChild("CrowZombie")
+                     if humanoid then humanoid.Health = 0 end
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   autoFreezeGrannyTimer = autoFreezeGrannyTimer + delta
+   if autoFreezeGrannyEnabled and autoFreezeGrannyTimer >= 0.5 then
+      autoFreezeGrannyTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local granny = findGrannyModel()
+            if granny and granny:FindFirstChild("HumanoidRootPart") then
+               local dist = (granny.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= autoFreezeGrannyRange then
+                  local humanoid = granny:FindFirstChildWhichIsA("Humanoid")
+                  if humanoid then humanoid.WalkSpeed = 0 end
+                  local hrp = granny:FindFirstChild("HumanoidRootPart")
+                  if hrp then hrp.Anchored = true end
+               end
+            end
+         end
+      end
+   end
+
+   autoFreezeSlendrinaTimer = autoFreezeSlendrinaTimer + delta
+   if autoFreezeSlendrinaEnabled and autoFreezeSlendrinaTimer >= 0.5 then
+      autoFreezeSlendrinaTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local slendrina = findSlendrinaModel()
+            if slendrina and slendrina:FindFirstChild("HumanoidRootPart") then
+               local dist = (slendrina.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= autoFreezeSlendrinaRange then
+                  local humanoid = slendrina:FindFirstChildWhichIsA("Humanoid")
+                  if humanoid then humanoid.WalkSpeed = 0 end
+                  local hrp = slendrina:FindFirstChild("HumanoidRootPart")
+                  if hrp then hrp.Anchored = true end
+               end
+            end
+         end
+      end
+   end
+
+   lagSwitchTimer = lagSwitchTimer + delta
+   if lagSwitchEnabled then
+      if lagSwitchActive then
+         if lagSwitchTimer >= lagSwitchDuration then
+            lagSwitchTimer = 0
+            lagSwitchActive = false
+            game:GetService("NetworkClient"):SetOutgoingKBPSLimit(9e9)
+         end
+      else
+         if lagSwitchTimer >= lagSwitchInterval then
+            lagSwitchTimer = 0
+            lagSwitchActive = true
+            game:GetService("NetworkClient"):SetOutgoingKBPSLimit(0)
+         end
+      end
+   elseif lagSwitchActive then
+      lagSwitchActive = false
+      game:GetService("NetworkClient"):SetOutgoingKBPSLimit(9e9)
+   end
+
+   noclipTimer = noclipTimer + delta
+   if noclipEnabled and noclipTimer >= 0.1 then
+      noclipTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local hum = char:FindFirstChild("Humanoid")
+            if hum and hum.MoveDirection.Magnitude > 0 then
+               local chance = math.random(1, 100)
+               if chance <= noclipChance then
+                  local moveDir = hum.MoveDirection
+                  local rayOrigin = root.Position
+                  local rayDir = moveDir * noclipMaxThickness
+                  local rayParams = RaycastParams.new()
+                  rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                  rayParams.FilterDescendantsInstances = {char}
+                  local rayResult = workspace:Raycast(rayOrigin, rayDir, rayParams)
+                  if rayResult then
+                     root.CFrame = root.CFrame + moveDir * (noclipMaxThickness + 1)
+                  end
+               end
+            end
+         end
+      end
+   end
+
    if orbitEnabled then
       local char = player.Character
       if char and char:FindFirstChild("HumanoidRootPart") then
@@ -1502,6 +2036,20 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
    local cam = workspace.CurrentCamera
    local hue = tick() % 5 / 5
    local rainbowColor = Color3.fromHSV(hue, 1, 1)
+
+   if viewAngleGrannyEnabled then
+      local granny = findGrannyModel()
+      if granny and granny:FindFirstChild("Head") then
+         cam.CFrame = CFrame.new(cam.CFrame.Position, granny.Head.Position)
+      end
+   end
+
+   if viewAngleSlendrinaEnabled then
+      local slendrina = findSlendrinaModel()
+      if slendrina and slendrina:FindFirstChild("Head") then
+         cam.CFrame = CFrame.new(cam.CFrame.Position, slendrina.Head.Position)
+      end
+   end
 
    if invisTimer > 0 then
       invisTimer = invisTimer - delta
@@ -1689,4 +2237,13 @@ Players.PlayerRemoving:Connect(function(plr)
    if playersESPEnabled then applyPlayersESP() end
    if playersTracersEnabled then applyPlayersTracers() end
    playerDropdown:Refresh(getPlayerList())
+end)
+
+workspace.FallenPartsDestroyHeight = 0/0
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if hum and hum.Health <= 0 then
+        hum.Health = hum.MaxHealth
+    end
 end)
