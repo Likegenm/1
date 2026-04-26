@@ -3,7 +3,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
    Name = "Granny: Multiplayer Chapter: 1 | by Likegenm",
    LoadingTitle = "Loading...",
-   LoadingSubtitle = "by Likegenm",
+   LoadingSubtitle = "by Script",
    ConfigurationSaving = {
       Enabled = false
    },
@@ -32,6 +32,7 @@ local distanceColor = Color3.fromRGB(255, 255, 255)
 
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
+local UIS = game:GetService("UserInputService")
 
 local scanItems = function()
    allItems = {}
@@ -654,33 +655,6 @@ VisualTab:CreateColorPicker({
    end
 })
 
-local thirdPersonEnabled = false
-
-local oldIndex
-oldIndex = hookmetamethod(game, "__newindex", function(self, prop, value)
-    if self == player and prop == "CameraMode" then
-        return
-    end
-    return oldIndex(self, prop, value)
-end)
-
-VisualTab:CreateToggle({
-   Name = "Third Person",
-   CurrentValue = false,
-   Flag = "ThirdPerson",
-   Callback = function(Value)
-      thirdPersonEnabled = Value
-      if Value then
-         player.CameraMode = Enum.CameraMode.Classic
-         player.CameraMinZoomDistance = 0.5
-         player.CameraMaxZoomDistance = 20
-      else
-         player.CameraMinZoomDistance = 0.5
-         player.CameraMaxZoomDistance = 0.5
-      end
-   end
-})
-
 local fullbrightEnabled = false
 local defaultLighting = {}
 
@@ -1177,7 +1151,8 @@ local function findCrowModels()
       local preset = workspace:FindFirstChild("Preset" .. i)
       if preset then
          local locks = preset:FindFirstChild("Locks")
-         if locks then            for _, obj in pairs(locks:GetDescendants()) do
+         if locks then
+            for _, obj in pairs(locks:GetDescendants()) do
                if obj.Name == "CrowModel" then
                   local humanoid = obj:FindFirstChild("CrowZombie")
                   if humanoid then
@@ -1455,6 +1430,62 @@ LocalPlayerTab:CreateToggle({
    end
 })
 
+local AntiFallV2Section = LocalPlayerTab:CreateSection("Anti Fall V2")
+
+local antiFallV2Enabled = false
+local antiFallV2Chance = 100
+local antiFallV2Connection = nil
+
+LocalPlayerTab:CreateToggle({
+   Name = "Anti Fall V2(Beta)",
+   CurrentValue = false,
+   Flag = "AntiFallV2",
+   Callback = function(Value)
+      antiFallV2Enabled = Value
+      if Value then
+         local char = player.Character or player.CharacterAdded:Wait()
+         local hum = char:WaitForChild("Humanoid")
+         if antiFallV2Connection then antiFallV2Connection:Disconnect() end
+         antiFallV2Connection = hum.StateChanged:Connect(function(oldState, newState)
+            if not antiFallV2Enabled then return end
+            if newState == Enum.HumanoidStateType.Freefall then
+               local currentChar = player.Character
+               if not currentChar then return end
+               local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
+               if not rootPart then return end
+               local rayParams = RaycastParams.new()
+               rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+               rayParams.FilterDescendantsInstances = {currentChar}
+               local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -5, 0), rayParams)
+               if rayResult then
+                  local chance = math.random(1, 100)
+                  if chance <= antiFallV2Chance then
+                     rootPart.Velocity = Vector3.new(0, 1, 0)
+                  end
+               end
+            end
+         end)
+      else
+         if antiFallV2Connection then
+            antiFallV2Connection:Disconnect()
+            antiFallV2Connection = nil
+         end
+      end
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Anti Fall V2 Chance",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "%",
+   CurrentValue = 100,
+   Flag = "AntiFallV2Chance",
+   Callback = function(Value)
+      antiFallV2Chance = Value
+   end
+})
+
 local SpeedSection = LocalPlayerTab:CreateSection("Speed")
 
 local speedEnabled = false
@@ -1481,81 +1512,12 @@ LocalPlayerTab:CreateToggle({
    end
 })
 
-local InvisibleSection = LocalPlayerTab:CreateSection("Invisible")
-
-local invis_on = false
-local invisTimer = 0
-local invisX = 1000
-local invisY = 1000
-local invisZ = 1000
-
-local function setTransparency(character, transparency)
-    for _, part in pairs(character:GetDescendants()) do
-        if part:IsA("BasePart") or part:IsA("Decal") then
-            part.Transparency = transparency
-        end
-    end
-end
-
-local function activateInvis()
-   if invis_on then return end
-   local charNow = player.Character
-   if not charNow or not charNow:FindFirstChild("HumanoidRootPart") then return end
-
-   local savedpos = charNow.HumanoidRootPart.CFrame
-   charNow.HumanoidRootPart.CFrame = CFrame.new(invisX, invisY, invisZ)
-   task.wait(0.15)
-
-   local Seat = Instance.new('Seat', game.Workspace)
-   Seat.Anchored = false
-   Seat.CanCollide = false
-   Seat.Name = 'invischair'
-   Seat.Transparency = 1
-   Seat.Position = Vector3.new(invisX, invisY, invisZ)
-
-   local Weld = Instance.new("Weld", Seat)
-   local torso = charNow:FindFirstChild("Torso") or charNow:FindFirstChild("UpperTorso")
-   if torso then
-      Weld.Part0 = Seat
-      Weld.Part1 = torso
-   end
-
-   task.wait()
-   Seat.CFrame = savedpos
-   setTransparency(charNow, 0.5)
-   invis_on = true
-   invisTimer = 3
-end
-
-local function deactivateInvis()
-   if not invis_on then return end
-   local invisChair = workspace:FindFirstChild('invischair')
-   if invisChair then invisChair:Destroy() end
-   local charNow = player.Character
-   if charNow then
-      setTransparency(charNow, 0)
-   end
-   invis_on = false
-   invisTimer = 0
-end
-
-LocalPlayerTab:CreateToggle({
-   Name = "Invisible",
-   CurrentValue = false,
-   Flag = "Invisible",
-   Callback = function(Value)
-      if Value then
-         activateInvis()
-      else
-         deactivateInvis()
-      end
-   end
-})
-
 local PickUpAuraSection = LocalPlayerTab:CreateSection("PickUp Aura")
 
 local pickUpAuraEnabled = false
 local pickUpAuraRange = 10
+local pickUpAuraThroughWalls = true
+local pickUpAuraChance = 100
 
 LocalPlayerTab:CreateToggle({
    Name = "PickUp Aura",
@@ -1575,6 +1537,27 @@ LocalPlayerTab:CreateSlider({
    Flag = "PickUpAuraRange",
    Callback = function(Value)
       pickUpAuraRange = Value
+   end
+})
+
+LocalPlayerTab:CreateToggle({
+   Name = "PickUp Through Walls",
+   CurrentValue = true,
+   Flag = "PickUpThroughWalls",
+   Callback = function(Value)
+      pickUpAuraThroughWalls = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "PickUp Chance",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "%",
+   CurrentValue = 100,
+   Flag = "PickUpChance",
+   Callback = function(Value)
+      pickUpAuraChance = Value
    end
 })
 
@@ -1736,14 +1719,6 @@ local lagSwitchTimer = 0
 local lagSwitchActive = false
 local noclipTimer = 0
 
-game:GetService("RunService").RenderStepped:Connect(function(delta)
-   if thirdPersonEnabled then
-      player.CameraMode = Enum.CameraMode.Classic
-      player.CameraMinZoomDistance = 0.5
-      player.CameraMaxZoomDistance = 20
-   end
-end)
-
 game:GetService("RunService").Heartbeat:Connect(function(delta)
    if speedEnabled then
       local char = player.Character
@@ -1760,7 +1735,9 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
       if char then
          local hum = char:FindFirstChild("Humanoid")
          if hum and hum.MoveDirection.Magnitude > 0 and hum:GetState() == Enum.HumanoidStateType.Running then
-            hum.Jump = true
+            if not hum.Jump then
+               hum.Jump = true
+            end
          end
       end
    end
@@ -1814,7 +1791,19 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
                      if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
                         local dist = (obj.Position - root.Position).Magnitude
                         if dist <= pickUpAuraRange then
-                           obj.InteractRemote:FireServer(player)
+                           if not pickUpAuraThroughWalls then
+                              local rayParams = RaycastParams.new()
+                              rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                              rayParams.FilterDescendantsInstances = {char}
+                              local rayResult = workspace:Raycast(root.Position, (obj.Position - root.Position).Unit * dist, rayParams)
+                              if rayResult then
+                                 continue
+                              end
+                           end
+                           local chance = math.random(1, 100)
+                           if chance <= pickUpAuraChance then
+                              obj.InteractRemote:FireServer(player)
+                           end
                         end
                      end
                   end
@@ -2051,13 +2040,6 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
       end
    end
 
-   if invisTimer > 0 then
-      invisTimer = invisTimer - delta
-      if invisTimer <= 0 then
-         deactivateInvis()
-      end
-   end
-
    if rainbowESP then
       for _, h in pairs(espObjects) do
          h.FillColor = rainbowColor
@@ -2185,7 +2167,6 @@ end)
 
 player.CharacterAdded:Connect(function(newChar)
    task.wait(0.5)
-   if invis_on then deactivateInvis() end
    if espEnabled then applyESP() end
    if nametagsEnabled then applyNameTags() end
    if distanceEnabled then applyDistanceTags() end
@@ -2213,6 +2194,29 @@ player.CharacterAdded:Connect(function(newChar)
 
             if rayResult then
                rootPart.CFrame = CFrame.new(rayResult.Position + Vector3.new(0, 3, 0))
+            end
+         end
+      end)
+   end
+   if antiFallV2Enabled then
+      local hum = newChar:WaitForChild("Humanoid")
+      if antiFallV2Connection then antiFallV2Connection:Disconnect() end
+      antiFallV2Connection = hum.StateChanged:Connect(function(oldState, newState)
+         if not antiFallV2Enabled then return end
+         if newState == Enum.HumanoidStateType.Freefall then
+            local currentChar = player.Character
+            if not currentChar then return end
+            local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
+            if not rootPart then return end
+            local rayParams = RaycastParams.new()
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+            rayParams.FilterDescendantsInstances = {currentChar}
+            local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -5, 0), rayParams)
+            if rayResult then
+               local chance = math.random(1, 100)
+               if chance <= antiFallV2Chance then
+                  rootPart.Velocity = Vector3.new(0, 1, 0)
+               end
             end
          end
       end)
