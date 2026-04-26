@@ -30,6 +30,9 @@ local distanceTags = {}
 local distanceEnabled = false
 local distanceColor = Color3.fromRGB(255, 255, 255)
 
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+
 local scanItems = function()
    allItems = {}
    for i = 1, 10 do
@@ -177,7 +180,7 @@ local createNameTag = function(obj)
    billboard.Size = UDim2.new(0, 200, 0, 30)
    billboard.StudsOffset = Vector3.new(0, 2, 0)
    billboard.AlwaysOnTop = true
-   
+
    local textLabel = Instance.new("TextLabel")
    textLabel.Parent = billboard
    textLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -187,7 +190,7 @@ local createNameTag = function(obj)
    textLabel.TextStrokeTransparency = 0.5
    textLabel.Font = Enum.Font.SourceSansBold
    textLabel.TextSize = 14
-   
+
    table.insert(nametagObjects, billboard)
    return billboard
 end
@@ -247,7 +250,7 @@ local createDistanceTag = function(obj)
    billboard.Size = UDim2.new(0, 200, 0, 20)
    billboard.StudsOffset = Vector3.new(0, -1, 0)
    billboard.AlwaysOnTop = true
-   
+
    local textLabel = Instance.new("TextLabel")
    textLabel.Parent = billboard
    textLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -257,7 +260,7 @@ local createDistanceTag = function(obj)
    textLabel.TextStrokeTransparency = 0.5
    textLabel.Font = Enum.Font.SourceSansBold
    textLabel.TextSize = 12
-   
+
    table.insert(distanceTags, {billboard = billboard, target = obj})
    return billboard
 end
@@ -527,7 +530,139 @@ VisualTab:CreateColorPicker({
    end
 })
 
+local PlayersESPSection = VisualTab:CreateSection("Players ESP")
+
+local playersESPObjects = {}
+local playersESPColor = Color3.fromRGB(0, 255, 0)
+local playersESPEnabled = false
+local rainbowPlayersESP = false
+
+local playersTracers = {}
+local playersTracersEnabled = false
+local playersTracerColor = Color3.fromRGB(0, 255, 0)
+local rainbowPlayersTracers = false
+
+local clearPlayersESP = function()
+   for _, h in pairs(playersESPObjects) do
+      h:Destroy()
+   end
+   playersESPObjects = {}
+end
+
+local applyPlayersESP = function()
+   clearPlayersESP()
+   if not playersESPEnabled then return end
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr ~= player and plr.Character then
+         local highlight = Instance.new("Highlight")
+         highlight.Parent = plr.Character
+         highlight.Adornee = plr.Character
+         highlight.FillColor = playersESPColor
+         highlight.FillTransparency = 0.5
+         highlight.OutlineColor = playersESPColor
+         highlight.OutlineTransparency = 0
+         table.insert(playersESPObjects, highlight)
+      end
+   end
+end
+
+local clearPlayersTracers = function()
+   for _, t in pairs(playersTracers) do
+      t.tracer:Remove()
+   end
+   playersTracers = {}
+end
+
+local applyPlayersTracers = function()
+   clearPlayersTracers()
+   if not playersTracersEnabled then return end
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr ~= player and plr.Character then
+         local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            local tracer = Drawing.new("Line")
+            tracer.Visible = true
+            tracer.Color = playersTracerColor
+            tracer.Thickness = 1
+            tracer.Transparency = 1
+            table.insert(playersTracers, {tracer = tracer, target = hrp})
+         end
+      end
+   end
+end
+
+VisualTab:CreateToggle({
+   Name = "Players ESP",
+   CurrentValue = false,
+   Flag = "PlayersESP",
+   Callback = function(Value)
+      playersESPEnabled = Value
+      if Value then applyPlayersESP() else clearPlayersESP() end
+   end
+})
+
+VisualTab:CreateToggle({
+   Name = "Rainbow Players ESP",
+   CurrentValue = false,
+   Flag = "RainbowPlayersESP",
+   Callback = function(Value)
+      rainbowPlayersESP = Value
+   end
+})
+
+VisualTab:CreateColorPicker({
+   Name = "Players ESP Color",
+   Color = Color3.fromRGB(0, 255, 0),
+   Flag = "PlayersESPColor",
+   Callback = function(Value)
+      playersESPColor = Value
+      for _, h in pairs(playersESPObjects) do
+         h.FillColor = Value
+         h.OutlineColor = Value
+      end
+   end
+})
+
+VisualTab:CreateToggle({
+   Name = "Players Tracers",
+   CurrentValue = false,
+   Flag = "PlayersTracers",
+   Callback = function(Value)
+      playersTracersEnabled = Value
+      if Value then applyPlayersTracers() else clearPlayersTracers() end
+   end
+})
+
+VisualTab:CreateToggle({
+   Name = "Rainbow Players Tracers",
+   CurrentValue = false,
+   Flag = "RainbowPlayersTracers",
+   Callback = function(Value)
+      rainbowPlayersTracers = Value
+   end
+})
+
+VisualTab:CreateColorPicker({
+   Name = "Players Tracer Color",
+   Color = Color3.fromRGB(0, 255, 0),
+   Flag = "PlayersTracerColor",
+   Callback = function(Value)
+      playersTracerColor = Value
+      for _, t in pairs(playersTracers) do
+         t.tracer.Color = Value
+      end
+   end
+})
+
 local thirdPersonEnabled = false
+
+local oldIndex
+oldIndex = hookmetamethod(game, "__newindex", function(self, prop, value)
+    if self == player and prop == "CameraMode" then
+        return
+    end
+    return oldIndex(self, prop, value)
+end)
 
 VisualTab:CreateToggle({
    Name = "Third Person",
@@ -536,6 +671,7 @@ VisualTab:CreateToggle({
    Callback = function(Value)
       thirdPersonEnabled = Value
       if Value then
+         player.CameraMode = Enum.CameraMode.Classic
          player.CameraMinZoomDistance = 0.5
          player.CameraMaxZoomDistance = 20
       else
@@ -554,25 +690,91 @@ VisualTab:CreateToggle({
    Flag = "Fullbright",
    Callback = function(Value)
       fullbrightEnabled = Value
-      local lighting = game:GetService("Lighting")
+      local lighting = Lighting
       if Value then
          defaultLighting.Brightness = lighting.Brightness
          defaultLighting.ClockTime = lighting.ClockTime
          defaultLighting.FogEnd = lighting.FogEnd
          defaultLighting.GlobalShadows = lighting.GlobalShadows
          defaultLighting.OutdoorAmbient = lighting.OutdoorAmbient
-         
+         defaultLighting.Ambient = lighting.Ambient
+
          lighting.Brightness = 2
          lighting.ClockTime = 14
          lighting.FogEnd = 100000
          lighting.GlobalShadows = false
          lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+         lighting.Ambient = Color3.fromRGB(128, 128, 128)
       else
          lighting.Brightness = defaultLighting.Brightness
          lighting.ClockTime = defaultLighting.ClockTime
          lighting.FogEnd = defaultLighting.FogEnd
          lighting.GlobalShadows = defaultLighting.GlobalShadows
          lighting.OutdoorAmbient = defaultLighting.OutdoorAmbient
+         lighting.Ambient = defaultLighting.Ambient
+      end
+   end
+})
+
+local AmbientColorSection = VisualTab:CreateSection("Ambient Color")
+
+local ambientColorEnabled = false
+local ambientColorValue = Color3.fromRGB(255, 255, 255)
+
+VisualTab:CreateToggle({
+   Name = "Ambient Color",
+   CurrentValue = false,
+   Flag = "AmbientColor",
+   Callback = function(Value)
+      ambientColorEnabled = Value
+      if Value then
+         Lighting.Ambient = ambientColorValue
+      else
+         Lighting.Ambient = defaultLighting.Ambient or Color3.new()
+      end
+   end
+})
+
+VisualTab:CreateColorPicker({
+   Name = "Ambient Color",
+   Color = Color3.fromRGB(255, 255, 255),
+   Flag = "AmbientColorPicker",
+   Callback = function(Value)
+      ambientColorValue = Value
+      if ambientColorEnabled then
+         Lighting.Ambient = Value
+      end
+   end
+})
+
+local TimeChangerSection = VisualTab:CreateSection("Time Changer")
+
+local timeChangerEnabled = false
+local timeValue = 14
+
+VisualTab:CreateToggle({
+   Name = "Time Changer",
+   CurrentValue = false,
+   Flag = "TimeChanger",
+   Callback = function(Value)
+      timeChangerEnabled = Value
+      if not Value then
+         Lighting.ClockTime = defaultLighting.ClockTime or 14
+      end
+   end
+})
+
+VisualTab:CreateSlider({
+   Name = "Time",
+   Range = {0, 24},
+   Increment = 0.1,
+   Suffix = "",
+   CurrentValue = 14,
+   Flag = "TimeSlider",
+   Callback = function(Value)
+      timeValue = Value
+      if timeChangerEnabled then
+         Lighting.ClockTime = Value
       end
    end
 })
@@ -621,7 +823,7 @@ GrannyTab:CreateButton({
 })
 
 GrannyTab:CreateButton({
-   Name = "Stun Granny",
+   Name = "Freeze Granny",
    Callback = function()
       local granny = findGrannyModel()
       if granny then
@@ -629,7 +831,24 @@ GrannyTab:CreateButton({
          if zombie then
             zombie.WalkSpeed = 0
          end
+         local hrp = granny:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.Anchored = true
+         end
       end
+   end
+})
+
+local ViewAngleGrannySection = GrannyTab:CreateSection("View Angle")
+
+local viewAngleGrannyEnabled = false
+
+GrannyTab:CreateToggle({
+   Name = "View Angle Granny",
+   CurrentValue = false,
+   Flag = "ViewAngleGranny",
+   Callback = function(Value)
+      viewAngleGrannyEnabled = Value
    end
 })
 
@@ -648,6 +867,84 @@ GrannyTab:CreateButton({
    end
 })
 
+local OrbitSection = GrannyTab:CreateSection("Orbit")
+
+local orbitGrannyEnabled = false
+local orbitGrannySpeed = 5
+local orbitGrannyRadius = 10
+local orbitGrannyHeight = 0
+
+GrannyTab:CreateToggle({
+   Name = "Orbit Granny",
+   CurrentValue = false,
+   Flag = "OrbitGranny",
+   Callback = function(Value)
+      orbitGrannyEnabled = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Orbit Speed",
+   Range = {1, 20},
+   Increment = 1,
+   Suffix = "",
+   CurrentValue = 5,
+   Flag = "OrbitGrannySpeed",
+   Callback = function(Value)
+      orbitGrannySpeed = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Orbit Radius",
+   Range = {5, 30},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "OrbitGrannyRadius",
+   Callback = function(Value)
+      orbitGrannyRadius = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Orbit Height",
+   Range = {-10, 10},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 0,
+   Flag = "OrbitGrannyHeight",
+   Callback = function(Value)
+      orbitGrannyHeight = Value
+   end
+})
+
+local AutoFreezeGrannySection = GrannyTab:CreateSection("Auto Freeze")
+
+local autoFreezeGrannyEnabled = false
+local autoFreezeGrannyRange = 10
+
+GrannyTab:CreateToggle({
+   Name = "Auto Freeze Granny",
+   CurrentValue = false,
+   Flag = "AutoFreezeGranny",
+   Callback = function(Value)
+      autoFreezeGrannyEnabled = Value
+   end
+})
+
+GrannyTab:CreateSlider({
+   Name = "Auto Freeze Range",
+   Range = {1, 50},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "AutoFreezeGrannyRange",
+   Callback = function(Value)
+      autoFreezeGrannyRange = Value
+   end
+})
+
 local AntiGrannySection = GrannyTab:CreateSection("Anti Granny")
 
 local antiGrannyKillEnabled = false
@@ -658,6 +955,17 @@ GrannyTab:CreateToggle({
    Flag = "AntiGrannyKill",
    Callback = function(Value)
       antiGrannyKillEnabled = Value
+   end
+})
+
+local instanceKillGrannyEnabled = false
+
+GrannyTab:CreateToggle({
+   Name = "Instance Kill Granny",
+   CurrentValue = false,
+   Flag = "InstanceKillGranny",
+   Callback = function(Value)
+      instanceKillGrannyEnabled = Value
    end
 })
 
@@ -705,7 +1013,7 @@ GrandpaTab:CreateButton({
 })
 
 GrandpaTab:CreateButton({
-   Name = "Stun Grandpa",
+   Name = "Freeze Grandpa",
    Callback = function()
       local grandpa = findGrandpaModel()
       if grandpa then
@@ -713,7 +1021,24 @@ GrandpaTab:CreateButton({
          if zombie then
             zombie.WalkSpeed = 0
          end
+         local hrp = grandpa:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.Anchored = true
+         end
       end
+   end
+})
+
+local ViewAngleGrandpaSection = GrandpaTab:CreateSection("View Angle")
+
+local viewAngleGrandpaEnabled = false
+
+GrandpaTab:CreateToggle({
+   Name = "View Angle Grandpa",
+   CurrentValue = false,
+   Flag = "ViewAngleGrandpa",
+   Callback = function(Value)
+      viewAngleGrandpaEnabled = Value
    end
 })
 
@@ -732,6 +1057,84 @@ GrandpaTab:CreateButton({
    end
 })
 
+local OrbitGrandpaSection = GrandpaTab:CreateSection("Orbit")
+
+local orbitGrandpaEnabled = false
+local orbitGrandpaSpeed = 5
+local orbitGrandpaRadius = 10
+local orbitGrandpaHeight = 0
+
+GrandpaTab:CreateToggle({
+   Name = "Orbit Grandpa",
+   CurrentValue = false,
+   Flag = "OrbitGrandpa",
+   Callback = function(Value)
+      orbitGrandpaEnabled = Value
+   end
+})
+
+GrandpaTab:CreateSlider({
+   Name = "Orbit Speed",
+   Range = {1, 20},
+   Increment = 1,
+   Suffix = "",
+   CurrentValue = 5,
+   Flag = "OrbitGrandpaSpeed",
+   Callback = function(Value)
+      orbitGrandpaSpeed = Value
+   end
+})
+
+GrandpaTab:CreateSlider({
+   Name = "Orbit Radius",
+   Range = {5, 30},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "OrbitGrandpaRadius",
+   Callback = function(Value)
+      orbitGrandpaRadius = Value
+   end
+})
+
+GrandpaTab:CreateSlider({
+   Name = "Orbit Height",
+   Range = {-10, 10},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 0,
+   Flag = "OrbitGrandpaHeight",
+   Callback = function(Value)
+      orbitGrandpaHeight = Value
+   end
+})
+
+local AutoFreezeGrandpaSection = GrandpaTab:CreateSection("Auto Freeze")
+
+local autoFreezeGrandpaEnabled = false
+local autoFreezeGrandpaRange = 10
+
+GrandpaTab:CreateToggle({
+   Name = "Auto Freeze Grandpa",
+   CurrentValue = false,
+   Flag = "AutoFreezeGrandpa",
+   Callback = function(Value)
+      autoFreezeGrandpaEnabled = Value
+   end
+})
+
+GrandpaTab:CreateSlider({
+   Name = "Auto Freeze Range",
+   Range = {1, 50},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "AutoFreezeGrandpaRange",
+   Callback = function(Value)
+      autoFreezeGrandpaRange = Value
+   end
+})
+
 local AntiGrandpaSection = GrandpaTab:CreateSection("Anti Grandpa")
 
 local antiGrandpaKillEnabled = false
@@ -745,7 +1148,209 @@ GrandpaTab:CreateToggle({
    end
 })
 
+local instanceKillGrandpaEnabled = false
+
+GrandpaTab:CreateToggle({
+   Name = "Instance Kill Grandpa",
+   CurrentValue = false,
+   Flag = "InstanceKillGrandpa",
+   Callback = function(Value)
+      instanceKillGrandpaEnabled = Value
+   end
+})
+
+local PetsTab = Window:CreateTab("Pets", 4483362458)
+
+local ChildSection = PetsTab:CreateSection("Child")
+
+local function findChildModels()
+   local children = {}
+   for i = 1, 10 do
+      local preset = workspace:FindFirstChild("Preset" .. i)
+      if preset then
+         local locks = preset:FindFirstChild("Locks")
+         if locks then
+            for _, obj in pairs(locks:GetDescendants()) do
+               if obj.Name == "SlendrinaChild" then
+                  local zombie = obj:FindFirstChild("Zombie")
+                  if zombie then
+                     table.insert(children, obj)
+                  end
+               end
+            end
+         end
+      end
+   end
+   return children
+end
+
+PetsTab:CreateButton({
+   Name = "Kill Child",
+   Callback = function()
+      local children = findChildModels()
+      for _, child in pairs(children) do
+         local zombie = child:FindFirstChild("Zombie")
+         if zombie then
+            zombie.Health = 0
+         end
+      end
+   end
+})
+
+PetsTab:CreateButton({
+   Name = "Freeze Child",
+   Callback = function()
+      local children = findChildModels()
+      for _, child in pairs(children) do
+         local zombie = child:FindFirstChild("Zombie")
+         if zombie then
+            zombie.WalkSpeed = 0
+         end
+         local hrp = child:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.Anchored = true
+         end
+      end
+   end
+})
+
+PetsTab:CreateButton({
+   Name = "Destroy Child",
+   Callback = function()
+      local children = findChildModels()
+      for _, child in pairs(children) do
+         child:Destroy()
+      end
+   end
+})
+
+local TeleportsTab = Window:CreateTab("Teleports", 4483362458)
+
+local PlayersTeleportSection = TeleportsTab:CreateSection("Teleport to Player")
+
+local selectedPlayer = ""
+
+local function getPlayerList()
+   local list = {}
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr ~= player then
+         table.insert(list, plr.Name)
+      end
+   end
+   return list
+end
+
+local playerDropdown = TeleportsTab:CreateDropdown({
+   Name = "Select Player",
+   Options = getPlayerList(),
+   CurrentOption = "",
+   Flag = "SelectPlayer",
+   Callback = function(Value)
+      selectedPlayer = Value
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Refresh Players",
+   Callback = function()
+      playerDropdown:Refresh(getPlayerList())
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Player",
+   Callback = function()
+      if selectedPlayer == "" then return end
+      local target = Players:FindFirstChild(selectedPlayer)
+      if target and target.Character then
+         local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            local char = player.Character
+            if char then
+               local myHrp = char:FindFirstChild("HumanoidRootPart")
+               if myHrp then
+                  myHrp.CFrame = hrp.CFrame
+               end
+            end
+         end
+      end
+   end
+})
+
+local MapTeleportsSection = TeleportsTab:CreateSection("Map Teleports")
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Void",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            hrp.CFrame = CFrame.new(hrp.Position.X, -4995, hrp.Position.Z)
+         end
+      end
+   end
+})
+
+local SavedPositionSection = TeleportsTab:CreateSection("Saved Position")
+
+local savedPosition = nil
+
+TeleportsTab:CreateButton({
+   Name = "Save Position",
+   Callback = function()
+      local char = player.Character
+      if char then
+         local hrp = char:FindFirstChild("HumanoidRootPart")
+         if hrp then
+            savedPosition = hrp.CFrame
+         end
+      end
+   end
+})
+
+TeleportsTab:CreateButton({
+   Name = "Teleport to Position",
+   Callback = function()
+      if savedPosition then
+         local char = player.Character
+         if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+               hrp.CFrame = savedPosition
+            end
+         end
+      end
+   end
+})
+
 local LocalPlayerTab = Window:CreateTab("LocalPlayer", 4483362458)
+
+local KillAuraSection = LocalPlayerTab:CreateSection("Kill Aura")
+
+local killAuraEnabled = false
+local killAuraRange = 10
+
+LocalPlayerTab:CreateToggle({
+   Name = "Kill Aura",
+   CurrentValue = false,
+   Flag = "KillAura",
+   Callback = function(Value)
+      killAuraEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Kill Aura Range",
+   Range = {1, 50},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "KillAuraRange",
+   Callback = function(Value)
+      killAuraRange = Value
+   end
+})
 
 local AntiFallSection = LocalPlayerTab:CreateSection("Anti Fall")
 
@@ -761,7 +1366,7 @@ LocalPlayerTab:CreateToggle({
       if Value then
          local char = player.Character or player.CharacterAdded:Wait()
          local hum = char:WaitForChild("Humanoid")
-         
+
          if antiFallConnection then antiFallConnection:Disconnect() end
          antiFallConnection = hum.StateChanged:Connect(function(oldState, newState)
             if not antiFallEnabled then return end
@@ -770,13 +1375,13 @@ LocalPlayerTab:CreateToggle({
                if not currentChar then return end
                local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
                if not rootPart then return end
-               
+
                local rayParams = RaycastParams.new()
                rayParams.FilterType = Enum.RaycastFilterType.Blacklist
                rayParams.FilterDescendantsInstances = {currentChar}
-               
+
                local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -999, 0), rayParams)
-               
+
                if rayResult then
                   rootPart.CFrame = CFrame.new(rayResult.Position + Vector3.new(0, 3, 0))
                end
@@ -791,6 +1396,75 @@ LocalPlayerTab:CreateToggle({
    end
 })
 
+local AntiFallV2Section = LocalPlayerTab:CreateSection("Anti Fall V2")
+
+local antiFallV2Enabled = false
+local antiFallV2Chance = 100
+local antiFallV2Connection = nil
+
+LocalPlayerTab:CreateToggle({
+   Name = "Anti Fall V2",
+   CurrentValue = false,
+   Flag = "AntiFallV2",
+   Callback = function(Value)
+      antiFallV2Enabled = Value
+      if Value then
+         local char = player.Character or player.CharacterAdded:Wait()
+         local hum = char:WaitForChild("Humanoid")
+         if antiFallV2Connection then antiFallV2Connection:Disconnect() end
+         antiFallV2Connection = hum.StateChanged:Connect(function(oldState, newState)
+            if not antiFallV2Enabled then return end
+            if newState == Enum.HumanoidStateType.Freefall then
+               local currentChar = player.Character
+               if not currentChar then return end
+               local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
+               if not rootPart then return end
+               local rayParams = RaycastParams.new()
+               rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+               rayParams.FilterDescendantsInstances = {currentChar}
+               local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -5, 0), rayParams)
+               if rayResult then
+                  local chance = math.random(1, 100)
+                  if chance <= antiFallV2Chance then
+                     rootPart.Velocity = Vector3.new(0, 1, 0)
+                  end
+               end
+            end
+         end)
+      else
+         if antiFallV2Connection then
+            antiFallV2Connection:Disconnect()
+            antiFallV2Connection = nil
+         end
+      end
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Anti Fall V2 Chance",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "%",
+   CurrentValue = 100,
+   Flag = "AntiFallV2Chance",
+   Callback = function(Value)
+      antiFallV2Chance = Value
+   end
+})
+
+local AntiWaterSection = LocalPlayerTab:CreateSection("Anti Water")
+
+local antiWaterEnabled = false
+
+LocalPlayerTab:CreateToggle({
+   Name = "Anti Water",
+   CurrentValue = false,
+   Flag = "AntiWater",
+   Callback = function(Value)
+      antiWaterEnabled = Value
+   end
+})
+
 local SpeedSection = LocalPlayerTab:CreateSection("Speed")
 
 local speedEnabled = false
@@ -801,6 +1475,19 @@ LocalPlayerTab:CreateToggle({
    Flag = "Speed",
    Callback = function(Value)
       speedEnabled = Value
+   end
+})
+
+local BunnyHopSection = LocalPlayerTab:CreateSection("Bunny Hop")
+
+local bunnyHopEnabled = false
+
+LocalPlayerTab:CreateToggle({
+   Name = "Bunny Hop",
+   CurrentValue = false,
+   Flag = "BunnyHop",
+   Callback = function(Value)
+      bunnyHopEnabled = Value
    end
 })
 
@@ -824,25 +1511,25 @@ local function activateInvis()
    if invis_on then return end
    local charNow = player.Character
    if not charNow or not charNow:FindFirstChild("HumanoidRootPart") then return end
-   
+
    local savedpos = charNow.HumanoidRootPart.CFrame
    charNow.HumanoidRootPart.CFrame = CFrame.new(invisX, invisY, invisZ)
    task.wait(0.15)
-   
+
    local Seat = Instance.new('Seat', game.Workspace)
    Seat.Anchored = false
    Seat.CanCollide = false
    Seat.Name = 'invischair'
    Seat.Transparency = 1
    Seat.Position = Vector3.new(invisX, invisY, invisZ)
-   
+
    local Weld = Instance.new("Weld", Seat)
    local torso = charNow:FindFirstChild("Torso") or charNow:FindFirstChild("UpperTorso")
    if torso then
       Weld.Part0 = Seat
       Weld.Part1 = torso
    end
-   
+
    task.wait()
    Seat.CFrame = savedpos
    setTransparency(charNow, 0.5)
@@ -875,7 +1562,224 @@ LocalPlayerTab:CreateToggle({
    end
 })
 
-game:GetService("RunService").Heartbeat:Connect(function()
+local PickUpAuraSection = LocalPlayerTab:CreateSection("PickUp Aura")
+
+local pickUpAuraEnabled = false
+local pickUpAuraRange = 10
+local pickUpAuraThroughWalls = true
+local pickUpAuraChance = 100
+
+LocalPlayerTab:CreateToggle({
+   Name = "PickUp Aura",
+   CurrentValue = false,
+   Flag = "PickUpAura",
+   Callback = function(Value)
+      pickUpAuraEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "PickUp Aura Range",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "PickUpAuraRange",
+   Callback = function(Value)
+      pickUpAuraRange = Value
+   end
+})
+
+LocalPlayerTab:CreateToggle({
+   Name = "PickUp Through Walls",
+   CurrentValue = true,
+   Flag = "PickUpThroughWalls",
+   Callback = function(Value)
+      pickUpAuraThroughWalls = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "PickUp Chance",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "%",
+   CurrentValue = 100,
+   Flag = "PickUpChance",
+   Callback = function(Value)
+      pickUpAuraChance = Value
+   end
+})
+
+local UseAuraSection = LocalPlayerTab:CreateSection("Use Aura")
+
+local useAuraEnabled = false
+local useAuraRange = 10
+
+LocalPlayerTab:CreateToggle({
+   Name = "Use Aura",
+   CurrentValue = false,
+   Flag = "UseAura",
+   Callback = function(Value)
+      useAuraEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Use Aura Range",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "UseAuraRange",
+   Callback = function(Value)
+      useAuraRange = Value
+   end
+})
+
+local RangeSection = LocalPlayerTab:CreateSection("Range")
+
+local rangeCircleEnabled = false
+local rangeCircleColor = Color3.fromRGB(255, 255, 255)
+local rangeCircleRainbow = false
+local rangeCircle = nil
+
+LocalPlayerTab:CreateToggle({
+   Name = "Range",
+   CurrentValue = false,
+   Flag = "Range",
+   Callback = function(Value)
+      rangeCircleEnabled = Value
+      if not Value and rangeCircle then
+         rangeCircle:Destroy()
+         rangeCircle = nil
+      end
+   end
+})
+
+LocalPlayerTab:CreateToggle({
+   Name = "Range Rainbow",
+   CurrentValue = false,
+   Flag = "RangeRainbow",
+   Callback = function(Value)
+      rangeCircleRainbow = Value
+   end
+})
+
+LocalPlayerTab:CreateColorPicker({
+   Name = "Range Color",
+   Color = Color3.fromRGB(255, 255, 255),
+   Flag = "RangeColor",
+   Callback = function(Value)
+      rangeCircleColor = Value
+      if rangeCircle then
+         rangeCircle.BrickColor = BrickColor.new(Value)
+      end
+   end
+})
+
+local NoclipSection = LocalPlayerTab:CreateSection("Noclip")
+
+local noclipEnabled = false
+local noclipChance = 50
+local noclipMaxThickness = 3.0
+
+LocalPlayerTab:CreateToggle({
+   Name = "Noclip",
+   CurrentValue = false,
+   Flag = "Noclip",
+   Callback = function(Value)
+      noclipEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Noclip Chance",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "%",
+   CurrentValue = 50,
+   Flag = "NoclipChance",
+   Callback = function(Value)
+      noclipChance = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Max Wall Thickness",
+   Range = {1, 6},
+   Increment = 0.1,
+   Suffix = "Studs",
+   CurrentValue = 3.0,
+   Flag = "NoclipThickness",
+   Callback = function(Value)
+      noclipMaxThickness = Value
+   end
+})
+
+local LagSwitchSection = LocalPlayerTab:CreateSection("Lag Switch")
+
+local lagSwitchEnabled = false
+local lagSwitchDuration = 1
+local lagSwitchInterval = 5
+
+LocalPlayerTab:CreateToggle({
+   Name = "Lag Switch",
+   CurrentValue = false,
+   Flag = "LagSwitch",
+   Callback = function(Value)
+      lagSwitchEnabled = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Lag Duration",
+   Range = {0.1, 5},
+   Increment = 0.1,
+   Suffix = "s",
+   CurrentValue = 1,
+   Flag = "LagDuration",
+   Callback = function(Value)
+      lagSwitchDuration = Value
+   end
+})
+
+LocalPlayerTab:CreateSlider({
+   Name = "Lag Interval",
+   Range = {1, 30},
+   Increment = 1,
+   Suffix = "s",
+   CurrentValue = 5,
+   Flag = "LagInterval",
+   Callback = function(Value)
+      lagSwitchInterval = Value
+   end
+})
+
+local instanceKillGrannyTimer = 0
+local instanceKillGrandpaTimer = 0
+local espUpdateTimer = 0
+local pickUpAuraTimer = 0
+local useAuraTimer = 0
+local orbitGrannyAngle = 0
+local orbitGrandpaAngle = 0
+local killAuraTimer = 0
+local autoFreezeGrannyTimer = 0
+local autoFreezeGrandpaTimer = 0
+local lagSwitchTimer = 0
+local lagSwitchActive = false
+local noclipTimer = 0
+local antiWaterTimer = 0
+
+game:GetService("RunService").RenderStepped:Connect(function(delta)
+   if thirdPersonEnabled then
+      player.CameraMode = Enum.CameraMode.Classic
+      player.CameraMinZoomDistance = 0.5
+      player.CameraMaxZoomDistance = 20
+   end
+end)
+
+game:GetService("RunService").Heartbeat:Connect(function(delta)
    if speedEnabled then
       local char = player.Character
       if char then
@@ -885,41 +1789,376 @@ game:GetService("RunService").Heartbeat:Connect(function()
          end
       end
    end
+
+   if bunnyHopEnabled then
+      local char = player.Character
+      if char then
+         local hum = char:FindFirstChild("Humanoid")
+         if hum and hum.MoveDirection.Magnitude > 0 and hum:GetState() == Enum.HumanoidStateType.Running then
+            if not hum.Jump then
+               hum.Jump = true
+            end
+         end
+      end
+   end
+
+   if timeChangerEnabled then
+      Lighting.ClockTime = timeValue
+   end
+
+   antiWaterTimer = antiWaterTimer + delta
+   if antiWaterEnabled and antiWaterTimer >= 0.5 then
+      antiWaterTimer = 0
+      for i = 1, 10 do
+         local preset = workspace:FindFirstChild("Preset" .. i)
+         if preset then
+            local locks = preset:FindFirstChild("Locks")
+            if locks then
+               for _, obj in pairs(locks:GetDescendants()) do
+                  if obj.Name == "Creature" then
+                     obj:Destroy()
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   instanceKillGrannyTimer = instanceKillGrannyTimer + delta
+   if instanceKillGrannyEnabled and instanceKillGrannyTimer >= 1 then
+      instanceKillGrannyTimer = 0
+      local granny = findGrannyModel()
+      if granny then
+         local zombie = granny:FindFirstChild("Zombie")
+         if zombie then
+            zombie.Health = 0
+         end
+      end
+   end
+
+   instanceKillGrandpaTimer = instanceKillGrandpaTimer + delta
+   if instanceKillGrandpaEnabled and instanceKillGrandpaTimer >= 1 then
+      instanceKillGrandpaTimer = 0
+      local grandpa = findGrandpaModel()
+      if grandpa then
+         local zombie = grandpa:FindFirstChild("Zombie")
+         if zombie then
+            zombie.Health = 0
+         end
+      end
+   end
+
+   espUpdateTimer = espUpdateTimer + delta
+   if espUpdateTimer >= 5 then
+      espUpdateTimer = 0
+      if espEnabled then applyESP() end
+      if grannyESPEnabled then applyGrannyESP() end
+      if grandpaESPEnabled then applyGrandpaESP() end
+      if playersESPEnabled then applyPlayersESP() end
+      if playersTracersEnabled then applyPlayersTracers() end
+   end
+
+   pickUpAuraTimer = pickUpAuraTimer + delta
+   if pickUpAuraEnabled and pickUpAuraTimer >= 0.5 then
+      pickUpAuraTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            for i = 1, 10 do
+               local preset = workspace:FindFirstChild("Preset" .. i)
+               if preset then
+                  for _, obj in pairs(preset:GetChildren()) do
+                     if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
+                        local dist = (obj.Position - root.Position).Magnitude
+                        if dist <= pickUpAuraRange then
+                           if not pickUpAuraThroughWalls then
+                              local rayParams = RaycastParams.new()
+                              rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                              rayParams.FilterDescendantsInstances = {char}
+                              local rayResult = workspace:Raycast(root.Position, (obj.Position - root.Position).Unit * dist, rayParams)
+                              if rayResult then
+                                 continue
+                              end
+                           end
+                           local chance = math.random(1, 100)
+                           if chance <= pickUpAuraChance then
+                              obj.InteractRemote:FireServer(player)
+                           end
+                        end
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   useAuraTimer = useAuraTimer + delta
+   if useAuraEnabled and useAuraTimer >= 0.5 then
+      useAuraTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            for i = 1, 10 do
+               local preset = workspace:FindFirstChild("Preset" .. i)
+               if preset then
+                  for _, obj in pairs(preset:GetChildren()) do
+                     if obj:FindFirstChild("InteractRemote") and obj:IsA("BasePart") then
+                        if obj:FindFirstChild("ProximityPrompt") then
+                           local dist = (obj.Position - root.Position).Magnitude
+                           if dist <= useAuraRange then
+                              fireproximityprompt(obj.ProximityPrompt)
+                           end
+                        end
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   killAuraTimer = killAuraTimer + delta
+   if killAuraEnabled and killAuraTimer >= 0.5 then
+      killAuraTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local granny = findGrannyModel()
+            if granny and granny:FindFirstChild("HumanoidRootPart") then
+               local dist = (granny.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= killAuraRange then
+                  local zombie = granny:FindFirstChild("Zombie")
+                  if zombie then zombie.Health = 0 end
+               end
+            end
+            local grandpa = findGrandpaModel()
+            if grandpa and grandpa:FindFirstChild("HumanoidRootPart") then
+               local dist = (grandpa.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= killAuraRange then
+                  local zombie = grandpa:FindFirstChild("Zombie")
+                  if zombie then zombie.Health = 0 end
+               end
+            end
+            local children = findChildModels()
+            for _, child in pairs(children) do
+               local hrp = child:FindFirstChild("HumanoidRootPart")
+               if hrp then
+                  local dist = (hrp.Position - root.Position).Magnitude
+                  if dist <= killAuraRange then
+                     local zombie = child:FindFirstChild("Zombie")
+                     if zombie then zombie.Health = 0 end
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   autoFreezeGrannyTimer = autoFreezeGrannyTimer + delta
+   if autoFreezeGrannyEnabled and autoFreezeGrannyTimer >= 0.5 then
+      autoFreezeGrannyTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local granny = findGrannyModel()
+            if granny and granny:FindFirstChild("HumanoidRootPart") then
+               local dist = (granny.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= autoFreezeGrannyRange then
+                  local zombie = granny:FindFirstChild("Zombie")
+                  if zombie then zombie.WalkSpeed = 0 end
+                  local hrp = granny:FindFirstChild("HumanoidRootPart")
+                  if hrp then hrp.Anchored = true end
+               end
+            end
+         end
+      end
+   end
+
+   autoFreezeGrandpaTimer = autoFreezeGrandpaTimer + delta
+   if autoFreezeGrandpaEnabled and autoFreezeGrandpaTimer >= 0.5 then
+      autoFreezeGrandpaTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local grandpa = findGrandpaModel()
+            if grandpa and grandpa:FindFirstChild("HumanoidRootPart") then
+               local dist = (grandpa.HumanoidRootPart.Position - root.Position).Magnitude
+               if dist <= autoFreezeGrandpaRange then
+                  local zombie = grandpa:FindFirstChild("Zombie")
+                  if zombie then zombie.WalkSpeed = 0 end
+                  local hrp = grandpa:FindFirstChild("HumanoidRootPart")
+                  if hrp then hrp.Anchored = true end
+               end
+            end
+         end
+      end
+   end
+
+   lagSwitchTimer = lagSwitchTimer + delta
+   if lagSwitchEnabled then
+      if lagSwitchActive then
+         if lagSwitchTimer >= lagSwitchDuration then
+            lagSwitchTimer = 0
+            lagSwitchActive = false
+            game:GetService("NetworkClient"):SetOutgoingKBPSLimit(9e9)
+         end
+      else
+         if lagSwitchTimer >= lagSwitchInterval then
+            lagSwitchTimer = 0
+            lagSwitchActive = true
+            game:GetService("NetworkClient"):SetOutgoingKBPSLimit(0)
+         end
+      end
+   elseif lagSwitchActive then
+      lagSwitchActive = false
+      game:GetService("NetworkClient"):SetOutgoingKBPSLimit(9e9)
+   end
+
+   noclipTimer = noclipTimer + delta
+   if noclipEnabled and noclipTimer >= 0.1 then
+      noclipTimer = 0
+      local char = player.Character
+      if char then
+         local root = char:FindFirstChild("HumanoidRootPart")
+         if root then
+            local hum = char:FindFirstChild("Humanoid")
+            if hum and hum.MoveDirection.Magnitude > 0 then
+               local chance = math.random(1, 100)
+               if chance <= noclipChance then
+                  local moveDir = hum.MoveDirection
+                  local rayOrigin = root.Position
+                  local rayDir = moveDir * noclipMaxThickness
+                  local rayParams = RaycastParams.new()
+                  rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                  rayParams.FilterDescendantsInstances = {char}
+                  local rayResult = workspace:Raycast(rayOrigin, rayDir, rayParams)
+                  if rayResult then
+                     root.CFrame = root.CFrame + moveDir * (noclipMaxThickness + 1)
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   if orbitGrannyEnabled then
+      local char = player.Character
+      if char and char:FindFirstChild("HumanoidRootPart") then
+         local granny = findGrannyModel()
+         if granny and granny:FindFirstChild("HumanoidRootPart") then
+            orbitGrannyAngle = orbitGrannyAngle + (orbitGrannySpeed * delta)
+            local offsetX = math.cos(orbitGrannyAngle) * orbitGrannyRadius
+            local offsetZ = math.sin(orbitGrannyAngle) * orbitGrannyRadius
+            local targetPos = granny.HumanoidRootPart.Position + Vector3.new(offsetX, orbitGrannyHeight, offsetZ)
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+         end
+      end
+   end
+
+   if orbitGrandpaEnabled then
+      local char = player.Character
+      if char and char:FindFirstChild("HumanoidRootPart") then
+         local grandpa = findGrandpaModel()
+         if grandpa and grandpa:FindFirstChild("HumanoidRootPart") then
+            orbitGrandpaAngle = orbitGrandpaAngle + (orbitGrandpaSpeed * delta)
+            local offsetX = math.cos(orbitGrandpaAngle) * orbitGrandpaRadius
+            local offsetZ = math.sin(orbitGrandpaAngle) * orbitGrandpaRadius
+            local targetPos = grandpa.HumanoidRootPart.Position + Vector3.new(offsetX, orbitGrandpaHeight, offsetZ)
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+         end
+      end
+   end
+
+   if rangeCircleEnabled then
+      local char = player.Character
+      if char and char:FindFirstChild("HumanoidRootPart") then
+         local root = char.HumanoidRootPart
+         local legY = root.Position.Y - 3
+         if not rangeCircle then
+            rangeCircle = Instance.new("Part")
+            rangeCircle.Name = "RangeCircle"
+            rangeCircle.Anchored = true
+            rangeCircle.CanCollide = false
+            rangeCircle.Massless = true
+            rangeCircle.Size = Vector3.new(0.2, 0.2, 0.2)
+            rangeCircle.Shape = Enum.PartType.Cylinder
+            rangeCircle.Material = Enum.Material.Neon
+            rangeCircle.BrickColor = BrickColor.new(rangeCircleColor)
+            rangeCircle.Parent = workspace
+         end
+         rangeCircle.Position = Vector3.new(root.Position.X, legY, root.Position.Z)
+         local rot = tick() * 180
+         rangeCircle.Orientation = Vector3.new(0, rot % 360, 90)
+         rangeCircle.Size = Vector3.new(pickUpAuraRange * 0.2, pickUpAuraRange * 2, pickUpAuraRange * 2)
+      end
+   else
+      if rangeCircle then
+         rangeCircle:Destroy()
+         rangeCircle = nil
+      end
+   end
 end)
 
 game:GetService("RunService").RenderStepped:Connect(function(delta)
    local cam = workspace.CurrentCamera
    local hue = tick() % 5 / 5
    local rainbowColor = Color3.fromHSV(hue, 1, 1)
-   
+
+   if viewAngleGrannyEnabled then
+      local granny = findGrannyModel()
+      if granny and granny:FindFirstChild("Head") then
+         cam.CFrame = CFrame.new(cam.CFrame.Position, granny.Head.Position)
+      end
+   end
+
+   if viewAngleGrandpaEnabled then
+      local grandpa = findGrandpaModel()
+      if grandpa and grandpa:FindFirstChild("Head") then
+         cam.CFrame = CFrame.new(cam.CFrame.Position, grandpa.Head.Position)
+      end
+   end
+
    if invisTimer > 0 then
       invisTimer = invisTimer - delta
       if invisTimer <= 0 then
          deactivateInvis()
       end
    end
-   
+
    if rainbowESP then
       for _, h in pairs(espObjects) do
          h.FillColor = rainbowColor
          h.OutlineColor = rainbowColor
       end
    end
-   
+
    if rainbowGrannyESP then
       for _, h in pairs(grannyESPObjects) do
          h.FillColor = rainbowColor
          h.OutlineColor = rainbowColor
       end
    end
-   
+
    if rainbowGrandpaESP then
       for _, h in pairs(grandpaESPObjects) do
          h.FillColor = rainbowColor
          h.OutlineColor = rainbowColor
       end
    end
-   
+
+   if rainbowPlayersESP then
+      for _, h in pairs(playersESPObjects) do
+         h.FillColor = rainbowColor
+         h.OutlineColor = rainbowColor
+      end
+   end
+
    if distanceEnabled then
       local char = player.Character
       local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -937,7 +2176,7 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
          end
       end
    end
-   
+
    if tracersEnabled then
       for _, t in pairs(tracers) do
          if t.target and t.target.Parent then
@@ -957,7 +2196,27 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
          end
       end
    end
-   
+
+   if playersTracersEnabled then
+      for _, t in pairs(playersTracers) do
+         if t.target and t.target.Parent then
+            local screenPos, onScreen = cam:WorldToViewportPoint(t.target.Position)
+            if onScreen then
+               t.tracer.From = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y)
+               t.tracer.To = Vector2.new(screenPos.X, screenPos.Y)
+               t.tracer.Visible = true
+            else
+               t.tracer.Visible = false
+            end
+            if rainbowPlayersTracers then
+               t.tracer.Color = rainbowColor
+            end
+         else
+            t.tracer.Visible = false
+         end
+      end
+   end
+
    if antiGrannyKillEnabled then
       local char = player.Character
       local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -974,7 +2233,7 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
          end
       end
    end
-   
+
    if antiGrandpaKillEnabled then
       local char = player.Character
       local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -991,6 +2250,10 @@ game:GetService("RunService").RenderStepped:Connect(function(delta)
          end
       end
    end
+
+   if rangeCircleRainbow and rangeCircle then
+      rangeCircle.BrickColor = BrickColor.new(rainbowColor)
+   end
 end)
 
 player.CharacterAdded:Connect(function(newChar)
@@ -1002,6 +2265,8 @@ player.CharacterAdded:Connect(function(newChar)
    if tracersEnabled then applyTracers() end
    if grannyESPEnabled then applyGrannyESP() end
    if grandpaESPEnabled then applyGrandpaESP() end
+   if playersESPEnabled then applyPlayersESP() end
+   if playersTracersEnabled then applyPlayersTracers() end
    if antiFallEnabled then
       local hum = newChar:WaitForChild("Humanoid")
       if antiFallConnection then antiFallConnection:Disconnect() end
@@ -1012,17 +2277,69 @@ player.CharacterAdded:Connect(function(newChar)
             if not currentChar then return end
             local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
             if not rootPart then return end
-            
+
             local rayParams = RaycastParams.new()
             rayParams.FilterType = Enum.RaycastFilterType.Blacklist
             rayParams.FilterDescendantsInstances = {currentChar}
-            
+
             local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -999, 0), rayParams)
-            
+
             if rayResult then
                rootPart.CFrame = CFrame.new(rayResult.Position + Vector3.new(0, 3, 0))
             end
          end
       end)
    end
+   if antiFallV2Enabled then
+      local hum = newChar:WaitForChild("Humanoid")
+      if antiFallV2Connection then antiFallV2Connection:Disconnect() end
+      antiFallV2Connection = hum.StateChanged:Connect(function(oldState, newState)
+         if not antiFallV2Enabled then return end
+         if newState == Enum.HumanoidStateType.Freefall then
+            local currentChar = player.Character
+            if not currentChar then return end
+            local rootPart = currentChar:FindFirstChild("HumanoidRootPart")
+            if not rootPart then return end
+            local rayParams = RaycastParams.new()
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+            rayParams.FilterDescendantsInstances = {currentChar}
+            local rayResult = workspace:Raycast(rootPart.Position, Vector3.new(0, -5, 0), rayParams)
+            if rayResult then
+               local chance = math.random(1, 100)
+               if chance <= antiFallV2Chance then
+                  rootPart.Velocity = Vector3.new(0, 1, 0)
+               end
+            end
+         end
+      end)
+   end
+   if rangeCircle then
+      rangeCircle:Destroy()
+      rangeCircle = nil
+   end
+end)
+
+Players.PlayerAdded:Connect(function(plr)
+   plr.CharacterAdded:Connect(function(char)
+      task.wait(0.5)
+      if playersESPEnabled then applyPlayersESP() end
+      if playersTracersEnabled then applyPlayersTracers() end
+      playerDropdown:Refresh(getPlayerList())
+   end)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+   task.wait(0.5)
+   if playersESPEnabled then applyPlayersESP() end
+   if playersTracersEnabled then applyPlayersTracers() end
+   playerDropdown:Refresh(getPlayerList())
+end)
+
+workspace.FallenPartsDestroyHeight = 0/0
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if hum and hum.Health <= 0 then
+        hum.Health = hum.MaxHealth
+    end
 end)
