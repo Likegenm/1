@@ -1031,6 +1031,58 @@ SlendrinaTab:CreateButton({
    end
 })
 
+local OrbitSlendrinaSection = SlendrinaTab:CreateSection("Orbit")
+
+local orbitSlendrinaEnabled = false
+local orbitSlendrinaSpeed = 5
+local orbitSlendrinaRadius = 10
+local orbitSlendrinaHeight = 0
+
+SlendrinaTab:CreateToggle({
+   Name = "Orbit Slendrina",
+   CurrentValue = false,
+   Flag = "OrbitSlendrina",
+   Callback = function(Value)
+      orbitSlendrinaEnabled = Value
+   end
+})
+
+SlendrinaTab:CreateSlider({
+   Name = "Orbit Speed",
+   Range = {1, 20},
+   Increment = 1,
+   Suffix = "",
+   CurrentValue = 5,
+   Flag = "OrbitSlendrinaSpeed",
+   Callback = function(Value)
+      orbitSlendrinaSpeed = Value
+   end
+})
+
+SlendrinaTab:CreateSlider({
+   Name = "Orbit Radius",
+   Range = {5, 30},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "OrbitSlendrinaRadius",
+   Callback = function(Value)
+      orbitSlendrinaRadius = Value
+   end
+})
+
+SlendrinaTab:CreateSlider({
+   Name = "Orbit Height",
+   Range = {-10, 10},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 0,
+   Flag = "OrbitSlendrinaHeight",
+   Callback = function(Value)
+      orbitSlendrinaHeight = Value
+   end
+})
+
 local AutoStunSlendrinaSection = SlendrinaTab:CreateSection("Auto Freeze")
 
 local autoFreezeSlendrinaEnabled = false
@@ -1437,7 +1489,7 @@ local antiFallV2Chance = 100
 local antiFallV2Connection = nil
 
 LocalPlayerTab:CreateToggle({
-   Name = "Anti Fall V2(Beta)",
+   Name = "Anti Fall V2",
    CurrentValue = false,
    Flag = "AntiFallV2",
    Callback = function(Value)
@@ -1509,6 +1561,19 @@ LocalPlayerTab:CreateToggle({
    Flag = "BunnyHop",
    Callback = function(Value)
       bunnyHopEnabled = Value
+   end
+})
+
+local AntiTrapSection = LocalPlayerTab:CreateSection("Anti Trap")
+
+local antiTrapEnabled = false
+
+LocalPlayerTab:CreateToggle({
+   Name = "Anti Trap",
+   CurrentValue = false,
+   Flag = "AntiTrap",
+   Callback = function(Value)
+      antiTrapEnabled = Value
    end
 })
 
@@ -1712,12 +1777,14 @@ local espUpdateTimer = 0
 local pickUpAuraTimer = 0
 local useAuraTimer = 0
 local orbitAngle = 0
+local orbitSlendrinaAngle = 0
 local killAuraTimer = 0
 local autoFreezeGrannyTimer = 0
 local autoFreezeSlendrinaTimer = 0
 local lagSwitchTimer = 0
 local lagSwitchActive = false
 local noclipTimer = 0
+local antiTrapTimer = 0
 
 game:GetService("RunService").Heartbeat:Connect(function(delta)
    if speedEnabled then
@@ -1738,6 +1805,17 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
             if not hum.Jump then
                hum.Jump = true
             end
+         end
+      end
+   end
+
+   antiTrapTimer = antiTrapTimer + delta
+   if antiTrapEnabled and antiTrapTimer >= 1 then
+      antiTrapTimer = 0
+      local openFolder = workspace:FindFirstChild("Open")
+      if openFolder then
+         for _, obj in pairs(openFolder:GetChildren()) do
+            obj:Destroy()
          end
       end
    end
@@ -1986,6 +2064,20 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
             local offsetX = math.cos(orbitAngle) * orbitRadius
             local offsetZ = math.sin(orbitAngle) * orbitRadius
             local targetPos = granny.HumanoidRootPart.Position + Vector3.new(offsetX, orbitHeight, offsetZ)
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
+         end
+      end
+   end
+
+   if orbitSlendrinaEnabled then
+      local char = player.Character
+      if char and char:FindFirstChild("HumanoidRootPart") then
+         local slendrina = findSlendrinaModel()
+         if slendrina and slendrina:FindFirstChild("HumanoidRootPart") then
+            orbitSlendrinaAngle = orbitSlendrinaAngle + (orbitSlendrinaSpeed * delta)
+            local offsetX = math.cos(orbitSlendrinaAngle) * orbitSlendrinaRadius
+            local offsetZ = math.sin(orbitSlendrinaAngle) * orbitSlendrinaRadius
+            local targetPos = slendrina.HumanoidRootPart.Position + Vector3.new(offsetX, orbitSlendrinaHeight, offsetZ)
             char.HumanoidRootPart.CFrame = CFrame.new(targetPos)
          end
       end
