@@ -654,33 +654,6 @@ VisualTab:CreateColorPicker({
    end
 })
 
-local thirdPersonEnabled = false
-
-local oldIndex
-oldIndex = hookmetamethod(game, "__newindex", function(self, prop, value)
-    if self == player and prop == "CameraMode" then
-        return
-    end
-    return oldIndex(self, prop, value)
-end)
-
-VisualTab:CreateToggle({
-   Name = "Third Person",
-   CurrentValue = false,
-   Flag = "ThirdPerson",
-   Callback = function(Value)
-      thirdPersonEnabled = Value
-      if Value then
-         player.CameraMode = Enum.CameraMode.Classic
-         player.CameraMinZoomDistance = 0.5
-         player.CameraMaxZoomDistance = 20
-      else
-         player.CameraMinZoomDistance = 0.5
-         player.CameraMaxZoomDistance = 0.5
-      end
-   end
-})
-
 local fullbrightEnabled = false
 local defaultLighting = {}
 
@@ -1771,14 +1744,6 @@ local lagSwitchActive = false
 local noclipTimer = 0
 local antiWaterTimer = 0
 
-game:GetService("RunService").RenderStepped:Connect(function(delta)
-   if thirdPersonEnabled then
-      player.CameraMode = Enum.CameraMode.Classic
-      player.CameraMinZoomDistance = 0.5
-      player.CameraMaxZoomDistance = 20
-   end
-end)
-
 game:GetService("RunService").Heartbeat:Connect(function(delta)
    if speedEnabled then
       local char = player.Character
@@ -1821,6 +1786,12 @@ game:GetService("RunService").Heartbeat:Connect(function(delta)
                end
             end
          end
+      end
+      if workspace:FindFirstChild("Creature") then
+         workspace.Creature:Destroy()
+      end
+      if workspace:FindFirstChild("Water") then
+         workspace.Water:Destroy()
       end
    end
 
