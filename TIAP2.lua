@@ -1,27 +1,3 @@
-local function checkXeno()
-    pcall(function()
-        if identifyexecutor then
-            local exec = identifyexecutor():lower()
-            if exec:find("xeno") then
-                return true
-            end
-        end
-    end)
-    return false
-end
-
-if checkXeno() then
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Executor Blocked",
-        Text = "Xeno executor is not supported",
-        Duration = 5,
-        Icon = "rbxassetid://4483345998"
-    })
-    return
-end
-
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/BypassVoid.lua"))()
-
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Qanuir/orion-ui/refs/heads/main/source.lua"))()
 
 local Window = OrionLib:MakeWindow({
@@ -381,3 +357,5 @@ for _, path in pairs(trollPaths) do
 end
 
 OrionLib:Init()
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Likegenm/Scripts/refs/heads/main/BypassVoid.lua"))()
